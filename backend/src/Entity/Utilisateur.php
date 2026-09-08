@@ -7,9 +7,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -335,5 +337,40 @@ class Utilisateur
         }
 
         return $this;
+    }
+
+    /**
+     Email sert à retrouver le bon login
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     *Noms des roles
+     */
+    public function getRoles(): array
+    {
+        return match ($this->role) {
+            'admin' => ['ROLE_ADMIN'],
+            'gestionnaire' => ['ROLE_GESTIONNAIRE'],
+            default => ['ROLE_USER'],
+        };
+    }
+
+    /**
+     Rècupèration et comparation du mot de passe (hashé) lors du login
+     */
+    public function getPassword(): ?string
+    {
+        return $this->mot_de_passe;
+    }
+
+    /**
+     * Obligatoire meme si on ne stocke pas le mot de passe en clair. Laissez vide
+     */
+    public function eraseCredentials(): void
+    {
     }
 }
