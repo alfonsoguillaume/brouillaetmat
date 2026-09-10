@@ -1,0 +1,12 @@
+POST http://localhost:8000/api/inscription
+Content-Type: application/json
+
+{
+    "nom": "Test",
+    "prenom": "Utilisateur",
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123",
+    "date_naissance": "2000-01-01",
+    "consentement_parental": false
+}
+
