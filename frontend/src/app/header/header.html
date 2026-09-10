@@ -1,36 +1,39 @@
-<!-- logo avec lien vers l accueil à ajouter-->
-<a routerLink="/accueil">logo</a>
-<nav>
-  <ul class="navgauche">
-    <li><a routerLink="/accueil" routerLinkActive="active">Accueil</a></li>
-    <li><a routerLink="/club" routerLinkActive="active">Club</a></li>
-    <li><a routerLink="/bureau" routerLinkActive="active">Bureau</a></li>
-    <li><a routerLink="/information" routerLinkActive="active">Information</a></li>
+<div class="navcomplete">
 
-    <!-- si connecté -->
-    @if (isLoggedIn()) {
-      <li><a routerLink="/jouer" routerLinkActive="active">Jouer</a></li>
-      <li><a routerLink="/tournois" routerLinkActive="active">Tournois</a></li>
-    }
-  </ul>
+  <!-- logo avec lien vers l accueil à ajouter-->
+  <a routerLink="/accueil">logo</a>
+  <nav>
+    <ul class="navgauche">
+      <li><a routerLink="/accueil" routerLinkActive="active">Accueil</a></li>
+      <li><a routerLink="/club" routerLinkActive="active">Club</a></li>
+      <li><a routerLink="/bureau" routerLinkActive="active">Bureau</a></li>
+      <li><a routerLink="/information" routerLinkActive="active">Information</a></li>
 
-
-  <ul class="navdroite">
-        <!-- si connecté -->
-    @if (isLoggedIn()) {
-      <!-- Menu pour admin et gestionnaire -->
-
-      @if (isAdmin() || isGestionnaire()){
-        <li><a routerLink="/administration" routerLinkActive="active">Administration</a></li>
+      <!-- si connecté -->
+      @if (isLoggedIn()) {
+        <li><a routerLink="/jouer" routerLinkActive="active">Jouer</a></li>
+        <li><a routerLink="/tournois" routerLinkActive="active">Tournois</a></li>
       }
-      <li><a routerLink="/profil" routerLinkActive="active">Profil</a> </li>
-      <li><a routerLink="/accueil" (click)="logout()">Déconnexion</a></li>
-    } @else {
-      <!-- si non connecté -->
-      <li><a routerLink="/inscription" routerLinkActive="active">Inscription</a></li>
-      <li><a routerLink="/connexion" routerLinkActive="active">Connexion</a></li>
-    }
-  </ul>
-</nav>
+    </ul>
 
-<h1>Brouilla &amp; Mat</h1>
+
+    <ul class="navdroite">
+      <!-- si connecté -->
+      @if (isLoggedIn()) {
+        <!-- Menu pour admin et gestionnaire -->
+
+        @if (isAdmin() || isGestionnaire()) {
+          <li><a routerLink="/administration" routerLinkActive="active">Administration</a></li>
+        }
+        <li><a routerLink="/profil" routerLinkActive="active">Profil</a></li>
+        <li><a routerLink="/accueil" (click)="logout()">Déconnexion</a></li>
+      } @else {
+        <!-- si non connecté -->
+        <li><a routerLink="/inscription" routerLinkActive="active">Inscription</a></li>
+        <li><a routerLink="/connexion" routerLinkActive="active">Connexion</a></li>
+      }
+    </ul>
+  </nav>
+</div>
+
+<h1>Brouilla <span>&amp;</span> Mat</h1>

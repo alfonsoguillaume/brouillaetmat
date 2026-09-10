@@ -9,3 +9,10 @@
 
 controllers:
     resource: routing.controllers
+
+# Le firewall "login" (json_login dans security.yaml) intercepte cette route
+# lui-même — pas besoin de contrôleur — mais Symfony a besoin que la route
+# existe pour ne pas la rejeter en 404 avant même d'atteindre le firewall.
+api_login:
+    path: /api/login
+    methods: [POST]

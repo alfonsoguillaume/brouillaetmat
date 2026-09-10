@@ -1,0 +1,12 @@
+### Connexion (login) — récupère un token JWT
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### Qui suis-je (nécessite le token obtenu ci-dessus)
+GET http://localhost:8000/api/me
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODg5NTg2MTIsImV4cCI6MTc4ODk2MjIxMiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEBicm91aWxsYWV0bWF0LmZyIn0.TCbNWebVRHxWcOxzFq88Y59shOi10aRegljPiUrAz07CPWemYh2m8eksy7BEzr_H9xEuvlZiZjNpaSOGcjByDl3kegSJPfOf5A3z9ZoELtvXBtT6QT3x2Nt-2r8fh5MZzuBhBBcsbEXVdYSY9SFbPh5XawljgpnOzBKMg_9UNwNo5JzfmzxtBdDfzofXhe-UccTPlSp6yLsCkflubH5-0o-Qrhsz-dqox2qJcHYTYo5__KnJyuZBjfhT8fZacI--EhAc_doq9LGlSIaR3-G8cw2xxFTVWfj0ltHUBOgfBIn18qTESi7TRhBZzPE20xfyCabBxydQ5udSuHMt6POlnw
