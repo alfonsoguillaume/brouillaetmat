@@ -2,18 +2,19 @@
   background-color: #2D302C;
   width: 100%;
   padding: 15px 0;
+
 }
 
 .contact {
   text-align: center;
   color: #D9A24B;
   margin: 0 0 15px 0;
-  font-size: 18px;
+  font-size: 25px;
 }
 
 .foot {
   list-style: none;
-  color: #C97B4A;
+  color: #CE865A;
   display: flex;
   justify-content: space-evenly;
   gap: 20px;
@@ -22,6 +23,9 @@
 }
 
 .mon-footer a {
-  color: #C97B4A;
+  color: #CE865A;
   text-decoration: none;
+  font-size: 20px;
+  font-weight: bold;
+
 }

@@ -2,6 +2,7 @@
 
 * {
   box-sizing: border-box;
+
 }
 
 .navcomplete {
@@ -10,6 +11,7 @@
   gap: 20px;
   background-color: #2D302C;
   padding: 10px 20px;
+
 }
 
 .navcomplete nav {
@@ -25,18 +27,20 @@
   gap: 20px;
   padding: 0;
   margin: 0;
+  font-size: 20px;
 }
 
 .navcomplete a {
-  color: #C97B4A;
+  color: #CE865A;
   text-decoration: none;
+  font-weight: bold;
 }
 
 h1 {
   font-family: 'Lobster Two', cursive;
-  color: #5B7A5E;
+  color: #688D6A;
   text-align: center;
-  font-size: 3rem;
+  font-size: 5rem;
   background-color: #2D302C;
   margin: 0;
   padding-bottom: 20px;
