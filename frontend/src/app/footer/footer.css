@@ -1,31 +1,155 @@
+* {
+  box-sizing: border-box;
+}
+
 .mon-footer {
   background-color: #2D302C;
   width: 100%;
-  padding: 15px 0;
-
+  padding: 25px 20px;
+  border-top: 3px solid #CE865A;
+  margin-top: auto;
+  position: relative; /* Indispensable pour ancrer le bouton en bas à droite */
 }
 
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* --- CONTACT --- */
 .contact {
   text-align: center;
   color: #D9A24B;
-  margin: 0 0 15px 0;
-  font-size: 25px;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: bold;
 }
 
+.contact-link {
+  color: #D9A24B;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.contact-link:hover,
+.contact-link:focus {
+  color: #ffffff;
+}
+
+/* --- LIENS LÉGAUX --- */
 .foot {
   list-style: none;
-  color: #CE865A;
   display: flex;
-  justify-content: space-evenly;
-  gap: 20px;
+  justify-content: center;
+  gap: 30px;
   padding: 0;
   margin: 0;
+  width: 100%;
 }
 
 .mon-footer a {
   color: #CE865A;
   text-decoration: none;
-  font-size: 20px;
+  font-size: 1.1rem;
   font-weight: bold;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
 
+.mon-footer .foot a:hover {
+  color: #D9A24B;
+}
+
+/* --- BOUTON HAUT DE PAGE --- */
+.back-to-top {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: auto;
+  height: auto;
+  min-height: 48px;
+  padding: 10px 18px;
+  white-space: nowrap; /* Empêche le texte de se couper */
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  background-color: #CE865A;
+  color: #2D302C;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  z-index: 5;
+}
+
+.back-to-top:hover,
+.back-to-top:focus {
+  background-color: #D9A24B;
+  transform: translateY(-3px);
+}
+
+.arrow-icon {
+  flex-shrink: 0;
+}
+
+/* --- RESPONSIVE (MOBILE & TABLETTE - 1024px ET SOUS) --- */
+@media (max-width: 1024px) {
+  .mon-footer {
+    padding: 20px 15px 85px 15px; /* Espace en bas pour éviter le chevauchement avec le bouton */
+  }
+
+  .contact {
+    font-size: 1.2rem;
+    line-height: 1.4;
+  }
+
+  .contact-link {
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* Grands pavés tactiles adaptés aux enfants et seniors */
+  .foot {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .foot li {
+    width: 100%;
+  }
+
+  .foot a {
+    display: block;
+    padding: 12px 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    text-align: center;
+    width: 100%;
+    font-size: 1.1rem;
+  }
+
+  .foot a.active,
+  .foot a:active {
+    background-color: #CE865A;
+    color: #2D302C;
+  }
+
+  .back-to-top {
+    bottom: 15px;
+    right: 15px;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+  }
 }

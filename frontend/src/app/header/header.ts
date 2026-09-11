@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import {Component} from '@angular/core';
+import {RouterLink, RouterLinkActive} from '@angular/router';
 
 @Component({
   imports: [RouterLink, RouterLinkActive],
@@ -8,6 +8,13 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './header.html',
 })
 export class Header {
+  // Propriété qui gère l'état d'ouverture du menu sur mobile
+  isMenuOpen: boolean = false;
+
+  // Méthode appelée au clic sur le bouton burger
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
 
   isLoggedIn(): boolean {
     return false;
