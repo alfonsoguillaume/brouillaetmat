@@ -128,3 +128,8 @@ h1 span {
     color: #2D302C;
   }
 }
+
+.home-link {
+  color: inherit; /* Garde la couleur d'origine du texte */
+  text-decoration: none; /* Supprime le soulignement */
+}
