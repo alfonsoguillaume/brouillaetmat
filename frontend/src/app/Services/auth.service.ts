@@ -1,5 +1,5 @@
 import {inject, Injectable, signal} from '@angular/core';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {tap} from 'rxjs/operators';
 
 interface LoginResponse {
@@ -43,16 +43,7 @@ export class AuthService {
   }
 
   chargerProfil(): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      return;
-    }
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    this.http.get<MeResponse>(`${this.apiUrl}/me`, {headers}).subscribe({
+    this.http.get<MeResponse>(`${this.apiUrl}/me`).subscribe({
       next: (me) => this.roles.set(me.roles),
       error: () => this.logout()
     });

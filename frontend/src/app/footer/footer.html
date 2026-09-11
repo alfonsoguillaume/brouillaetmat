@@ -1,7 +1,22 @@
 <footer class="mon-footer">
-  <p class="contact">CONTACT: brouillaetmat@gmail.com</p>
-  <ul class="foot">
-    <li><a routerLink="/politique-de-confidentialite" routerLinkActive="active">Politique de confidentialité</a></li>
-    <li><a routerLink="/mentions-legales" routerLinkActive="active">Mentions légales</a></li>
-  </ul>
+  <div class="footer-container">
+    <p class="contact">
+      CONTACT :
+      <a href="mailto:brouillaetmat@gmail.com" class="contact-link">brouillaetmat@gmail.com</a>
+    </p>
+
+    <ul class="foot">
+      <li><a routerLink="/politique-de-confidentialite" routerLinkActive="active">Politique de confidentialité</a></li>
+      <li><a routerLink="/mentions-legales" routerLinkActive="active">Mentions légales</a></li>
+    </ul>
+  </div>
+
+  <button class="back-to-top" (click)="scrollToTop()">
+    <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="5" y1="3" x2="19" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="7"></line>
+      <polyline points="6 13 12 7 18 13"></polyline>
+    </svg>
+    <span>Haut de page</span>
+  </button>
 </footer>

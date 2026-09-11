@@ -1,14 +1,20 @@
 <div class="navcomplete">
 
-  <!-- logo avec lien vers l accueil à ajouter-->
+  <!-- logo avec lien vers l accueil à ajouter -->
   <a routerLink="/accueil">logo</a>
-  <nav>
+
+  <!-- Bouton Burger (masqué sur desktop via le CSS à venir) -->
+  <button class="menu-toggle" (click)="toggleMenu()" aria-label="Menu">
+    <span class="burger-icon">&#9776;</span>
+    <span class="menu-text">Menu</span>
+  </button>
+
+  <nav [class.open]="isMenuOpen">
     <ul class="navgauche">
       <li><a routerLink="/accueil" routerLinkActive="active">Accueil</a></li>
       <li><a routerLink="/club" routerLinkActive="active">Club</a></li>
       <li><a routerLink="/bureau" routerLinkActive="active">Bureau</a></li>
       <li><a routerLink="/information" routerLinkActive="active">Information</a></li>
-
       <!-- si connecté -->
       @if (isLoggedIn()) {
         <li><a routerLink="/jouer" routerLinkActive="active">Jouer</a></li>
@@ -16,12 +22,10 @@
       }
     </ul>
 
-
     <ul class="navdroite">
       <!-- si connecté -->
       @if (isLoggedIn()) {
         <!-- Menu pour admin et gestionnaire -->
-
         @if (isAdmin() || isGestionnaire()) {
           <li><a routerLink="/administration" routerLinkActive="active">Administration</a></li>
         }
