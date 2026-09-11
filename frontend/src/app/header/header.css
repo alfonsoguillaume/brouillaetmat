@@ -4,12 +4,16 @@
   box-sizing: border-box;
 }
 
+body {
+  margin: 0; /* Supprime la marge par défaut du navigateur */
+}
+
 .navcomplete {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 10px; /* Écart réduit entre le logo et le menu */
   background-color: #2D302C;
-  padding: 10px 20px;
+  padding: 10px 20px 10px 0; /* 0 à gauche */
   position: relative; /* Requis pour ancrer le menu flottant */
 }
 
@@ -43,13 +47,19 @@ h1 {
   background-color: #2D302C;
   margin: 0;
   padding-bottom: 20px;
+  border-bottom: 3px solid #CE865A;
 }
 
 h1 span {
   color: #D9A24B;
 }
 
-/* Bouton burger avec un contour net et facile à cibler */
+.home-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* menu burger */
 .menu-toggle {
   display: none;
   background: none;
@@ -68,8 +78,8 @@ h1 span {
   font-size: 1.4rem;
 }
 
-/* --- ADAPTATION MOBILE & TABLETTE (1024px et sous) --- */
-@media (max-width: 1024px) {
+/* Responsive < 1200px  */
+@media (max-width: 1200px) {
   .navcomplete {
     justify-content: space-between;
   }
@@ -78,18 +88,17 @@ h1 span {
     display: flex;
   }
 
-  /* Le menu flotte au-dessus du h1 sans le pousser */
   .navcomplete nav {
     display: none;
     position: absolute;
-    top: 100%; /* S'aligne juste sous la barre de navigation */
+    top: 100%;
     left: 0;
     width: 100%;
     background-color: #2D302C;
     flex-direction: column;
     gap: 20px;
     padding: 20px;
-    z-index: 1000; /* Passe au-dessus du reste du site */
+    z-index: 1000;
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
     border-bottom: 3px solid #CE865A;
   }
@@ -105,13 +114,11 @@ h1 span {
     width: 100%;
   }
 
-  /* Séparation visuelle claire pour l'espace membre/connexion */
   .navdroite {
     border-top: 1px solid rgba(206, 134, 90, 0.3);
     padding-top: 16px;
   }
 
-  /* Grands pavés de clics adaptés aux doigts (enfants/seniors) */
   .navcomplete nav a {
     display: block;
     padding: 14px;
@@ -121,7 +128,6 @@ h1 span {
     font-size: 1.2rem;
   }
 
-  /* Met en valeur la page active ou le clic tactile */
   .navcomplete nav a.active,
   .navcomplete nav a:active {
     background-color: #CE865A;
@@ -129,7 +135,10 @@ h1 span {
   }
 }
 
-.home-link {
-  color: inherit; /* Garde la couleur d'origine du texte */
-  text-decoration: none; /* Supprime le soulignement */
+/* logo */
+a img {
+  height: 90px;
+  width: auto;
+  margin-left: -5px;
+  display: block;
 }
