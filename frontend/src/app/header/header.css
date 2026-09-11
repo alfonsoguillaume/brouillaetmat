@@ -2,7 +2,6 @@
 
 * {
   box-sizing: border-box;
-
 }
 
 .navcomplete {
@@ -11,7 +10,7 @@
   gap: 20px;
   background-color: #2D302C;
   padding: 10px 20px;
-
+  position: relative; /* Requis pour ancrer le menu flottant */
 }
 
 .navcomplete nav {
@@ -48,4 +47,84 @@ h1 {
 
 h1 span {
   color: #D9A24B;
+}
+
+/* Bouton burger avec un contour net et facile à cibler */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: 2px solid #CE865A;
+  border-radius: 8px;
+  color: #CE865A;
+  font-size: 1.1rem;
+  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  padding: 8px 14px;
+}
+
+.menu-toggle .burger-icon {
+  font-size: 1.4rem;
+}
+
+/* --- ADAPTATION MOBILE & TABLETTE (1024px et sous) --- */
+@media (max-width: 1024px) {
+  .navcomplete {
+    justify-content: space-between;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  /* Le menu flotte au-dessus du h1 sans le pousser */
+  .navcomplete nav {
+    display: none;
+    position: absolute;
+    top: 100%; /* S'aligne juste sous la barre de navigation */
+    left: 0;
+    width: 100%;
+    background-color: #2D302C;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    z-index: 1000; /* Passe au-dessus du reste du site */
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+    border-bottom: 3px solid #CE865A;
+  }
+
+  .navcomplete nav.open {
+    display: flex;
+  }
+
+  .navgauche,
+  .navdroite {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* Séparation visuelle claire pour l'espace membre/connexion */
+  .navdroite {
+    border-top: 1px solid rgba(206, 134, 90, 0.3);
+    padding-top: 16px;
+  }
+
+  /* Grands pavés de clics adaptés aux doigts (enfants/seniors) */
+  .navcomplete nav a {
+    display: block;
+    padding: 14px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  /* Met en valeur la page active ou le clic tactile */
+  .navcomplete nav a.active,
+  .navcomplete nav a:active {
+    background-color: #CE865A;
+    color: #2D302C;
+  }
 }
