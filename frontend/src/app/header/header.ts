@@ -1,5 +1,6 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {RouterLink, RouterLinkActive} from '@angular/router';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   imports: [RouterLink, RouterLinkActive],
@@ -8,6 +9,8 @@ import {RouterLink, RouterLinkActive} from '@angular/router';
   templateUrl: './header.html',
 })
 export class Header {
+  private authService = inject(AuthService);
+
   // Propriété qui gère l'état d'ouverture du menu sur mobile
   isMenuOpen: boolean = false;
 
@@ -17,18 +20,18 @@ export class Header {
   }
 
   isLoggedIn(): boolean {
-    return false;
+    return this.authService.isLoggedIn();
   }
 
   isAdmin(): boolean {
-    return false;
+    return this.authService.isAdmin();
   }
 
   isGestionnaire(): boolean {
-    return false;
+    return this.authService.isGestionnaire();
   }
 
   logout(): void {
-    console.log('déconnexion (pas encore branchée)');
+    this.authService.logout();
   }
 }
