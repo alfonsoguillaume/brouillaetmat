@@ -1,0 +1,16 @@
+/* --- LIEN MOT DE PASSE OUBLIÉ (Spécifique à la connexion) --- */
+.mdp-oublie {
+  align-self: flex-end;
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #CE865A;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.mdp-oublie:hover,
+.mdp-oublie:focus {
+  color: #D9A24B;
+}
