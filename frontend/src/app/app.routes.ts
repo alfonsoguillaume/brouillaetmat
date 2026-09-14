@@ -11,13 +11,13 @@ import {TournoisComponent} from './tournois-component/tournois-component';
 import {AdministrationComponent} from './administration-component/administration-component';
 import {ProfilComponent} from './profil-component/profil-component';
 import {InscriptionComponent} from './inscription-component/inscription-component';
-
+import {OublieComponent} from './oublie-component/oublie-component';
 
 export const routes: Routes = [
   // Redirection de la racine vers l'accueil
   {path: '', redirectTo: 'accueil', pathMatch: 'full'},
 
-  // Pages principales de navigation
+  // Pages principales
   {path: 'accueil', component: AccueilComponent},
   {path: 'club', component: ClubComponent},
   {path: 'bureau', component: BureauComponent},
@@ -28,11 +28,12 @@ export const routes: Routes = [
   {path: 'profil', component: ProfilComponent},
   {path: 'inscription', component: InscriptionComponent},
   {path: 'connexion', component: ConnexionComponent},
+  {path: 'oublie', component: OublieComponent},
 
-  // Pages du footer
+  // Footer
   {path: 'mentions-legales', component: LegalComponent},
   {path: 'politique-confidentialite', component: PolitiqueComponent},
 
-  // (Optionnel mais conseillé) Redirection si l'URL n'existe pas
+  // Redirection globale
   {path: '**', redirectTo: 'accueil'}
 ];
