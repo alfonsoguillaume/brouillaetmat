@@ -1,10 +1,10 @@
 import {Component, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {AuthService} from '../services/auth.service';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   selector: 'app-connexion-component',
   styleUrl: './connexion-component.css',
   templateUrl: './connexion-component.html',

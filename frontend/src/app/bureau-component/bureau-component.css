@@ -1,0 +1,77 @@
+.bureau-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.bureau-section h2 {
+  color: #D9A24B;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* --- CONTENEUR DES VIGNETTES --- */
+.cards-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch; /* Maintient des cartes de même hauteur */
+  gap: 25px;
+  width: 100%;
+}
+
+/* --- STRUCTURE DE LA VIGNETTE (Statique, aucun effet au survol) --- */
+.vignette {
+  flex: 1;
+  max-width: 350px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid #7D9982;
+  border-top: 4px solid #CE865A; /* Accentuation ocre en haut */
+  border-radius: 10px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+/* --- TEXTES DANS LA VIGNETTE --- */
+.vignette-nom {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #D9A24B;
+  margin: 0 0 8px 0;
+}
+
+.vignette-role {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #CE865A;
+  margin: 0;
+}
+
+/* Séparateur et contact (s'affiche proprement uniquement si présent) */
+.vignette-desc {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #688D6A;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+/* --- RESPONSIVE (MOBILE ET TABLETTE - 900px ET SOUS) --- */
+@media (max-width: 900px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .vignette {
+    width: 100%;
+    max-width: 400px;
+  }
+}

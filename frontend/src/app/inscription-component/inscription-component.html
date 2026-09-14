@@ -1,1 +1,60 @@
-<p>inscription-component works!</p>
+<div class="inscription-page">
+  <h2 class="titre-page">Inscription</h2>
+
+  <p class="info-inscription">
+    Avant l'inscription au site, vous devez <strong>OBLIGATOIREMENT</strong> vous inscrire à l'association.
+  </p>
+
+  <form [formGroup]="inscriptionForm" (ngSubmit)="onSubmit()">
+
+    <div class="form-group">
+      <label class="label" for="nom">Nom*</label>
+      <input type="text" id="nom" formControlName="nom">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="prenom">Prénom*</label>
+      <input type="text" id="prenom" formControlName="prenom">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="pseudo">Pseudo*</label>
+      <input type="text" id="pseudo" formControlName="pseudo">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="email">E-mail*</label>
+      <input type="email" id="email" formControlName="email">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="dateNaissance">Date de naissance*</label>
+      <input type="date" id="dateNaissance" formControlName="dateNaissance" (change)="checkAge()">
+    </div>
+
+    @if (isMineur) {
+      <div class="form-group tuteur-block">
+        <label class="label" for="emailTuteur">E-mail du tuteur légal*</label>
+        <input type="email" id="emailTuteur" formControlName="emailTuteur" placeholder="parent@exemple.fr">
+      </div>
+    }
+
+    <div class="form-group">
+      <label class="label" for="telephone">Téléphone</label>
+      <input type="tel" id="telephone" formControlName="telephone">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="password">Mot de passe*</label>
+      <input type="password" id="password" formControlName="password">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="confirmPassword">Vérification du mot de passe*</label>
+      <input type="password" id="confirmPassword" formControlName="confirmPassword">
+    </div>
+
+    <button type="submit" class="btn-primary">S'inscrire</button>
+
+  </form>
+</div>

@@ -1,0 +1,115 @@
+.info-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.info-section h2 {
+  color: #D9A24B;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* --- CONTENEUR DES 2 VIGNETTES --- */
+.cards-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 30px;
+  width: 100%;
+  max-width: 950px;
+  margin: 0 auto;
+}
+
+/* --- VIGNETTE INFORMATIVE (Immobile) --- */
+.vignette {
+  flex: 1;
+  max-width: 440px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid #7D9982;
+  border-top: 4px solid #CE865A;
+  border-radius: 10px;
+  padding: 28px 24px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  box-sizing: border-box;
+}
+
+/* --- TITRE ET CONTENU --- */
+.vignette-titre {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #D9A24B;
+  margin: 0 0 1rem 0;
+  width: 100%;
+  text-align: center;
+}
+
+.vignette-contenu {
+  width: 100%;
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #688D6A;
+  margin-bottom: 1.5rem;
+}
+
+.vignette-contenu p {
+  margin: 0 0 10px 0;
+}
+
+.vignette-contenu p:last-child {
+  margin-bottom: 0;
+}
+
+.vignette-contenu strong {
+  color: #CE865A;
+}
+
+/* --- LIEN HYPERTEXTE CLASSIQUE (FALC) --- */
+.vignette-lien {
+  margin-top: auto;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #CE865A;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.vignette-lien:hover,
+.vignette-lien:focus {
+  color: #D9A24B;
+  outline: none;
+}
+
+/* --- RESPONSIVE (TABLETTE ET MOBILE - 850px ET SOUS) --- */
+@media (max-width: 850px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .vignette {
+    width: 100%;
+    max-width: 450px;
+  }
+
+  .vignette-titre {
+    text-align: center;
+  }
+
+  .vignette-contenu {
+    text-align: left;
+  }
+}
+
+.don-bene {
+  text-align: center
+}

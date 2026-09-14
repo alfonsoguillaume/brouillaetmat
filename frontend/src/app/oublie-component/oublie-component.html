@@ -1,0 +1,26 @@
+<h2>Mot de passe oublié</h2>
+
+<form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
+
+  <div class="form-fields">
+    <div class="form-group">
+      <label class="label" for="email">E-mail</label>
+      <input
+        type="email"
+        id="email"
+        formControlName="email"
+        placeholder="votre.email@exemple.fr"
+        autocomplete="email">
+
+      <!-- Message d'erreur d'invalidation (FALC) -->
+      @if (forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched) {
+        <span class="erreur">Veuillez entrer une adresse e-mail valide.</span>
+      }
+    </div>
+  </div>
+
+  <button type="submit" class="btn-primary" [disabled]="forgotPasswordForm.invalid">
+    Envoyer le lien de réinitialisation
+  </button>
+
+</form>

@@ -1,6 +1,6 @@
 <div class="navcomplete">
 
-  <a routerLink="/accueil">
+  <a routerLink="/accueil" (click)="closeMenu()">
     <img src="images/logo.png" alt="Logo de Brouilla & Mat">
   </a>
 
@@ -12,14 +12,14 @@
 
   <nav [class.open]="isMenuOpen">
     <ul class="navgauche">
-      <li><a routerLink="/accueil" routerLinkActive="active">Accueil</a></li>
-      <li><a routerLink="/club" routerLinkActive="active">Club</a></li>
-      <li><a routerLink="/bureau" routerLinkActive="active">Bureau</a></li>
-      <li><a routerLink="/information" routerLinkActive="active">Information</a></li>
+      <li><a routerLink="/accueil" routerLinkActive="active" (click)="closeMenu()">Accueil</a></li>
+      <li><a routerLink="/club" routerLinkActive="active" (click)="closeMenu()">Club</a></li>
+      <li><a routerLink="/bureau" routerLinkActive="active" (click)="closeMenu()">Bureau</a></li>
+      <li><a routerLink="/information" routerLinkActive="active" (click)="closeMenu()">Information</a></li>
       <!-- si connecté -->
       @if (isLoggedIn()) {
-        <li><a routerLink="/jouer" routerLinkActive="active">Jouer</a></li>
-        <li><a routerLink="/tournois" routerLinkActive="active">Tournois</a></li>
+        <li><a routerLink="/jouer" routerLinkActive="active" (click)="closeMenu()">Jouer</a></li>
+        <li><a routerLink="/tournois" routerLinkActive="active" (click)="closeMenu()">Tournois</a></li>
       }
     </ul>
 
@@ -28,21 +28,21 @@
       @if (isLoggedIn()) {
         <!-- Menu pour admin et gestionnaire -->
         @if (isAdmin() || isGestionnaire()) {
-          <li><a routerLink="/administration" routerLinkActive="active">Administration</a></li>
+          <li><a routerLink="/administration" routerLinkActive="active" (click)="closeMenu()">Administration</a></li>
         }
-        <li><a routerLink="/profil" routerLinkActive="active">Profil</a></li>
-        <li><a routerLink="/accueil" (click)="logout()">Déconnexion</a></li>
+        <li><a routerLink="/profil" routerLinkActive="active" (click)="closeMenu()">Profil</a></li>
+        <li><a routerLink="/accueil" (click)="logout(); closeMenu()">Déconnexion</a></li>
       } @else {
         <!-- si non connecté -->
-        <li><a routerLink="/inscription" routerLinkActive="active">Inscription</a></li>
-        <li><a routerLink="/connexion" routerLinkActive="active">Connexion</a></li>
+        <li><a routerLink="/inscription" routerLinkActive="active" (click)="closeMenu()">Inscription</a></li>
+        <li><a routerLink="/connexion" routerLinkActive="active" (click)="closeMenu()">Connexion</a></li>
       }
     </ul>
   </nav>
 </div>
 
 <h1>
-  <a [routerLink]="['/accueil']" class="home-link">
+  <a [routerLink]="['/accueil']" class="home-link" (click)="closeMenu()">
     Brouilla <span>&amp;</span> Mat
   </a>
 </h1>

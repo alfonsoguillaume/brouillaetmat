@@ -1,0 +1,28 @@
+
+.info-inscription {
+  width: 100%;
+  max-width: 400px;
+  background-color: rgba(206, 134, 90, 0.12);
+  border-left: 4px solid #CE865A;
+  color: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 0.85rem 1rem;
+  border-radius: 6px;
+  margin: 0 auto 1.5rem auto;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.info-inscription strong {
+  color: #D9A24B;
+}
+
+
+.tuteur-block {
+  background-color: rgba(125, 153, 130, 0.1);
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #7D9982;
+  box-sizing: border-box;
+}
