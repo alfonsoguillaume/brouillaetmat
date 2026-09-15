@@ -1,4 +1,4 @@
-<script src="../../../../../../../Users/guill/Downloads/admin.service.ts"></script>
+<script src="../../../../../../../Users/guill/Downloads/administration-component.ts"></script>
 <button class="btn-notif" (click)="ouvrirModale()">
   Inscriptions en attente
   @if (inscriptions.length > 0) {
@@ -19,7 +19,7 @@
         <div class="carte-inscription">
           <p><strong>{{ inscription.nom }} {{ inscription.prenom }}</strong> ({{ inscription.pseudo }})</p>
           <p>Email : {{ inscription.email }}</p>
-          <p>Date de naissance : {{ inscription.date_naissance }}</p>
+          <p>Date de naissance : {{ inscription.date_naissance | date:'dd/MM/yyyy' }}</p>
           @if (inscription.telephone) {
             <p>Téléphone : {{ inscription.telephone }}</p>
           }

@@ -25,6 +25,64 @@ class InscriptionController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        // 1. Champs obligatoires : on vérifie leur présence avant d'y toucher,
+        // pour éviter un plantage PHP brut si l'un d'eux manque.
+        $champsRequis = ['nom', 'prenom', 'pseudo', 'email', 'date_naissance', 'password'];
+        foreach ($champsRequis as $champ) {
+            if (empty($data[$champ])) {
+                return $this->json(['message' => "Le champ \"$champ\" est obligatoire."], 400);
+            }
+        }
+
+        // 2. Format de l'email : ne jamais faire confiance au frontend pour ça.
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['message' => 'Le format de l\'email est invalide.'], 400);
+        }
+
+        // 3. Longueur minimale du mot de passe.
+        if (strlen($data['password']) < 8) {
+            return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères.'], 400);
+        }
+
+        // 4. Cohérence de la date de naissance.
+        try {
+            $dateNaissance = new \DateTime($data['date_naissance']);
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'La date de naissance est invalide.'], 400);
+        }
+
+        $aujourdhui = new \DateTime();
+        if ($dateNaissance > $aujourdhui) {
+            return $this->json(['message' => 'La date de naissance ne peut pas être dans le futur.'], 400);
+        }
+
+        $age = $aujourdhui->diff($dateNaissance)->y;
+        if ($age > 120) {
+            return $this->json(['message' => 'La date de naissance est invalide.'], 400);
+        }
+
+        // 5. Cohérence email du tuteur / minorité.
+        $estMineur = $age < 18;
+        if ($estMineur && empty($data['email_tuteur'])) {
+            return $this->json(['message' => 'L\'email du tuteur légal est obligatoire pour un membre mineur.'], 400);
+        }
+
+        if (!empty($data['email_tuteur']) && !filter_var($data['email_tuteur'], FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['message' => 'Le format de l\'email du tuteur légal est invalide.'], 400);
+        }
+
+        if (!empty($data['email_tuteur']) && strtolower($data['email']) === strtolower($data['email_tuteur'])) {
+            return $this->json(['message' => 'L\'email du membre et l\'email du tuteur doivent être différents.'], 400);
+        }
+
+        // 6. Format du téléphone (champ optionnel, mais vérifié s'il est rempli).
+        if (!empty($data['telephone'])) {
+            $telephoneNettoye = preg_replace('/\s+/', '', $data['telephone']);
+            if (!preg_match('/^0\d{9}$/', $telephoneNettoye)) {
+                return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
+            }
+        }
+
         $utilisateurRepository = $em->getRepository(Utilisateur::class);
 
         if ($utilisateurRepository->findOneBy(['email' => $data['email']])) {
@@ -41,7 +99,7 @@ class InscriptionController extends AbstractController
         $utilisateur->setPseudo($data['pseudo']);
         $utilisateur->setEmail($data['email']);
         $utilisateur->setRole('membre');
-        $utilisateur->setDateNaissance(new \DateTime($data['date_naissance']));
+        $utilisateur->setDateNaissance($dateNaissance);
         $utilisateur->setStatutInscription('en_attente');
         $utilisateur->setTelephone($data['telephone'] ?? null);
         $utilisateur->setEmailTuteur($data['email_tuteur'] ?? null);

@@ -54,6 +54,14 @@
       <input type="password" id="confirmPassword" formControlName="confirmPassword">
     </div>
 
+    @if (messagesErreursFormulaire.length > 0) {
+      <div class="erreur">
+        @for (msg of messagesErreursFormulaire; track msg) {
+          <p>{{ msg }}</p>
+        }
+      </div>
+    }
+
     @if (messageErreur) {
       <p class="erreur">{{ messageErreur }}</p>
     }

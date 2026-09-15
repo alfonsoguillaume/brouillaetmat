@@ -1,8 +1,9 @@
 import {ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
+import {DatePipe} from '@angular/common';
 import {AdminService, InscriptionEnAttente} from '../services/admin.service';
 
 @Component({
-  imports: [],
+  imports: [DatePipe],
   selector: 'app-administration-component',
   styleUrl: './administration-component.css',
   templateUrl: './administration-component.html',
