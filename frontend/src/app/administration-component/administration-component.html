@@ -1,1 +1,54 @@
-<p>administration-component works!</p>
+<script src="../../../../../../../Users/guill/Downloads/admin.service.ts"></script>
+<button class="btn-notif" (click)="ouvrirModale()">
+  Inscriptions en attente
+  @if (inscriptions.length > 0) {
+    <span class="badge">{{ inscriptions.length }}</span>
+  }
+</button>
+
+@if (modaleOuverte) {
+  <div class="modale-overlay" (click)="fermerModale()">
+    <div class="modale-contenu" (click)="$event.stopPropagation()">
+      <h2>Inscriptions en attente</h2>
+
+      @if (inscriptions.length === 0) {
+        <p>Aucune inscription en attente.</p>
+      }
+
+      @for (inscription of inscriptions; track inscription.id) {
+        <div class="carte-inscription">
+          <p><strong>{{ inscription.nom }} {{ inscription.prenom }}</strong> ({{ inscription.pseudo }})</p>
+          <p>Email : {{ inscription.email }}</p>
+          <p>Date de naissance : {{ inscription.date_naissance }}</p>
+          @if (inscription.telephone) {
+            <p>Téléphone : {{ inscription.telephone }}</p>
+          }
+          @if (inscription.email_tuteur) {
+            <p>Email du tuteur : {{ inscription.email_tuteur }}</p>
+          }
+
+          <div class="actions">
+            <button class="btn-valider" (click)="demanderConfirmation(inscription.id, 'valider')">Valider</button>
+            <button class="btn-refuser" (click)="demanderConfirmation(inscription.id, 'refuser')">Refuser</button>
+          </div>
+        </div>
+      }
+
+      <button class="btn-fermer" (click)="fermerModale()">Fermer</button>
+    </div>
+  </div>
+}
+
+@if (confirmationEnCours) {
+  <div class="confirmation-overlay">
+    <div class="confirmation-contenu">
+      @if (confirmationEnCours.action === 'valider') {
+        <p>Êtes-vous sûr de vouloir l'ajouter au site ?</p>
+      } @else {
+        <p>Êtes-vous sûr de vouloir le refuser et supprimer sa demande ?</p>
+      }
+      <button (click)="confirmer()">Oui</button>
+      <button (click)="annulerConfirmation()">Annuler</button>
+    </div>
+  </div>
+}

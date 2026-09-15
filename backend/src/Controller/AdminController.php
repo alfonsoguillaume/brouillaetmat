@@ -12,9 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class AdminController extends AbstractController
 {
     /**
-     * Liste tous les comptes en attente de validation.
-     * Route déjà protégée globalement (voir security.yaml : ^/api/admin => ROLE_ADMIN).
-     */
+     * Liste tous les comptes en attente de validation.*/
     #[Route('/api/admin/inscriptions', name: 'api_admin_inscriptions_liste', methods: ['GET'])]
     public function listeInscriptionsEnAttente(EntityManagerInterface $em): JsonResponse
     {
@@ -39,7 +37,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * Valide un compte : passe son statut à "valide".
+     * Valide un compte".
      */
     #[Route('/api/admin/inscriptions/{id}/valider', name: 'api_admin_inscription_valider', methods: ['PATCH'])]
     public function validerInscription(int $id, EntityManagerInterface $em): JsonResponse
