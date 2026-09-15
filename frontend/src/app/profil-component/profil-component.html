@@ -1,1 +1,98 @@
-<p>profil-component works!</p>
+<div class="profil-page">
+  <h2 class="titre-page">Mon profil</h2>
+
+  @if (chargementEnCours) {
+    <p>Chargement de vos informations...</p>
+  }
+
+  @if (!chargementEnCours) {
+
+    <div class="infos-fixes">
+      <p><strong>E-mail de connexion :</strong> {{ email }}</p>
+      <p><strong>Date de naissance :</strong> {{ dateNaissance | date:'dd/MM/yyyy' }}</p>
+    </div>
+
+    <form [formGroup]="profilForm" (ngSubmit)="enregistrerProfil()">
+
+      <div class="form-group">
+        <label class="label" for="nom">Nom*</label>
+        <input type="text" id="nom" formControlName="nom">
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="prenom">Prénom*</label>
+        <input type="text" id="prenom" formControlName="prenom">
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="pseudo">Pseudo*</label>
+        <input type="text" id="pseudo" formControlName="pseudo">
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="telephone">Téléphone</label>
+        <input type="tel" id="telephone" formControlName="telephone">
+      </div>
+
+      @if (isMineur) {
+        <div class="form-group tuteur-block">
+          <label class="label" for="emailTuteur">E-mail du tuteur légal*</label>
+          <input type="email" id="emailTuteur" formControlName="emailTuteur">
+        </div>
+      }
+
+      @if (messagesErreursProfil.length > 0) {
+        <div class="erreur">
+          @for (msg of messagesErreursProfil; track msg) {
+            <p>{{ msg }}</p>
+          }
+        </div>
+      }
+
+      @if (messageSuccesProfil) {
+        <p class="succes">{{ messageSuccesProfil }}</p>
+      }
+
+      <button type="submit" class="btn-primary">Enregistrer mes informations</button>
+
+    </form>
+
+    <hr>
+
+    <h3>Changer mon mot de passe</h3>
+
+    <form [formGroup]="motDePasseForm" (ngSubmit)="changerMotDePasse()">
+
+      <div class="form-group">
+        <label class="label" for="motDePasseActuel">Mot de passe actuel*</label>
+        <input type="password" id="motDePasseActuel" formControlName="motDePasseActuel">
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="nouveauMotDePasse">Nouveau mot de passe*</label>
+        <input type="password" id="nouveauMotDePasse" formControlName="nouveauMotDePasse">
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="confirmationNouveauMotDePasse">Vérification du nouveau mot de passe*</label>
+        <input type="password" id="confirmationNouveauMotDePasse" formControlName="confirmationNouveauMotDePasse">
+      </div>
+
+      @if (messagesErreursMotDePasse.length > 0) {
+        <div class="erreur">
+          @for (msg of messagesErreursMotDePasse; track msg) {
+            <p>{{ msg }}</p>
+          }
+        </div>
+      }
+
+      @if (messageSuccesMotDePasse) {
+        <p class="succes">{{ messageSuccesMotDePasse }}</p>
+      }
+
+      <button type="submit" class="btn-primary">Changer mon mot de passe</button>
+
+    </form>
+
+  }
+</div>
