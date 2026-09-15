@@ -1,0 +1,34 @@
+### 1. Connexion — copie le token reçu dans la réponse
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Voir mon profil (colle le token obtenu à l'étape 1)
+GET http://localhost:8000/api/profil
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk0NzY3MzMsImV4cCI6MTc4OTQ4MDMzMywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.I9tGprFOAWTShG3HTZdUjgC0Xy_7aWXF0MhtyIB5UAr6gQ1bW6bY0Ob70hXjBr32I9S17PVZ6-dwM0iloq9C6Q_oggzFlQWWU5obgEpHc4yGtSo9wQemetEf6JhfQDYoJqdmu2BdEmbTqR4vXFglBJnJN6pytT8cjgAvKWbN05sn1IwE-1U4BoZMmtcyWCezoU5GtKfgvRxSc0eQ0L7XckM4rFRoUGhz9qgazjc7QujbeZiY4L1K6nh9rVlBrseGqxAEUs7VLWp6YhdC0a_CjaQvopBQnUIk2gN5zLKjhm1Kr1w9dHWSXoN3b58alf5Q_XJGN0qnszMBPRTH-ZV3TA
+
+### 3. Modifier mon profil
+PATCH http://localhost:8000/api/profil
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk0NzY3MzMsImV4cCI6MTc4OTQ4MDMzMywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.I9tGprFOAWTShG3HTZdUjgC0Xy_7aWXF0MhtyIB5UAr6gQ1bW6bY0Ob70hXjBr32I9S17PVZ6-dwM0iloq9C6Q_oggzFlQWWU5obgEpHc4yGtSo9wQemetEf6JhfQDYoJqdmu2BdEmbTqR4vXFglBJnJN6pytT8cjgAvKWbN05sn1IwE-1U4BoZMmtcyWCezoU5GtKfgvRxSc0eQ0L7XckM4rFRoUGhz9qgazjc7QujbeZiY4L1K6nh9rVlBrseGqxAEUs7VLWp6YhdC0a_CjaQvopBQnUIk2gN5zLKjhm1Kr1w9dHWSXoN3b58alf5Q_XJGN0qnszMBPRTH-ZV3TA
+Content-Type: application/json
+
+{
+    "nom": "Test",
+    "prenom": "Utilisateur",
+    "pseudo": "testadmin",
+    "telephone": "0612345678"
+}
+
+### 4. Changer mon mot de passe (attention : le nouveau mot de passe sera actif après ce test !)
+PATCH http://localhost:8000/api/profil/mot-de-passe
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk0NzY3MzMsImV4cCI6MTc4OTQ4MDMzMywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.I9tGprFOAWTShG3HTZdUjgC0Xy_7aWXF0MhtyIB5UAr6gQ1bW6bY0Ob70hXjBr32I9S17PVZ6-dwM0iloq9C6Q_oggzFlQWWU5obgEpHc4yGtSo9wQemetEf6JhfQDYoJqdmu2BdEmbTqR4vXFglBJnJN6pytT8cjgAvKWbN05sn1IwE-1U4BoZMmtcyWCezoU5GtKfgvRxSc0eQ0L7XckM4rFRoUGhz9qgazjc7QujbeZiY4L1K6nh9rVlBrseGqxAEUs7VLWp6YhdC0a_CjaQvopBQnUIk2gN5zLKjhm1Kr1w9dHWSXoN3b58alf5Q_XJGN0qnszMBPRTH-ZV3TA
+Content-Type: application/json
+
+{
+    "mot_de_passe_actuel": "motdepasse123",
+    "nouveau_mot_de_passe": "NouveauMotDePasse123!"
+}

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
@@ -12,7 +11,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class AdminController extends AbstractController
 {
     /**
-     * Liste tous les comptes en attente de validation.*/
+     * Liste tous les comptes en attente de validation.
+     * Route déjà protégée globalement (voir security.yaml : ^/api/admin => ROLE_ADMIN).
+     */
     #[Route('/api/admin/inscriptions', name: 'api_admin_inscriptions_liste', methods: ['GET'])]
     public function listeInscriptionsEnAttente(EntityManagerInterface $em): JsonResponse
     {
@@ -37,9 +38,9 @@ class AdminController extends AbstractController
     }
 
     /**
-     * Valide un compte".
+     * Valide un compte : passe son statut à "valide".
      */
-    #[Route('/api/admin/inscriptions/{id}/valider', name: 'api_admin_inscription_valider', methods: ['PATCH'])]
+    #[Route('/api/admin/inscriptions/{id<\d+>}/valider', name: 'api_admin_inscription_valider', methods: ['PATCH'])]
     public function validerInscription(int $id, EntityManagerInterface $em): JsonResponse
     {
         $utilisateur = $em->getRepository(Utilisateur::class)->find($id);
@@ -57,7 +58,7 @@ class AdminController extends AbstractController
     /**
      * Refuse un compte : supprime définitivement la demande d'inscription.
      */
-    #[Route('/api/admin/inscriptions/{id}/refuser', name: 'api_admin_inscription_refuser', methods: ['DELETE'])]
+    #[Route('/api/admin/inscriptions/{id<\d+>}/refuser', name: 'api_admin_inscription_refuser', methods: ['DELETE'])]
     public function refuserInscription(int $id, EntityManagerInterface $em): JsonResponse
     {
         $utilisateur = $em->getRepository(Utilisateur::class)->find($id);

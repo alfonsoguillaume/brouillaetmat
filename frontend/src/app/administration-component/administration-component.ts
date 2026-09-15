@@ -1,6 +1,7 @@
 import {ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
 import {DatePipe} from '@angular/common';
 import {AdminService, InscriptionEnAttente} from '../services/admin.service';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   imports: [DatePipe],
@@ -10,14 +11,24 @@ import {AdminService, InscriptionEnAttente} from '../services/admin.service';
 })
 export class AdministrationComponent implements OnInit {
   private adminService = inject(AdminService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   inscriptions: InscriptionEnAttente[] = [];
   modaleOuverte = false;
   confirmationEnCours: { id: number; action: 'valider' | 'refuser' } | null = null;
 
+  estAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
   ngOnInit(): void {
-    this.chargerInscriptions();
+    // Seul un admin a le droit d'appeler ces routes côté Symfony (ROLE_ADMIN) —
+    // inutile de charger la liste si ce n'est pas le cas, ça éviterait juste
+    // une erreur 403 sans intérêt pour un gestionnaire.
+    if (this.estAdmin()) {
+      this.chargerInscriptions();
+    }
   }
 
   chargerInscriptions(): void {
