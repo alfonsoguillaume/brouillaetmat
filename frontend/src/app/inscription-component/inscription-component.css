@@ -26,3 +26,18 @@
   border-left: 4px solid #7D9982;
   box-sizing: border-box;
 }
+
+.erreur {
+  width: 100%;
+  max-width: 400px;
+  background-color: rgba(200, 60, 60, 0.15);
+  border-left: 4px solid #C83C3C;
+  color: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin: 1rem auto 1rem auto;
+  box-sizing: border-box;
+  text-align: center;
+}

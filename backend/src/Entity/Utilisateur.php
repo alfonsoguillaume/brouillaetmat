@@ -7,8 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
@@ -24,7 +24,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 191, unique: true)]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -41,6 +41,15 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private ?bool $consentement_parental = null;
+
+    #[ORM\Column(length: 191, unique: true)]
+    private ?string $pseudo = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $telephone = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $email_tuteur = null;
 
     /**
      * @var Collection<int, Article>
@@ -185,6 +194,42 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setConsentementParental(bool $consentement_parental): static
     {
         $this->consentement_parental = $consentement_parental;
+
+        return $this;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(string $pseudo): static
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    public function getTelephone(): ?string
+    {
+        return $this->telephone;
+    }
+
+    public function setTelephone(?string $telephone): static
+    {
+        $this->telephone = $telephone;
+
+        return $this;
+    }
+
+    public function getEmailTuteur(): ?string
+    {
+        return $this->email_tuteur;
+    }
+
+    public function setEmailTuteur(?string $email_tuteur): static
+    {
+        $this->email_tuteur = $email_tuteur;
 
         return $this;
     }
@@ -340,11 +385,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     Email sert à retrouver le bon login
+     * Email sert à retrouver le bon login
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string)$this->email;
     }
 
     /**
@@ -360,7 +405,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     Rècupèration et comparation du mot de passe (hashé) lors du login
+     * Rècupèration et comparation du mot de passe (hashé) lors du login
      */
     public function getPassword(): ?string
     {

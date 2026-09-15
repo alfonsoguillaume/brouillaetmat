@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
@@ -10,6 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+
 class InscriptionController extends AbstractController
 {
     /**
@@ -25,16 +25,30 @@ class InscriptionController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        $utilisateurRepository = $em->getRepository(Utilisateur::class);
+
+        if ($utilisateurRepository->findOneBy(['email' => $data['email']])) {
+            return $this->json(['message' => 'Cet email est déjà utilisé.'], 409);
+        }
+
+        if ($utilisateurRepository->findOneBy(['pseudo' => $data['pseudo']])) {
+            return $this->json(['message' => 'Ce pseudo est déjà utilisé.'], 409);
+        }
+
         $utilisateur = new Utilisateur();
         $utilisateur->setNom($data['nom']);
         $utilisateur->setPrenom($data['prenom']);
+        $utilisateur->setPseudo($data['pseudo']);
         $utilisateur->setEmail($data['email']);
         $utilisateur->setRole('membre');
         $utilisateur->setDateNaissance(new \DateTime($data['date_naissance']));
         $utilisateur->setStatutInscription('en_attente');
-        $utilisateur->setConsentementParental($data['consentement_parental'] ?? false);
+        $utilisateur->setTelephone($data['telephone'] ?? null);
+        $utilisateur->setEmailTuteur($data['email_tuteur'] ?? null);
+        // Le consentement est considéré donné si un email de tuteur a été fourni (mineur).
+        $utilisateur->setConsentementParental(!empty($data['email_tuteur']));
 
-        // On hashe le mot de passe avant de le stocker
+        // On hashe le mot de passe avant de le stocker : jamais de mot de passe en clair en base.
         $utilisateur->setMotDePasse(
             $passwordHasher->hashPassword($utilisateur, $data['password'])
         );
@@ -49,7 +63,7 @@ class InscriptionController extends AbstractController
 
     /**
      * Route protégée (nécessite un token JWT valide) : renvoie l'identité
-     * de l'utilisateur connecté. Utile pour qu'Angular sache
+     * de l'utilisateur actuellement connecté. Utile pour qu'Angular sache
      * "qui est connecté" et avec quel rôle, juste après le login.
      */
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
