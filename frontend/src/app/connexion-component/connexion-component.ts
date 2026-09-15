@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {ChangeDetectorRef, Component, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
 import {AuthService} from '../services/auth.service';
@@ -12,6 +12,7 @@ import {AuthService} from '../services/auth.service';
 export class ConnexionComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   email: string = '';
   password: string = '';
@@ -25,13 +26,11 @@ export class ConnexionComponent {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        if (err.status === 401) {
-          this.messageErreur = 'Email ou mot de passe incorrect.';
-        } else if (err.status === 403) {
-          this.messageErreur = 'Votre inscription est en attente de validation par un administrateur.';
-        } else {
-          this.messageErreur = 'Une erreur est survenue, réessaie plus tard.';
-        }
+        const message = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';
+        this.messageErreur = message === 'Invalid credentials.'
+          ? 'Email ou mot de passe incorrect.'
+          : message;
+        this.cdr.detectChanges();
       }
     });
   }

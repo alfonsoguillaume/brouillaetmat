@@ -1,1 +1,60 @@
-<p>club-component works!</p>
+<section class="club-container">
+  <h2 #topClub tabindex="-1">Actualités du Club</h2>
+
+  <!-- Grille des vignettes de la page active -->
+  <div class="articles-grid">
+    @for (article of articlesAffiches(); track article.id) {
+      <article class="article-card" (click)="ouvrirModale(article)">
+        <div class="image-wrapper" [class.flou]="!authService.isLoggedIn()">
+          <img [src]="article.imageUrl" [alt]="article.titre">
+          @if (!authService.isLoggedIn()) {
+            <span class="badge-restreint">Connexion requise</span>
+          }
+        </div>
+        <h3>{{ article.titre }}</h3>
+      </article>
+    }
+  </div>
+
+  <!-- Barre de pagination FALC -->
+  @if (totalPages() > 1) {
+    <nav class="pagination-falc" aria-label="Navigation dans les articles">
+      <button
+        type="button"
+        class="btn-primary btn-page"
+        [disabled]="pageActuelle() === 1"
+        (click)="changerPage(pageActuelle() - 1)">
+        ← Page précédente
+      </button>
+
+      <span class="page-indicateur">
+        Page <strong>{{ pageActuelle() }}</strong> sur <strong>{{ totalPages() }}</strong>
+      </span>
+
+      <button
+        type="button"
+        class="btn-primary btn-page"
+        [disabled]="pageActuelle() === totalPages()"
+        (click)="changerPage(pageActuelle() + 1)">
+        Page suivante →
+      </button>
+    </nav>
+  }
+
+  <!-- Modale d'affichage de l'article -->
+  @if (articleSelectionne(); as article) {
+    <div class="modal-overlay" (click)="fermerModale()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button type="button" class="btn-close" (click)="fermerModale()">×</button>
+
+        <h2>{{ article.titre }}</h2>
+
+        <div class="modal-image-wrapper" [class.flou]="!authService.isLoggedIn()">
+          <img [src]="article.imageUrl" [alt]="article.titre">
+        </div>
+
+        <p class="article-texte">{{ article.contenu }}</p>
+      </div>
+    </div>
+  }
+</section>

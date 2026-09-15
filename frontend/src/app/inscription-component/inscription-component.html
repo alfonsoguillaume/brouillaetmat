@@ -54,6 +54,10 @@
       <input type="password" id="confirmPassword" formControlName="confirmPassword">
     </div>
 
+    @if (messageErreur) {
+      <p class="erreur">{{ messageErreur }}</p>
+    }
+
     <button type="submit" class="btn-primary">S'inscrire</button>
 
   </form>
