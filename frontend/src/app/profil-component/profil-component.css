@@ -1,0 +1,34 @@
+.profil-page {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.infos-fixes {
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.infos-fixes p {
+  margin: 0.25rem 0;
+}
+
+hr {
+  border: none;
+  border-top: 1.5px solid #7D9982;
+  margin: 2rem 0;
+}
+
+h3 {
+  text-align: center;
+  color: #688D6A;
+}
+
+.succes {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #688D6A;
+  margin-top: 0.5rem;
+}

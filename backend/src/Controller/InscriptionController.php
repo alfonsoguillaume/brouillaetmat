@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 
 class InscriptionController extends AbstractController
@@ -18,11 +20,21 @@ class InscriptionController extends AbstractController
      */
     #[Route('/api/inscription', name: 'api_inscription', methods: ['POST'])]
     public function inscription(
-        Request                     $request,
-        EntityManagerInterface      $em,
-        UserPasswordHasherInterface $passwordHasher
+        Request                                                        $request,
+        EntityManagerInterface                                         $em,
+        UserPasswordHasherInterface                                    $passwordHasher,
+        #[Autowire(service: 'limiter.inscription')] RateLimiterFactory $inscriptionLimiter
     ): JsonResponse
     {
+        // Anti-spam : limite le nombre d'inscriptions par adresse IP,
+        // pour éviter qu'un robot crée des centaines de faux comptes.
+        $limiteur = $inscriptionLimiter->create($request->getClientIp());
+        if (!$limiteur->consume(1)->isAccepted()) {
+            return $this->json([
+                'message' => 'Trop de tentatives d\'inscription. Réessayez plus tard.',
+            ], 429);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         // 1. Champs obligatoires : on vérifie leur présence avant d'y toucher,
