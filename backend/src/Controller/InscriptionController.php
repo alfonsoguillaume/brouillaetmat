@@ -39,9 +39,31 @@ class InscriptionController extends AbstractController
             return $this->json(['message' => 'Le format de l\'email est invalide.'], 400);
         }
 
-        // 3. Longueur minimale du mot de passe.
-        if (strlen($data['password']) < 8) {
-            return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères.'], 400);
+        // 3. Complexité du mot de passe : 12 caractères minimum, avec au moins
+        // une majuscule, une minuscule, un chiffre et un caractère spécial.
+        $motDePasse = $data['password'];
+        $erreursMotDePasse = [];
+
+        if (strlen($motDePasse) < 12) {
+            $erreursMotDePasse[] = '12 caractères minimum';
+        }
+        if (!preg_match('/[A-Z]/', $motDePasse)) {
+            $erreursMotDePasse[] = 'une majuscule';
+        }
+        if (!preg_match('/[a-z]/', $motDePasse)) {
+            $erreursMotDePasse[] = 'une minuscule';
+        }
+        if (!preg_match('/\d/', $motDePasse)) {
+            $erreursMotDePasse[] = 'un chiffre';
+        }
+        if (!preg_match('/[^A-Za-z0-9]/', $motDePasse)) {
+            $erreursMotDePasse[] = 'un caractère spécial';
+        }
+
+        if (!empty($erreursMotDePasse)) {
+            return $this->json([
+                'message' => 'Le mot de passe doit contenir : ' . implode(', ', $erreursMotDePasse) . '.',
+            ], 400);
         }
 
         // 4. Cohérence de la date de naissance.

@@ -21,6 +21,25 @@ function telephoneValidator(control: AbstractControl): ValidationErrors | null {
   return /^0\d{9}$/.test(nettoye) ? null : {telephoneInvalide: true};
 }
 
+// Vérifie les 5 règles de complexité du mot de passe. Renvoie un objet
+// listant TOUTES les règles manquantes (pas juste la première trouvée),
+// pour que le message FALC puisse tout afficher en une fois.
+function motDePasseValidator(control: AbstractControl): ValidationErrors | null {
+  const valeur = control.value;
+  if (!valeur) {
+    return null; // champ vide : Validators.required s'en charge séparément
+  }
+
+  const erreurs: ValidationErrors = {};
+  if (valeur.length < 12) erreurs['longueur'] = true;
+  if (!/[A-Z]/.test(valeur)) erreurs['majuscule'] = true;
+  if (!/[a-z]/.test(valeur)) erreurs['minuscule'] = true;
+  if (!/\d/.test(valeur)) erreurs['chiffre'] = true;
+  if (!/[^A-Za-z0-9]/.test(valeur)) erreurs['special'] = true;
+
+  return Object.keys(erreurs).length > 0 ? erreurs : null;
+}
+
 @Component({
   selector: 'app-inscription',
   standalone: true,
@@ -49,7 +68,6 @@ export class InscriptionComponent {
     dateNaissance: 'la date de naissance',
     emailTuteur: "l'e-mail du tuteur légal",
     telephone: 'le téléphone',
-    password: 'le mot de passe',
     confirmPassword: 'la vérification du mot de passe'
   };
 
@@ -61,7 +79,7 @@ export class InscriptionComponent {
     dateNaissance: ['', Validators.required],
     emailTuteur: [''],
     telephone: ['', telephoneValidator],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    password: ['', [Validators.required, motDePasseValidator]],
     confirmPassword: ['', Validators.required]
   });
 
@@ -92,12 +110,38 @@ export class InscriptionComponent {
   }
 
   /**
-   * Construit une liste de messages simples et précis, un par champ en erreur.
+   * Construit une liste de messages simples et précis, un par problème détecté.
    * Principe FALC : une phrase courte, une seule idée, pas d'ambiguïté.
    */
   private construireMessagesErreurs(): string[] {
     const messages: string[] = [];
 
+    // Cas particulier du mot de passe : plusieurs règles peuvent manquer en
+    // même temps, on les liste toutes plutôt qu'une seule à la fois.
+    const passwordControle = this.inscriptionForm.get('password');
+    if (passwordControle && passwordControle.invalid) {
+      if (passwordControle.errors?.['required']) {
+        messages.push('Remplissez le mot de passe.');
+      } else {
+        if (passwordControle.errors?.['longueur']) {
+          messages.push('Le mot de passe doit avoir au moins 12 caractères.');
+        }
+        if (passwordControle.errors?.['majuscule']) {
+          messages.push('Le mot de passe doit avoir au moins une majuscule (A, B, C...).');
+        }
+        if (passwordControle.errors?.['minuscule']) {
+          messages.push('Le mot de passe doit avoir au moins une minuscule (a, b, c...).');
+        }
+        if (passwordControle.errors?.['chiffre']) {
+          messages.push('Le mot de passe doit avoir au moins un chiffre (0 à 9).');
+        }
+        if (passwordControle.errors?.['special']) {
+          messages.push('Le mot de passe doit avoir au moins un caractère spécial, par exemple : ! ? # @.');
+        }
+      }
+    }
+
+    // Tous les autres champs : un seul type d'erreur possible à la fois.
     for (const cle in this.nomsChamps) {
       const controle = this.inscriptionForm.get(cle);
       if (!controle || controle.valid) {
@@ -110,8 +154,6 @@ export class InscriptionComponent {
         messages.push(`Remplissez ${nomLisible}.`);
       } else if (controle.errors?.['email']) {
         messages.push(`Écrivez ${nomLisible} avec un @, par exemple : nom@exemple.fr.`);
-      } else if (controle.errors?.['minlength']) {
-        messages.push(`Le mot de passe doit avoir au moins 8 lettres ou chiffres.`);
       } else if (controle.errors?.['telephoneInvalide']) {
         messages.push(`Écrivez le téléphone avec 10 chiffres, en commençant par 0. Exemple : 0612345678.`);
       }
