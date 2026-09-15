@@ -27,11 +27,28 @@ export class ConnexionComponent {
       },
       error: (err) => {
         const message = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';
-        this.messageErreur = message === 'Invalid credentials.'
-          ? 'Email ou mot de passe incorrect.'
-          : message;
+        this.messageErreur = this.traduireMessage(message);
         this.cdr.detectChanges();
       }
     });
+  }
+
+  /**
+   * Symfony renvoie certains messages d'erreur en anglais par défaut.
+   * On les traduit ici pour un affichage cohérent en français.
+   */
+  private traduireMessage(message: string): string {
+    if (message === 'Invalid credentials.') {
+      return 'Email ou mot de passe incorrect.';
+    }
+
+    // Ex: "Too many failed login attempts, please try again in 15 minutes."
+    const correspondance = message.match(/Too many failed login attempts.*?(\d+)\s*minute/i);
+    if (correspondance) {
+      const minutes = correspondance[1];
+      return `Trop de tentatives de connexion. Réessayez dans ${minutes} minutes.`;
+    }
+
+    return message;
   }
 }
