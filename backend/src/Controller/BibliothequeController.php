@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Controller;
 
 use App\Entity\ArchiveEmprunt;
@@ -49,6 +48,10 @@ class BibliothequeController extends AbstractController
             return $this->json(['message' => 'Le titre et l\'auteur sont obligatoires.'], 400);
         }
 
+        if (strlen($data['titre']) > 255 || strlen($data['auteur']) > 255) {
+            return $this->json(['message' => 'Le titre et l\'auteur ne doivent pas dépasser 255 caractères.'], 400);
+        }
+
         $ouvrage = new Ouvrage();
         $ouvrage->setTitre($data['titre']);
         $ouvrage->setAuteur($data['auteur']);
@@ -71,6 +74,10 @@ class BibliothequeController extends AbstractController
 
         if (empty($data['titre']) || empty($data['auteur'])) {
             return $this->json(['message' => 'Le titre et l\'auteur sont obligatoires.'], 400);
+        }
+
+        if (strlen($data['titre']) > 255 || strlen($data['auteur']) > 255) {
+            return $this->json(['message' => 'Le titre et l\'auteur ne doivent pas dépasser 255 caractères.'], 400);
         }
 
         $ouvrage->setTitre($data['titre']);
