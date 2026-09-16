@@ -5,6 +5,12 @@
       <span class="badge">{{ inscriptions.length }}</span>
     }
   </button>
+  <button class="btn-notif" routerLink="/document">Document</button>
+}
+
+@if (estGestionnaire()) {
+  <button class="btn-notif" (click)="ouvrirModaleArticle()">Article</button>
+  <button class="btn-notif" routerLink="/bibliotheque">Bibliothèque</button>
 }
 
 @if (modaleOuverte) {
@@ -50,6 +56,201 @@
       }
       <button (click)="confirmer()">Oui</button>
       <button (click)="annulerConfirmation()">Annuler</button>
+    </div>
+  </div>
+}
+
+@if (estAdmin()) {
+  <h3>Membres du club</h3>
+
+  <table class="table-membres">
+    <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>Pseudo</th>
+      <th>Rôle</th>
+      <th>Statut</th>
+    </tr>
+    </thead>
+    <tbody>
+      @for (membre of membres; track membre.id) {
+        <tr>
+          @if (membre.role !== 'admin') {
+            <td><a class="lien-membre" (click)="ouvrirModaleMembre(membre)">{{ membre.nom }}</a></td>
+            <td><a class="lien-membre" (click)="ouvrirModaleMembre(membre)">{{ membre.prenom }}</a></td>
+            <td><a class="lien-membre" (click)="ouvrirModaleMembre(membre)">{{ membre.pseudo }}</a></td>
+          } @else {
+            <td>{{ membre.nom }}</td>
+            <td>{{ membre.prenom }}</td>
+            <td>{{ membre.pseudo }}</td>
+          }
+          <td>{{ membre.role }}</td>
+          <td>{{ membre.statut_inscription }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@if (membreSelectionne) {
+  <div class="modale-overlay" (click)="fermerModaleMembre()">
+    <div class="modale-contenu" (click)="$event.stopPropagation()">
+      <h2>Modifier {{ membreSelectionne.pseudo }}</h2>
+
+      <form [formGroup]="membreForm" (ngSubmit)="enregistrerMembre()">
+
+        <div class="form-group">
+          <label class="label" for="mNom">Nom*</label>
+          <input type="text" id="mNom" formControlName="nom">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="mPrenom">Prénom*</label>
+          <input type="text" id="mPrenom" formControlName="prenom">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="mPseudo">Pseudo*</label>
+          <input type="text" id="mPseudo" formControlName="pseudo">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="mEmail">E-mail*</label>
+          <input type="email" id="mEmail" formControlName="email">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="mTelephone">Téléphone</label>
+          <input type="tel" id="mTelephone" formControlName="telephone">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="mEmailTuteur">E-mail du tuteur légal</label>
+          <input type="email" id="mEmailTuteur" formControlName="emailTuteur">
+        </div>
+
+        @if (messagesErreursMembre.length > 0) {
+          <div class="erreur">
+            @for (msg of messagesErreursMembre; track msg) {
+              <p>{{ msg }}</p>
+            }
+          </div>
+        }
+
+        @if (messageSuccesMembre) {
+          <p class="succes">{{ messageSuccesMembre }}</p>
+        }
+
+        <button type="submit" class="btn-primary">Enregistrer les informations</button>
+
+      </form>
+
+      <hr>
+
+      <div class="form-group">
+        <label class="label" for="mRole">Rôle</label>
+        <select id="mRole" #roleSelect (change)="onRoleChange(roleSelect.value)">
+          <option value="membre" [selected]="membreSelectionne.role === 'membre'">Membre</option>
+          <option value="gestionnaire" [selected]="membreSelectionne.role === 'gestionnaire'">Gestionnaire</option>
+          <option value="admin" [selected]="membreSelectionne.role === 'admin'">Admin</option>
+        </select>
+        <button type="button" class="btn-valider" (click)="demanderConfirmationRole()">Valider le rôle</button>
+      </div>
+
+      <hr>
+
+      @if (messageErreurSuppression) {
+        <p class="erreur">{{ messageErreurSuppression }}</p>
+      }
+
+      <div class="actions">
+        @if (membreSelectionne.statut_inscription === 'bloque') {
+          <button class="btn-valider" (click)="demanderConfirmationBlocage('debloquer')">Débloquer</button>
+        } @else {
+          <button class="btn-refuser" (click)="demanderConfirmationBlocage('bloquer')">Bloquer</button>
+        }
+        <button class="btn-refuser" (click)="demanderConfirmationSuppression()">Supprimer</button>
+      </div>
+
+      <button class="btn-fermer" (click)="fermerModaleMembre()">Fermer</button>
+    </div>
+  </div>
+}
+
+@if (confirmationRoleEnCours && membreSelectionne) {
+  <div class="confirmation-overlay">
+    <div class="confirmation-contenu">
+      <p>Êtes-vous sûr de vouloir changer le rôle de {{ membreSelectionne.pseudo }} en « {{ roleChoisi }} » ?</p>
+      <button (click)="confirmerChangementRole()">Oui</button>
+      <button (click)="annulerConfirmationRole()">Annuler</button>
+    </div>
+  </div>
+}
+
+@if (confirmationBlocageEnCours) {
+  <div class="confirmation-overlay">
+    <div class="confirmation-contenu">
+      @if (confirmationBlocageEnCours.action === 'bloquer') {
+        <p>Êtes-vous sûr de vouloir bloquer ce compte ? La personne ne pourra plus se connecter.</p>
+      } @else {
+        <p>Êtes-vous sûr de vouloir débloquer ce compte ?</p>
+      }
+      <button (click)="confirmerBlocage()">Oui</button>
+      <button (click)="annulerConfirmationBlocage()">Annuler</button>
+    </div>
+  </div>
+}
+
+@if (confirmationSuppressionEnCours) {
+  <div class="confirmation-overlay">
+    <div class="confirmation-contenu">
+      <p>Êtes-vous sûr de vouloir supprimer définitivement le compte de {{ confirmationSuppressionEnCours.pseudo }} ?
+        Cette action est irréversible.</p>
+      <button (click)="confirmerSuppression()">Oui</button>
+      <button (click)="annulerConfirmationSuppression()">Annuler</button>
+    </div>
+  </div>
+}
+
+@if (modaleArticleOuverte) {
+  <div class="modale-overlay" (click)="fermerModaleArticle()">
+    <div class="modale-contenu" (click)="$event.stopPropagation()">
+      <h2>Écrire un article</h2>
+
+      <form [formGroup]="articleForm" (ngSubmit)="publierArticle()">
+
+        <div class="form-group">
+          <label class="label" for="aTitre">Titre*</label>
+          <input type="text" id="aTitre" formControlName="titre">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="aContenu">Contenu*</label>
+          <textarea id="aContenu" formControlName="contenu" rows="8"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="aPhoto">Photo (facultatif)</label>
+          <input type="file" id="aPhoto" accept="image/jpeg,image/png,image/webp"
+                 (change)="onPhotoArticleSelectionnee($event)">
+        </div>
+
+        @if (messagesErreursArticle.length > 0) {
+          <div class="erreur">
+            @for (msg of messagesErreursArticle; track msg) {
+              <p>{{ msg }}</p>
+            }
+          </div>
+        }
+
+        <button type="submit" class="btn-primary" [disabled]="publicationEnCours">
+          {{ publicationEnCours ? 'Publication en cours...' : "Publier l'article" }}
+        </button>
+
+      </form>
+
+      <button class="btn-fermer" (click)="fermerModaleArticle()">Fermer</button>
     </div>
   </div>
 }

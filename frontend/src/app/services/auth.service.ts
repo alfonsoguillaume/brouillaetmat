@@ -20,6 +20,24 @@ export class AuthService {
   private loggedIn = signal<boolean>(!!localStorage.getItem('token'));
   private roles = signal<string[]>([]);
 
+  // "Vrai" dès qu'on sait avec certitude si l'utilisateur est connecté ou
+  // non ET quel est son rôle — soit immédiatement (pas de token = rien à
+  // charger), soit après la réponse de /api/me. Le garde de route (guard)
+  // attendra ce signal avant de décider d'autoriser ou non une page, pour
+  // ne jamais juger "trop tôt", avant que le rôle soit vraiment connu.
+  private profilCharge = signal<boolean>(!this.loggedIn());
+  readonly profilChargeSignal = this.profilCharge.asReadonly();
+
+  constructor() {
+    // Si un token existe déjà (page rafraîchie, ou nouvel onglet), on
+    // récupère le profil immédiatement — sinon "roles" resterait vide
+    // jusqu'au prochain login(), et isAdmin()/isGestionnaire() renverraient
+    // toujours false même pour un admin déjà connecté.
+    if (this.loggedIn()) {
+      this.chargerProfil();
+    }
+  }
+
   isLoggedIn(): boolean {
     return this.loggedIn();
   }
@@ -44,8 +62,14 @@ export class AuthService {
 
   chargerProfil(): void {
     this.http.get<MeResponse>(`${this.apiUrl}/me`).subscribe({
-      next: (me) => this.roles.set(me.roles),
-      error: () => this.logout()
+      next: (me) => {
+        this.roles.set(me.roles);
+        this.profilCharge.set(true);
+      },
+      error: () => {
+        this.logout();
+        this.profilCharge.set(true);
+      }
     });
   }
 

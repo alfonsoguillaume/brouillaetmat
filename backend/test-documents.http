@@ -1,0 +1,33 @@
+### 1. Connexion en tant qu'admin — copie le token reçu
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Liste des documents (colle le token obtenu à l'étape 1)
+GET http://localhost:8000/api/documents
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjQ3ODcsImV4cCI6MTc4OTU2ODM4Nywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.beDbG74ih_dfB2uVOKtPAjyObPmxdKjvJawf0U4ZShNrKMFJgu8KwMAM7eELotJmRDohgny3rceovcaNtpFlY1TJegkwIphQen5KUO0ITxzX3jFGbYDptMveHR0oBCY0xm70fSZcJHd5k2W25nIaYGgERPX-bWLQkKf4sZ866mX-MyYnvg9Bu8rv2V_jJvOAwjCYuCFRPnP2R-T2QGIbV-zu-vN6GGtKI6B8MeFxm8skk7h9bs5QDRWOFBMT4-EbqmUZ-nazXiq39x78JUhJghzlNTpQBTMwLLccjHSxj4dwRMsgwa4EQEBp_wcYsf-gptoYizNaRhtLq3JBtekXCQ
+
+### 3. Ajouter un document
+### Remplace le chemin par un vrai fichier sur ton PC (pdf/word/excel/image)
+POST http://localhost:8000/api/documents
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjQ3ODcsImV4cCI6MTc4OTU2ODM4Nywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.beDbG74ih_dfB2uVOKtPAjyObPmxdKjvJawf0U4ZShNrKMFJgu8KwMAM7eELotJmRDohgny3rceovcaNtpFlY1TJegkwIphQen5KUO0ITxzX3jFGbYDptMveHR0oBCY0xm70fSZcJHd5k2W25nIaYGgERPX-bWLQkKf4sZ866mX-MyYnvg9Bu8rv2V_jJvOAwjCYuCFRPnP2R-T2QGIbV-zu-vN6GGtKI6B8MeFxm8skk7h9bs5QDRWOFBMT4-EbqmUZ-nazXiq39x78JUhJghzlNTpQBTMwLLccjHSxj4dwRMsgwa4EQEBp_wcYsf-gptoYizNaRhtLq3JBtekXCQ
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="nom"
+
+Règlement intérieur du club
+--WebAppBoundary
+Content-Disposition: form-data; name="fichier"; filename="test.pdf"
+Content-Type: application/pdf
+
+< C:\Users\guill\Pictures\fondecran\defaut.png
+--WebAppBoundary--
+
+### 4. Supprimer un document (remplace 1 par un vrai id vu à l'étape 2)
+DELETE http://localhost:8000/api/documents/1
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjQ3ODcsImV4cCI6MTc4OTU2ODM4Nywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.beDbG74ih_dfB2uVOKtPAjyObPmxdKjvJawf0U4ZShNrKMFJgu8KwMAM7eELotJmRDohgny3rceovcaNtpFlY1TJegkwIphQen5KUO0ITxzX3jFGbYDptMveHR0oBCY0xm70fSZcJHd5k2W25nIaYGgERPX-bWLQkKf4sZ866mX-MyYnvg9Bu8rv2V_jJvOAwjCYuCFRPnP2R-T2QGIbV-zu-vN6GGtKI6B8MeFxm8skk7h9bs5QDRWOFBMT4-EbqmUZ-nazXiq39x78JUhJghzlNTpQBTMwLLccjHSxj4dwRMsgwa4EQEBp_wcYsf-gptoYizNaRhtLq3JBtekXCQ

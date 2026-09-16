@@ -1,23 +1,22 @@
 import {Component, computed, ElementRef, inject, signal, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AuthService} from '../services/auth.service';
+import {Article, ArticleService} from '../services/article.service';
 
-export interface Article {
-  id: number;
-  titre: string;
-  contenu: string;
-  imageUrl: string;
-}
+const BASE_URL_PHOTOS = 'http://localhost:8000/uploads/articles/';
 
 @Component({
   selector: 'app-club-component',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './club-component.html',
   styleUrl: './club-component.css'
 })
 export class ClubComponent {
   authService = inject(AuthService);
+  private articleService = inject(ArticleService);
+  private fb = inject(FormBuilder);
 
   @ViewChild('topClub') topClubRef!: ElementRef;
 
@@ -27,57 +26,26 @@ export class ClubComponent {
   pageActuelle = signal<number>(1);
   articlesParPage = signal<number>(5);
 
-  // Jeu de données de test (étendu pour tester la pagination)
-  articles = signal<Article[]>([
-    {
-      id: 1,
-      titre: 'Reprise des entraînements',
-      contenu: 'Voici le détail du calendrier pour la nouvelle saison...',
-      imageUrl: 'https://picsum.photos/400/250?random=1'
-    },
-    {
-      id: 2,
-      titre: 'Résultats du dernier tournoi',
-      contenu: 'Félicitations à tous les participants pour leurs performances...',
-      imageUrl: 'https://picsum.photos/400/250?random=2'
-    },
-    {
-      id: 3,
-      titre: 'Stage de perfectionnement',
-      contenu: 'Inscriptions ouvertes pour le stage de perfectionnement de la Toussaint...',
-      imageUrl: 'https://picsum.photos/400/250?random=3'
-    },
-    {
-      id: 4,
-      titre: 'Assemblée Générale',
-      contenu: 'Ordre du jour de la prochaine Assemblée Générale du club...',
-      imageUrl: 'https://picsum.photos/400/250?random=4'
-    },
-    {
-      id: 5,
-      titre: 'Journée bénévolat',
-      contenu: 'Appel aux bénévoles pour l’entretien du matériel et des locaux...',
-      imageUrl: 'https://picsum.photos/400/250?random=5'
-    },
-    {
-      id: 6,
-      titre: 'Présentation des maillots',
-      contenu: 'Découvrez les nouvelles tenues officielles pour cette saison...',
-      imageUrl: 'https://picsum.photos/400/250?random=6'
-    },
-    {
-      id: 7,
-      titre: 'Repas de fin d’année',
-      contenu: 'Inscriptions pour la grande soirée conviviale du club...',
-      imageUrl: 'https://picsum.photos/400/250?random=7'
-    },
-    {
-      id: 8,
-      titre: 'Podium au championnat',
-      contenu: 'Excellents résultats de nos équipes ce week-end...',
-      imageUrl: 'https://picsum.photos/400/250?random=8'
-    }
-  ]);
+  articles = signal<Article[]>([]);
+
+  constructor() {
+    this.chargerArticles();
+  }
+
+  chargerArticles(): void {
+    this.articleService.liste().subscribe({
+      next: (data) => this.articles.set(data)
+    });
+  }
+
+  // Construit l'URL complète de la photo, ou null si l'article n'en a pas.
+  urlPhoto(article: Article): string | null {
+    return article.photo ? BASE_URL_PHOTOS + article.photo : null;
+  }
+
+  estGestionnaire(): boolean {
+    return this.authService.isGestionnaire();
+  }
 
   // Nombre total de pages
   totalPages = computed(() => {
@@ -104,9 +72,110 @@ export class ClubComponent {
 
   ouvrirModale(article: Article): void {
     this.articleSelectionne.set(article);
+    this.modeEdition.set(false);
   }
 
   fermerModale(): void {
     this.articleSelectionne.set(null);
+    this.modeEdition.set(false);
+  }
+
+  // ---------- Édition d'un article ----------
+
+  modeEdition = signal<boolean>(false);
+  photoEditionSelectionnee: File | null = null;
+  messagesErreursEdition: string[] = [];
+  publicationEnCours = false;
+
+  editionForm: FormGroup = this.fb.group({
+    titre: ['', Validators.required],
+    contenu: ['', Validators.required],
+  });
+
+  passerEnModeEdition(): void {
+    const article = this.articleSelectionne();
+    if (!article) {
+      return;
+    }
+
+    this.editionForm.setValue({
+      titre: article.titre,
+      contenu: article.contenu,
+    });
+    this.photoEditionSelectionnee = null;
+    this.messagesErreursEdition = [];
+    this.modeEdition.set(true);
+  }
+
+  annulerEdition(): void {
+    this.modeEdition.set(false);
+  }
+
+  onPhotoEditionSelectionnee(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.photoEditionSelectionnee = input.files && input.files.length > 0 ? input.files[0] : null;
+  }
+
+  enregistrerModification(): void {
+    const article = this.articleSelectionne();
+    if (!article || this.publicationEnCours) {
+      return;
+    }
+
+    this.messagesErreursEdition = [];
+
+    if (!this.editionForm.valid) {
+      const messages: string[] = [];
+      if (this.editionForm.get('titre')?.errors?.['required']) {
+        messages.push('Remplissez le titre.');
+      }
+      if (this.editionForm.get('contenu')?.errors?.['required']) {
+        messages.push('Remplissez le contenu.');
+      }
+      this.messagesErreursEdition = messages;
+      return;
+    }
+
+    const {titre, contenu} = this.editionForm.value;
+    this.publicationEnCours = true;
+
+    this.articleService.modifier(article.id, titre, contenu, this.photoEditionSelectionnee).subscribe({
+      next: () => {
+        this.publicationEnCours = false;
+        this.fermerModale();
+        this.chargerArticles();
+      },
+      error: (err) => {
+        this.publicationEnCours = false;
+        this.messagesErreursEdition = [err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.'];
+      },
+    });
+  }
+
+  // ---------- Suppression d'un article ----------
+
+  confirmationSuppressionEnCours = signal<boolean>(false);
+
+  demanderConfirmationSuppression(): void {
+    this.confirmationSuppressionEnCours.set(true);
+  }
+
+  annulerConfirmationSuppression(): void {
+    this.confirmationSuppressionEnCours.set(false);
+  }
+
+  confirmerSuppression(): void {
+    const article = this.articleSelectionne();
+    if (!article) {
+      return;
+    }
+
+    this.articleService.supprimer(article.id).subscribe({
+      next: () => {
+        this.confirmationSuppressionEnCours.set(false);
+        this.fermerModale();
+        this.chargerArticles();
+      }
+    });
   }
 }
