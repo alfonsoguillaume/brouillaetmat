@@ -1,0 +1,139 @@
+.bibliotheque-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.section-biblio {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1.5px solid #7D9982;
+}
+
+.section-biblio h3 {
+  color: #688D6A;
+}
+
+.btn-ajouter {
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+.table-biblio {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-biblio th,
+.table-biblio td {
+  border: 1px solid #7D9982;
+  padding: 0.6rem;
+  text-align: left;
+}
+
+.table-biblio th {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #688D6A;
+}
+
+.table-biblio .btn-valider,
+.table-biblio .btn-refuser {
+  margin-right: 0.5rem;
+}
+
+.form-emprunt {
+  max-width: 400px;
+}
+
+select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+}
+
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modale-contenu {
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #D9A24B;
+}
+
+.modale-contenu h2 {
+  color: #688D6A;
+  margin-top: 0;
+}
+
+.btn-fermer {
+  background-color: transparent;
+  border: 1.5px solid #7D9982;
+  color: #D9A24B;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.confirmation-contenu {
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 400px;
+  text-align: center;
+  color: #D9A24B;
+}
+
+.confirmation-contenu button {
+  margin: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.confirmation-contenu button:first-of-type {
+  background-color: #CE865A;
+  color: #2D302C;
+}
+
+.confirmation-contenu button:last-of-type {
+  background-color: transparent;
+  border: 1.5px solid #7D9982;
+  color: #D9A24B;
+}
