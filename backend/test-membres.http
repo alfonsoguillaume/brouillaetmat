@@ -1,0 +1,57 @@
+### 1. Connexion — copie le token reçu dans la réponse
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Liste des membres (colle le token obtenu à l'étape 1)
+GET http://localhost:8000/api/admin/membres
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NDU4ODcsImV4cCI6MTc4OTU0OTQ4Nywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.5Ghit-5kamzEmfHOYoQc_HuVU-2sqm4qhnkoxAocG-KbNMVMTtohUTGsvaLmmq3ZukVi4ubuhDR4DLGZLEs5CyGwenabfl-tRrHdJFW0hK2nhmbCB8BV2vM2hByoj49YtQ3fO373uDwEghy4-VJKvR-QkKHDwSiE80Sw-gYa8BUriDNwcc4HMhjYLtdfqeWecHfhHGujBzvu-v5-T2JoRtXVxsv7APg_GxDSIYMGBtSeMCPzhIh5oCqMrwkoEHPTQWobQYEzfiFLZsRP6UZ_eUwHGEKeF81-EFn4Er86yHucb7PnxXjlHMOg4eQyUFiVx3tMpwVXifEqcIpvn0NOgw
+
+### 3. Modifier un membre (remplace 3 par un vrai id vu à l'étape 2, PAS un admin)
+PATCH http://localhost:8000/api/admin/membres/3
+Authorization: Bearer COLLE_TON_TOKEN_ICI
+Content-Type: application/json
+
+{
+    "nom": "User",
+    "prenom": "User",
+    "pseudo": "user",
+    "email": "user@user.fr",
+    "telephone": "0612345678"
+}
+
+### 4. Changer le rôle d'un membre
+PATCH http://localhost:8000/api/admin/membres/3/role
+Authorization: Bearer COLLE_TON_TOKEN_ICI
+Content-Type: application/json
+
+{
+    "role": "gestionnaire"
+}
+
+### 5. Bloquer un membre
+PATCH http://localhost:8000/api/admin/membres/3/bloquer
+Authorization: Bearer COLLE_TON_TOKEN_ICI
+
+### 6. Débloquer un membre
+PATCH http://localhost:8000/api/admin/membres/3/debloquer
+Authorization: Bearer COLLE_TON_TOKEN_ICI
+
+### 7. Test de sécurité : essayer de modifier un compte admin (doit renvoyer 403)
+### Remplace 1 par l'id de ton propre compte admin
+PATCH http://localhost:8000/api/admin/membres/1/bloquer
+Authorization: Bearer COLLE_TON_TOKEN_ICI
+
+### 8. Supprimer un membre (ATTENTION : suppression définitive !)
+### Utilise de préférence un compte de test "jetable" (créé via inscription
+### puis validé), pas un compte dont tu as besoin pour d'autres tests.
+DELETE http://localhost:8000/api/admin/membres/3
+Authorization: Bearer COLLE_TON_TOKEN_ICI
+
+### 9. Test de sécurité : essayer de supprimer un compte admin (doit renvoyer 403)
+DELETE http://localhost:8000/api/admin/membres/1
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NDU4ODcsImV4cCI6MTc4OTU0OTQ4Nywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.5Ghit-5kamzEmfHOYoQc_HuVU-2sqm4qhnkoxAocG-KbNMVMTtohUTGsvaLmmq3ZukVi4ubuhDR4DLGZLEs5CyGwenabfl-tRrHdJFW0hK2nhmbCB8BV2vM2hByoj49YtQ3fO373uDwEghy4-VJKvR-QkKHDwSiE80Sw-gYa8BUriDNwcc4HMhjYLtdfqeWecHfhHGujBzvu-v5-T2JoRtXVxsv7APg_GxDSIYMGBtSeMCPzhIh5oCqMrwkoEHPTQWobQYEzfiFLZsRP6UZ_eUwHGEKeF81-EFn4Er86yHucb7PnxXjlHMOg4eQyUFiVx3tMpwVXifEqcIpvn0NOgw

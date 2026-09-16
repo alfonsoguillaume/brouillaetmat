@@ -5,13 +5,23 @@
   <div class="articles-grid">
     @for (article of articlesAffiches(); track article.id) {
       <article class="article-card" (click)="ouvrirModale(article)">
-        <div class="image-wrapper" [class.flou]="!authService.isLoggedIn()">
-          <img [src]="article.imageUrl" [alt]="article.titre">
-          @if (!authService.isLoggedIn()) {
-            <span class="badge-restreint">Connexion requise</span>
-          }
-        </div>
+        @if (urlPhoto(article); as photo) {
+          <div class="image-wrapper" [class.flou]="!authService.isLoggedIn()">
+            <img [src]="photo" [alt]="article.titre">
+            @if (!authService.isLoggedIn()) {
+              <span class="badge-restreint">Connexion requise</span>
+            }
+          </div>
+        }
         <h3>{{ article.titre }}</h3>
+
+        <p class="meta-article">
+          @if (article.date_modification) {
+            Modifié le {{ article.date_modification | date:'dd/MM/yyyy' }} par {{ article.modificateur }}
+          } @else {
+            Publié le {{ article.date_creation | date:'dd/MM/yyyy' }} par {{ article.auteur }}
+          }
+        </p>
       </article>
     }
   </div>
@@ -41,19 +51,75 @@
     </nav>
   }
 
-  <!-- Modale d'affichage de l'article -->
+  <!-- Modale d'affichage / édition de l'article -->
   @if (articleSelectionne(); as article) {
     <div class="modal-overlay" (click)="fermerModale()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <button type="button" class="btn-close" (click)="fermerModale()">×</button>
 
-        <h2>{{ article.titre }}</h2>
+        @if (!modeEdition()) {
+          <h2>{{ article.titre }}</h2>
 
-        <div class="modal-image-wrapper" [class.flou]="!authService.isLoggedIn()">
-          <img [src]="article.imageUrl" [alt]="article.titre">
-        </div>
+          @if (urlPhoto(article); as photo) {
+            <div class="modal-image-wrapper" [class.flou]="!authService.isLoggedIn()">
+              <img [src]="photo" [alt]="article.titre">
+            </div>
+          }
 
-        <p class="article-texte">{{ article.contenu }}</p>
+          <p class="article-texte">{{ article.contenu }}</p>
+
+          @if (estGestionnaire()) {
+            <div class="actions-article">
+              <button type="button" class="btn-valider" (click)="passerEnModeEdition()">Modifier</button>
+              <button type="button" class="btn-refuser" (click)="demanderConfirmationSuppression()">Supprimer</button>
+            </div>
+          }
+        } @else {
+          <h2>Modifier l'article</h2>
+
+          <form [formGroup]="editionForm" (ngSubmit)="enregistrerModification()">
+
+            <div class="form-group">
+              <label class="label" for="eTitre">Titre*</label>
+              <input type="text" id="eTitre" formControlName="titre">
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="eContenu">Contenu*</label>
+              <textarea id="eContenu" formControlName="contenu" rows="8"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="ePhoto">Remplacer la photo (facultatif)</label>
+              <input type="file" id="ePhoto" accept="image/jpeg,image/png,image/webp"
+                     (change)="onPhotoEditionSelectionnee($event)">
+            </div>
+
+            @if (messagesErreursEdition.length > 0) {
+              <div class="erreur">
+                @for (msg of messagesErreursEdition; track msg) {
+                  <p>{{ msg }}</p>
+                }
+              </div>
+            }
+
+            <button type="submit" class="btn-primary" [disabled]="publicationEnCours">
+              {{ publicationEnCours ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+            <button type="button" class="btn-fermer" (click)="annulerEdition()">Annuler</button>
+
+          </form>
+        }
+      </div>
+    </div>
+  }
+
+  @if (confirmationSuppressionEnCours()) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Êtes-vous sûr de vouloir supprimer définitivement cet article ? Cette action est irréversible.</p>
+        <button (click)="confirmerSuppression()">Oui</button>
+        <button (click)="annulerConfirmationSuppression()">Annuler</button>
       </div>
     </div>
   }

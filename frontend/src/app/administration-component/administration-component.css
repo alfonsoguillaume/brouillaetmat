@@ -7,7 +7,7 @@
   min-height: 48px;
   padding: 10px 18px;
   white-space: nowrap;
-
+  margin: 1rem 1rem 1rem 1rem;
   background-color: #CE865A;
   color: #2D302C;
   border: none;
@@ -176,5 +176,78 @@
 .confirmation-contenu button:last-of-type {
   background-color: transparent;
   border: 1.5px solid #7D9982;
+  color: #D9A24B;
+}
+
+h3 {
+  color: #688D6A;
+  margin-top: 2rem;
+}
+
+.table-membres {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.table-membres th,
+.table-membres td {
+  border: 1px solid #7D9982;
+  padding: 0.6rem;
+  text-align: left;
+}
+
+.table-membres th {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #688D6A;
+}
+
+.lien-membre {
+  color: #CE865A;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.lien-membre:hover {
+  color: #D9A24B;
+}
+
+.table-membres td .btn-valider,
+.table-membres td .btn-refuser {
+  margin-right: 0.5rem;
+}
+
+.table-membres td .btn-valider:last-child,
+.table-membres td .btn-refuser:last-child {
+  margin-right: 0;
+}
+
+@media (max-width: 768px) {
+  .table-membres th:nth-child(4),
+  .table-membres td:nth-child(4) {
+    display: none;
+  }
+}
+
+textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #CE865A;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+input[type="file"] {
   color: #D9A24B;
 }

@@ -1,0 +1,69 @@
+### 1. Connexion en tant qu'admin/gestionnaire — copie le token reçu
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Liste des articles (PUBLIC — pas besoin de token)
+GET http://localhost:8000/api/articles
+
+### 3. Créer un article SANS photo (colle le token obtenu à l'étape 1)
+POST http://localhost:8000/api/articles
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjE5MjksImV4cCI6MTc4OTU2NTUyOSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.fDWRMFzQ_j-8Z5QPl7Hq2jFSAXGtCQezyhWR6D0I6iPBC3fA_cZrlKZH8HXeRUeuCqAkTK-WraK5ieiX7ynEviicVZJpnHzPEoCDvznp_ODZmbW07szap_SzKsvWKwiF_XGPniWaaqCkud7x4RtbKNRhmMnyF1qqkPuJj92WY91YgBn5fpzbOX160DcPXPeDP0X6-nRYHosVqPQ4MyL9JFnP0J210SCH7j9w4ANgDHUVL38dXenLmWpWIVxpjRKvgBxEBMoSZouIuBjgAZI4BY2pTPYArakDkFs8LnqmRNGr7TxTf092kuQuZxHjizI00-ZN8xMsKSkGYDxtZ_sGaw
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="titre"
+
+Mon premier article de test
+--WebAppBoundary
+Content-Disposition: form-data; name="contenu"
+
+Ceci est le contenu de test de mon article, sans photo pour ce premier essai.
+--WebAppBoundary--
+
+### 4. Créer un article AVEC photo
+### Remplace le chemin par une vraie image sur ton PC (jpg/png/webp)
+POST http://localhost:8000/api/articles
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjE5MjksImV4cCI6MTc4OTU2NTUyOSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.fDWRMFzQ_j-8Z5QPl7Hq2jFSAXGtCQezyhWR6D0I6iPBC3fA_cZrlKZH8HXeRUeuCqAkTK-WraK5ieiX7ynEviicVZJpnHzPEoCDvznp_ODZmbW07szap_SzKsvWKwiF_XGPniWaaqCkud7x4RtbKNRhmMnyF1qqkPuJj92WY91YgBn5fpzbOX160DcPXPeDP0X6-nRYHosVqPQ4MyL9JFnP0J210SCH7j9w4ANgDHUVL38dXenLmWpWIVxpjRKvgBxEBMoSZouIuBjgAZI4BY2pTPYArakDkFs8LnqmRNGr7TxTf092kuQuZxHjizI00-ZN8xMsKSkGYDxtZ_sGaw
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="titre"
+
+Article avec photo
+--WebAppBoundary
+Content-Disposition: form-data; name="contenu"
+
+Ceci est un article de test avec une vraie photo jointe.
+--WebAppBoundary
+Content-Disposition: form-data; name="photo"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< C:\Users\guill\Pictures\fondecran\defaut.png
+--WebAppBoundary--
+
+### 5. Voir le détail d'un article (remplace 1 par un vrai id)
+GET http://localhost:8000/api/articles/3
+
+### 6. Modifier un article (remplace 1 par un vrai id)
+POST http://localhost:8000/api/articles/1
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjE5MjksImV4cCI6MTc4OTU2NTUyOSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.fDWRMFzQ_j-8Z5QPl7Hq2jFSAXGtCQezyhWR6D0I6iPBC3fA_cZrlKZH8HXeRUeuCqAkTK-WraK5ieiX7ynEviicVZJpnHzPEoCDvznp_ODZmbW07szap_SzKsvWKwiF_XGPniWaaqCkud7x4RtbKNRhmMnyF1qqkPuJj92WY91YgBn5fpzbOX160DcPXPeDP0X6-nRYHosVqPQ4MyL9JFnP0J210SCH7j9w4ANgDHUVL38dXenLmWpWIVxpjRKvgBxEBMoSZouIuBjgAZI4BY2pTPYArakDkFs8LnqmRNGr7TxTf092kuQuZxHjizI00-ZN8xMsKSkGYDxtZ_sGaw
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="titre"
+
+Titre modifié
+--WebAppBoundary
+Content-Disposition: form-data; name="contenu"
+
+Contenu modifié pour tester la mise à jour.
+--WebAppBoundary--
+
+### 7. Supprimer un article (remplace 1 par un vrai id)
+DELETE http://localhost:8000/api/articles/3
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk1NjE5MjksImV4cCI6MTc4OTU2NTUyOSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.fDWRMFzQ_j-8Z5QPl7Hq2jFSAXGtCQezyhWR6D0I6iPBC3fA_cZrlKZH8HXeRUeuCqAkTK-WraK5ieiX7ynEviicVZJpnHzPEoCDvznp_ODZmbW07szap_SzKsvWKwiF_XGPniWaaqCkud7x4RtbKNRhmMnyF1qqkPuJj92WY91YgBn5fpzbOX160DcPXPeDP0X6-nRYHosVqPQ4MyL9JFnP0J210SCH7j9w4ANgDHUVL38dXenLmWpWIVxpjRKvgBxEBMoSZouIuBjgAZI4BY2pTPYArakDkFs8LnqmRNGr7TxTf092kuQuZxHjizI00-ZN8xMsKSkGYDxtZ_sGaw

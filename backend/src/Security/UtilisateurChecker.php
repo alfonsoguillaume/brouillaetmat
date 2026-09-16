@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Security;
 
 use App\Entity\Utilisateur;
@@ -12,13 +11,19 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class UtilisateurChecker implements UserCheckerInterface
 {
     /**
-     * Appelée par Symfony AVANT la vérif du mot de passe.
-     * Bloque les comptes pas validés par un admin.
+     * Appelée par Symfony AVANT de vérifier le mot de passe.
+     * On en profite pour bloquer les comptes pas encore validés par un admin.
      */
     public function checkPreAuth(UserInterface $user): void
     {
         if (!$user instanceof Utilisateur) {
             return;
+        }
+
+        if ($user->getStatutInscription() === 'bloque') {
+            throw new CustomUserMessageAccountStatusException(
+                'Votre compte a été bloqué. Contactez un administrateur pour plus d\'informations.'
+            );
         }
 
         if ($user->getStatutInscription() !== 'valide') {
@@ -30,10 +35,10 @@ class UtilisateurChecker implements UserCheckerInterface
 
     /**
      * Appelée par Symfony APRÈS une authentification réussie.
-     * Rien à vérifier, mais la méthode est obligatoire
+     * Rien à vérifier ici pour l'instant, mais la méthode est obligatoire
+     * (imposée par l'interface UserCheckerInterface).
      */
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
-
     }
 }
