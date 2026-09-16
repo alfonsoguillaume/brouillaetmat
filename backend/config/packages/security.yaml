@@ -50,6 +50,7 @@ security:
         - { path: ^/api/articles, roles: ROLE_GESTIONNAIRE }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/documents, roles: ROLE_ADMIN }
+        - { path: ^/api/bibliotheque, roles: ROLE_GESTIONNAIRE }
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:

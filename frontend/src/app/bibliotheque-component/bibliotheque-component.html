@@ -1,1 +1,201 @@
-<p>bibliotheque-component works!</p>
+<div class="bibliotheque-page">
+  <h2>Bibliothèque</h2>
+
+  <!-- ========== Catalogue des ouvrages ========== -->
+  <section class="section-biblio">
+    <h3>Catalogue</h3>
+
+    <button class="btn-primary btn-ajouter" (click)="ouvrirModaleAjoutOuvrage()">Ajouter un ouvrage</button>
+
+    @if (messageErreurSuppressionOuvrage) {
+      <p class="erreur">{{ messageErreurSuppressionOuvrage }}</p>
+    }
+
+    @if (ouvrages.length === 0) {
+      <p>Aucun ouvrage pour l'instant.</p>
+    } @else {
+      <table class="table-biblio">
+        <thead>
+        <tr>
+          <th>Titre</th>
+          <th>Auteur</th>
+          <th>Disponible</th>
+          <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+          @for (ouvrage of ouvrages; track ouvrage.id) {
+            <tr>
+              <td>{{ ouvrage.titre }}</td>
+              <td>{{ ouvrage.auteur }}</td>
+              <td>{{ ouvrage.disponible ? 'Oui' : 'Non' }}</td>
+              <td>
+                <button class="btn-valider" (click)="ouvrirModaleModifierOuvrage(ouvrage)">Modifier</button>
+                <button class="btn-refuser" (click)="demanderConfirmationSuppressionOuvrage(ouvrage)">Supprimer</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <!-- ========== Nouvel emprunt ========== -->
+  <section class="section-biblio">
+    <h3>Nouvel emprunt</h3>
+
+    <form [formGroup]="empruntForm" (ngSubmit)="creerEmprunt()" class="form-emprunt">
+
+      <div class="form-group">
+        <label class="label" for="eOuvrage">Ouvrage*</label>
+        <select id="eOuvrage" formControlName="ouvrageId">
+          <option value="" disabled selected>Choisir un ouvrage disponible</option>
+          @for (ouvrage of ouvragesDisponibles; track ouvrage.id) {
+            <option [value]="ouvrage.id">{{ ouvrage.titre }} — {{ ouvrage.auteur }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="eMembre">Membre*</label>
+        <select id="eMembre" formControlName="utilisateurId">
+          <option value="" disabled selected>Choisir un membre</option>
+          @for (membre of membres; track membre.id) {
+            <option [value]="membre.id">{{ membre.prenom }} {{ membre.nom }}</option>
+          }
+        </select>
+      </div>
+
+      @if (messageErreurEmprunt) {
+        <p class="erreur">{{ messageErreurEmprunt }}</p>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="empruntEnCours">
+        {{ empruntEnCours ? 'Enregistrement...' : 'Emprunter' }}
+      </button>
+
+    </form>
+  </section>
+
+  <!-- ========== Emprunts en cours ========== -->
+  <section class="section-biblio">
+    <h3>Emprunts en cours</h3>
+
+    @if (emprunts.length === 0) {
+      <p>Aucun emprunt en cours.</p>
+    } @else {
+      <table class="table-biblio">
+        <thead>
+        <tr>
+          <th>Ouvrage</th>
+          <th>Membre</th>
+          <th>Emprunté le</th>
+          <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+          @for (emprunt of emprunts; track emprunt.id) {
+            <tr>
+              <td>{{ emprunt.ouvrage_titre }}</td>
+              <td>{{ emprunt.membre }}</td>
+              <td>{{ emprunt.date_emprunt | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <button class="btn-valider" (click)="demanderConfirmationRetour(emprunt)">Retour</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <!-- ========== Archives des prêts ========== -->
+  <section class="section-biblio">
+    <h3>Archives des prêts</h3>
+
+    @if (archives.length === 0) {
+      <p>Aucun prêt archivé pour l'instant.</p>
+    } @else {
+      <table class="table-biblio">
+        <thead>
+        <tr>
+          <th>Ouvrage</th>
+          <th>Membre</th>
+          <th>Emprunté le</th>
+          <th>Rendu le</th>
+        </tr>
+        </thead>
+        <tbody>
+          @for (archive of archives; track archive.id) {
+            <tr>
+              <td>{{ archive.ouvrage_titre }}</td>
+              <td>{{ archive.membre }}</td>
+              <td>{{ archive.date_emprunt | date:'dd/MM/yyyy' }}</td>
+              <td>{{ archive.date_retour | date:'dd/MM/yyyy' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <!-- ========== Modale ajout / modification ouvrage ========== -->
+  @if (modaleOuvrageOuverte) {
+    <div class="modale-overlay" (click)="fermerModaleOuvrage()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>{{ ouvrageEnEdition ? "Modifier l'ouvrage" : "Ajouter un ouvrage" }}</h2>
+
+        <form [formGroup]="ouvrageForm" (ngSubmit)="enregistrerOuvrage()">
+
+          <div class="form-group">
+            <label class="label" for="oTitre">Titre*</label>
+            <input type="text" id="oTitre" formControlName="titre">
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="oAuteur">Auteur*</label>
+            <input type="text" id="oAuteur" formControlName="auteur">
+          </div>
+
+          @if (messagesErreursOuvrage.length > 0) {
+            <div class="erreur">
+              @for (msg of messagesErreursOuvrage; track msg) {
+                <p>{{ msg }}</p>
+              }
+            </div>
+          }
+
+          <button type="submit" class="btn-primary" [disabled]="enregistrementEnCours">
+            {{ enregistrementEnCours ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+
+        </form>
+
+        <button class="btn-fermer" (click)="fermerModaleOuvrage()">Fermer</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation suppression ouvrage ========== -->
+  @if (confirmationSuppressionOuvrage) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Êtes-vous sûr de vouloir supprimer « {{ confirmationSuppressionOuvrage.titre }} » ? Cette action est
+          irréversible.</p>
+        <button (click)="confirmerSuppressionOuvrage()">Oui</button>
+        <button (click)="annulerConfirmationSuppressionOuvrage()">Annuler</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation retour ========== -->
+  @if (confirmationRetourEnCours) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Confirmer le retour de « {{ confirmationRetourEnCours.ouvrage_titre }} » ?</p>
+        <button (click)="confirmerRetour()">Oui</button>
+        <button (click)="annulerConfirmationRetour()">Annuler</button>
+      </div>
+    </div>
+  }
+</div>
