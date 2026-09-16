@@ -1,0 +1,80 @@
+<div class="document-page">
+  <h2>Documents administratifs</h2>
+
+  <button class="btn-primary btn-ajouter" (click)="ouvrirModaleAjout()">Ajouter un document</button>
+
+  @if (documents.length === 0) {
+    <p>Aucun document pour l'instant.</p>
+  } @else {
+    <table class="table-documents">
+      <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Ajouté le</th>
+        <th>Ajouté par</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+        @for (doc of documents; track doc.id) {
+          <tr>
+            <td><a (click)="telechargerDocument(doc)" class="lien-document">{{ doc.nom }}</a></td>
+            <td>{{ doc.date_ajout | date:'dd/MM/yyyy' }}</td>
+            <td>{{ doc.ajoute_par }}</td>
+            <td>
+              <button class="btn-refuser" (click)="demanderConfirmationSuppression(doc)">Supprimer</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (modaleAjoutOuverte) {
+    <div class="modale-overlay" (click)="fermerModaleAjout()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>Ajouter un document</h2>
+
+        <form [formGroup]="ajoutForm" (ngSubmit)="ajouterDocument()">
+
+          <div class="form-group">
+            <label class="label" for="dNom">Nom du document*</label>
+            <input type="text" id="dNom" formControlName="nom">
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="dFichier">Fichier*</label>
+            <input type="file" id="dFichier" accept=".pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png"
+                   (change)="onFichierSelectionne($event)">
+          </div>
+
+          @if (messagesErreursAjout.length > 0) {
+            <div class="erreur">
+              @for (msg of messagesErreursAjout; track msg) {
+                <p>{{ msg }}</p>
+              }
+            </div>
+          }
+
+          <button type="submit" class="btn-primary" [disabled]="ajoutEnCours">
+            {{ ajoutEnCours ? 'Ajout en cours...' : 'Ajouter' }}
+          </button>
+
+        </form>
+
+        <button class="btn-fermer" (click)="fermerModaleAjout()">Fermer</button>
+      </div>
+    </div>
+  }
+
+  @if (confirmationSuppressionEnCours) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Êtes-vous sûr de vouloir supprimer « {{ confirmationSuppressionEnCours.nom }} » ? Cette action est
+          irréversible.</p>
+        <button (click)="confirmerSuppression()">Oui</button>
+        <button (click)="annulerConfirmationSuppression()">Annuler</button>
+      </div>
+    </div>
+  }
+</div>

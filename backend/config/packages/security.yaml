@@ -46,6 +46,8 @@ security:
     access_control:
         - { path: ^/api/inscription, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/articles, roles: PUBLIC_ACCESS, methods: [ GET ] }
+        - { path: ^/api/articles, roles: ROLE_GESTIONNAIRE }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/documents, roles: ROLE_ADMIN }
         - { path: ^/api, roles: ROLE_USER }
