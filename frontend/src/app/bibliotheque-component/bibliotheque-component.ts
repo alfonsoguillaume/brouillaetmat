@@ -77,6 +77,24 @@ export class BibliothequeComponent {
     return this.ouvrages.filter(o => o.disponible);
   }
 
+  // ---------- Recherche dans le catalogue ----------
+
+  filtreCatalogue = '';
+
+  onFiltreCatalogueChange(valeur: string): void {
+    this.filtreCatalogue = valeur;
+  }
+
+  get ouvragesFiltres(): Ouvrage[] {
+    const recherche = this.filtreCatalogue.trim().toLowerCase();
+    if (!recherche) {
+      return this.ouvrages;
+    }
+    return this.ouvrages.filter(o =>
+      o.titre.toLowerCase().includes(recherche) || o.auteur.toLowerCase().includes(recherche)
+    );
+  }
+
   // ---------- Modale ajout / modification d'ouvrage ----------
 
   modaleOuvrageOuverte = false;
@@ -85,8 +103,8 @@ export class BibliothequeComponent {
   enregistrementEnCours = false;
 
   ouvrageForm: FormGroup = this.fb.group({
-    titre: ['', Validators.required],
-    auteur: ['', Validators.required],
+    titre: ['', [Validators.required, Validators.maxLength(255)]],
+    auteur: ['', [Validators.required, Validators.maxLength(255)]],
   });
 
   ouvrirModaleAjoutOuvrage(): void {
@@ -117,9 +135,13 @@ export class BibliothequeComponent {
     const messages: string[] = [];
     if (this.ouvrageForm.get('titre')?.errors?.['required']) {
       messages.push('Remplissez le titre.');
+    } else if (this.ouvrageForm.get('titre')?.errors?.['maxlength']) {
+      messages.push('Le titre est trop long (255 caractères maximum).');
     }
     if (this.ouvrageForm.get('auteur')?.errors?.['required']) {
       messages.push("Remplissez l'auteur.");
+    } else if (this.ouvrageForm.get('auteur')?.errors?.['maxlength']) {
+      messages.push("Le nom de l'auteur est trop long (255 caractères maximum).");
     }
     if (messages.length > 0) {
       this.messagesErreursOuvrage = messages;
@@ -157,6 +179,7 @@ export class BibliothequeComponent {
   demanderConfirmationSuppressionOuvrage(ouvrage: Ouvrage): void {
     this.messageErreurSuppressionOuvrage = '';
     this.confirmationSuppressionOuvrage = ouvrage;
+    this.modaleOuvrageOuverte = false;
   }
 
   annulerConfirmationSuppressionOuvrage(): void {

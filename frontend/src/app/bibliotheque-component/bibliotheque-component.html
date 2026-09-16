@@ -14,29 +14,28 @@
     @if (ouvrages.length === 0) {
       <p>Aucun ouvrage pour l'instant.</p>
     } @else {
-      <table class="table-biblio">
-        <thead>
-        <tr>
-          <th>Titre</th>
-          <th>Auteur</th>
-          <th>Disponible</th>
-          <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-          @for (ouvrage of ouvrages; track ouvrage.id) {
-            <tr>
-              <td>{{ ouvrage.titre }}</td>
-              <td>{{ ouvrage.auteur }}</td>
-              <td>{{ ouvrage.disponible ? 'Oui' : 'Non' }}</td>
-              <td>
-                <button class="btn-valider" (click)="ouvrirModaleModifierOuvrage(ouvrage)">Modifier</button>
-                <button class="btn-refuser" (click)="demanderConfirmationSuppressionOuvrage(ouvrage)">Supprimer</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <div class="form-group">
+        <label class="label" for="rechercheCatalogue">Rechercher un titre ou un auteur</label>
+        <input #rechercheInput type="text" id="rechercheCatalogue"
+               (input)="onFiltreCatalogueChange(rechercheInput.value)">
+      </div>
+
+      <div class="liste-defilante">
+        @if (ouvragesFiltres.length === 0) {
+          <p class="liste-vide">Aucun résultat pour cette recherche.</p>
+        }
+        @for (ouvrage of ouvragesFiltres; track ouvrage.id) {
+          <div class="ligne-ouvrage" (click)="ouvrirModaleModifierOuvrage(ouvrage)">
+            <div class="ligne-ouvrage-texte">
+              <strong>{{ ouvrage.titre }}</strong>
+              <span>{{ ouvrage.auteur }}</span>
+            </div>
+            <span class="badge-disponible" [class.indisponible]="!ouvrage.disponible">
+              {{ ouvrage.disponible ? 'Disponible' : 'Emprunté' }}
+            </span>
+          </div>
+        }
+      </div>
     }
   </section>
 
@@ -96,10 +95,10 @@
         <tbody>
           @for (emprunt of emprunts; track emprunt.id) {
             <tr>
-              <td>{{ emprunt.ouvrage_titre }}</td>
-              <td>{{ emprunt.membre }}</td>
-              <td>{{ emprunt.date_emprunt | date:'dd/MM/yyyy' }}</td>
-              <td>
+              <td data-label="Ouvrage">{{ emprunt.ouvrage_titre }}</td>
+              <td data-label="Membre">{{ emprunt.membre }}</td>
+              <td data-label="Emprunté le">{{ emprunt.date_emprunt | date:'dd/MM/yyyy' }}</td>
+              <td data-label="Action">
                 <button class="btn-valider" (click)="demanderConfirmationRetour(emprunt)">Retour</button>
               </td>
             </tr>
@@ -128,10 +127,10 @@
         <tbody>
           @for (archive of archives; track archive.id) {
             <tr>
-              <td>{{ archive.ouvrage_titre }}</td>
-              <td>{{ archive.membre }}</td>
-              <td>{{ archive.date_emprunt | date:'dd/MM/yyyy' }}</td>
-              <td>{{ archive.date_retour | date:'dd/MM/yyyy' }}</td>
+              <td data-label="Ouvrage">{{ archive.ouvrage_titre }}</td>
+              <td data-label="Membre">{{ archive.membre }}</td>
+              <td data-label="Emprunté le">{{ archive.date_emprunt | date:'dd/MM/yyyy' }}</td>
+              <td data-label="Rendu le">{{ archive.date_retour | date:'dd/MM/yyyy' }}</td>
             </tr>
           }
         </tbody>
@@ -170,6 +169,12 @@
           </button>
 
         </form>
+
+        @if (ouvrageEnEdition; as ouvrage) {
+          <button type="button" class="btn-refuser" (click)="demanderConfirmationSuppressionOuvrage(ouvrage)">
+            Supprimer cet ouvrage
+          </button>
+        }
 
         <button class="btn-fermer" (click)="fermerModaleOuvrage()">Fermer</button>
       </div>
