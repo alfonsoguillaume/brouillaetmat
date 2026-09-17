@@ -21,6 +21,7 @@ export class InscriptionComponent {
 
   isMineur = false;
   messageErreur = '';
+  afficherMotDePasse = false;
   messagesErreursFormulaire: string[] = [];
 
   // Nom lisible de chaque champ, utilisé pour construire des messages clairs.

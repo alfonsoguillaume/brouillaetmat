@@ -46,12 +46,17 @@
 
     <div class="form-group">
       <label class="label" for="password">Mot de passe*</label>
-      <input type="password" id="password" formControlName="password">
+      <input [type]="afficherMotDePasse ? 'text' : 'password'" id="password" formControlName="password">
     </div>
 
     <div class="form-group">
       <label class="label" for="confirmPassword">Vérification du mot de passe*</label>
-      <input type="password" id="confirmPassword" formControlName="confirmPassword">
+      <input [type]="afficherMotDePasse ? 'text' : 'password'" id="confirmPassword" formControlName="confirmPassword">
+    </div>
+
+    <div class="case-afficher-mdp">
+      <input type="checkbox" id="afficherMdp" (change)="afficherMotDePasse = !afficherMotDePasse">
+      <label for="afficherMdp">Afficher les mots de passe</label>
     </div>
 
     @if (messagesErreursFormulaire.length > 0) {

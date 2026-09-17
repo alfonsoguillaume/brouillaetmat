@@ -18,6 +18,7 @@ export class ProfilComponent implements OnInit {
 
   chargementEnCours = true;
   isMineur = false;
+  afficherMotDePasse = false;
 
   // Infos non modifiables, affichées à part (pas dans un formulaire).
   email = '';
