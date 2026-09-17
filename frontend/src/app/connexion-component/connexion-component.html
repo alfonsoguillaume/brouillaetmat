@@ -2,37 +2,32 @@
 
 <form (ngSubmit)="onSubmit()">
 
-  <div class="mail-mdp">
-    <div class="mail">
-      <label for="email" class="label">Email</label>
-      <input
-        type="email"
-        id="email"
-        name="email"
-        [(ngModel)]="email"
-        required
-      >
-    </div>
+  <label for="email">Email</label>
+  <input
+    type="email"
+    id="email"
+    name="email"
+    [(ngModel)]="email"
+    required
+  >
 
-    <div class="mdp">
-      <label for="password" class="label">Mot de passe</label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        [(ngModel)]="password"
-        required
-      >
+  <label for="password">Mot de passe</label>
+  <input
+    [type]="afficherMotDePasse ? 'text' : 'password'"
+    id="password"
+    name="password"
+    [(ngModel)]="password"
+    required
+  >
 
-      <a [routerLink]="['/oublie']" class="mdp-oublie">
-        Mot de passe oublié ?
-      </a>
-
-      @if (messageErreur) {
-        <p class="erreur">{{ messageErreur }}</p>
-      }
-    </div>
+  <div class="case-afficher-mdp">
+    <input type="checkbox" id="afficherMdp" [(ngModel)]="afficherMotDePasse" name="afficherMdp">
+    <label for="afficherMdp">Afficher le mot de passe</label>
   </div>
+
+  @if (messageErreur) {
+    <p class="erreur">{{ messageErreur }}</p>
+  }
 
   <button type="submit" class="btn-primary">Se connecter</button>
 

@@ -17,6 +17,7 @@ export class ConnexionComponent {
   email: string = '';
   password: string = '';
   messageErreur: string = '';
+  afficherMotDePasse: boolean = false;
 
   onSubmit(): void {
     this.messageErreur = '';
