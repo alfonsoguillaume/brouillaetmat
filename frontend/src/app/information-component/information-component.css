@@ -111,5 +111,20 @@
 }
 
 .don-bene {
-  text-align: center
+  text-align: center;
+  color: #D9A24B;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}
+
+.don-bene a {
+  color: #CE865A;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.don-bene a:hover,
+.don-bene a:focus {
+  color: #D9A24B;
 }

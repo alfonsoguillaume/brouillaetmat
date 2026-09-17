@@ -80,7 +80,7 @@
 /* --- RESPONSIVE (MOBILE & TABLETTE - 1024px ET SOUS) --- */
 @media (max-width: 1024px) {
   .mon-footer {
-    padding: 20px 15px 85px 15px;
+    padding: 20px 15px 20px 15px;
   }
 
   .contact {
@@ -121,9 +121,13 @@
     color: #2D302C;
   }
 
+  /* Sur petit écran, le bouton sort du positionnement absolu et rejoint
+     le flux normal — plus aucun risque de chevauchement avec le contenu
+     au-dessus, peu importe sa hauteur réelle. */
   .back-to-top {
-    bottom: 15px;
-    right: 15px;
+    position: static;
+    display: flex;
+    margin: 1rem 0 0 auto;
     font-size: 0.95rem;
     padding: 10px 14px;
   }
