@@ -21,7 +21,10 @@ class Participation
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $utilisateur_id = null;
 
-    #[ORM\Column(length: 255)]
+    // Optionnel : vide tant qu'aucun résultat n'a encore été saisi pour ce
+    // participant (le remplissage du résultat/classement viendra plus tard,
+    // une fois la méthode de notation confirmée).
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $resultat = null;
 
     public function getId(): ?int
@@ -65,7 +68,7 @@ class Participation
         return $this->resultat;
     }
 
-    public function setResultat(string $resultat): static
+    public function setResultat(?string $resultat): static
     {
         $this->resultat = $resultat;
 
