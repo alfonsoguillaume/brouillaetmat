@@ -51,6 +51,7 @@ security:
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/documents, roles: ROLE_ADMIN }
         - { path: ^/api/bibliotheque, roles: ROLE_GESTIONNAIRE }
+        - { path: ^/api/tournois, roles: ROLE_ADMIN, methods: [ POST, PATCH, DELETE ] }
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:

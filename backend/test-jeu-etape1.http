@@ -1,0 +1,65 @@
+### 1. Connexion joueur A (admin/test) — copie le token
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Connexion joueur B (un autre membre validé) — copie ce 2e token séparément
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "a@a.fr",
+    "password": "Aa123456789."
+}
+
+### 3. Liste des membres qu'on peut défier (avec le token du joueur A)
+GET http://localhost:8000/api/jeu/membres
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
+
+### 4. Ma partie (doit être "null", personne n'a encore rien proposé)
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
+
+### 5. Joueur A propose une partie à joueur B (adapte adversaire_id avec un vrai id vu à l'étape 3)
+POST http://localhost:8000/api/jeu/proposer
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
+Content-Type: application/json
+
+{
+    "adversaire_id": 23,
+    "classee": true
+}
+
+### 6. Joueur A reteste "ma partie" (doit montrer l'invitation, statut "en_attente")
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
+
+### 7. Joueur A essaie de proposer une 2e partie (doit échouer en 409, déjà une active)
+POST http://localhost:8000/api/jeu/proposer
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
+Content-Type: application/json
+
+{
+    "adversaire_id": 3,
+    "classee": true
+}
+
+### 8. Joueur B consulte "ma partie" (avec le token du joueur B — doit voir la même invitation, je_suis_blanc: false)
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjEyMjcsImV4cCI6MTc4OTcyNDgyNywicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.1jFID9VYx5tFtCEW2nUtvM1CiFsyolxzgFBhk8p4Zq3Fkq6bVvvhokuOHdyb-oejKSuhc3DDAY7fkPYLHQqWjkdZUO4r2dn8NEmUYe55R_GKnrrgzRYHV_fmnmfflkmo06cKiCGpeduTJlzBuDemu37mdlGZ8RgpW5QCTTBHIAY-KSNeyX5BijyrrML-PZ-wKNPNuYdADmw6JMfmC6Wlm8caUU3_msf-HxVrIScTR062CCb2s9UUbyQ9_MF3EvERa8Wq7V6nqhWMBoyGEO8wIAYaKTlJixWojgRbnmUEC6PII3U2mmN-SnBKfiJEXBbXVUOeCLdQChNiJAgHd4Ll4w
+
+### 9. Joueur B accepte (remplace 1 par le vrai id de partie vu à l'étape 5 ou 6)
+POST http://localhost:8000/api/jeu/2/accepter
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjEyMjcsImV4cCI6MTc4OTcyNDgyNywicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.1jFID9VYx5tFtCEW2nUtvM1CiFsyolxzgFBhk8p4Zq3Fkq6bVvvhokuOHdyb-oejKSuhc3DDAY7fkPYLHQqWjkdZUO4r2dn8NEmUYe55R_GKnrrgzRYHV_fmnmfflkmo06cKiCGpeduTJlzBuDemu37mdlGZ8RgpW5QCTTBHIAY-KSNeyX5BijyrrML-PZ-wKNPNuYdADmw6JMfmC6Wlm8caUU3_msf-HxVrIScTR062CCb2s9UUbyQ9_MF3EvERa8Wq7V6nqhWMBoyGEO8wIAYaKTlJixWojgRbnmUEC6PII3U2mmN-SnBKfiJEXBbXVUOeCLdQChNiJAgHd4Ll4w
+
+### 10. Ma partie à nouveau (statut doit être "en_cours" maintenant, avec fen/coups/temps remplis)
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
+
+### Annuler l'invitation en attente
+DELETE http://localhost:8000/api/jeu/1
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk3MjExNjUsImV4cCI6MTc4OTcyNDc2NSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.vRu-uzjv1M1E1lVUTzzyFYD0FjeqHDvaZw-pqjyIvScgVLrjbS0pRsbweyJ9GuRaMFXz2NyVYnOSByEM5Wwiy5CE3zNZfYw9c3xDV3dLv52l2PvN7c9NrWlUuT--50BzQYli5PwsPudJRnK3wZdu8-NlxxVdZY54lm2Sk-sdss4NauKaEYyanb_xk6odX2-bGdWDqHpe7a33cDsk8QhUEkCEMcI77dinz4ALxf-QNglrKrerdc-V28MxX7pO0zB6ssSwPlbvJ9XKAzjJXknOad6uWOKTXFA5wJV8pKL7ZHpcz5J9RvYFD8Psw4puFcFPyII6IcLfp3heONmLKv4yIg
