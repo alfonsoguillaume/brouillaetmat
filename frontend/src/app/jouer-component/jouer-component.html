@@ -1,1 +1,97 @@
-<p>jouer-component works!</p>
+<div class="jouer-page">
+  <h2>Jouer</h2>
+
+  @if (chargementInitial) {
+    <p>Chargement...</p>
+  } @else if (!maPartie) {
+
+    <!-- Aucune partie active : proposer une partie -->
+    <div class="carte-proposition">
+      <h3>Proposer une partie</h3>
+
+      <div class="form-group">
+        <label class="label" for="adversaire">Adversaire*</label>
+        <select id="adversaire" #adversaireSelect (change)="onAdversaireChange(adversaireSelect.value)">
+          <option value="" disabled selected>Choisir un membre</option>
+          @for (m of membres; track m.id) {
+            <option [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="case-classee">
+        <input type="checkbox" id="classee" [(ngModel)]="classeeChoisi">
+        <label for="classee">Partie classée (compte pour le classement Elo du club)</label>
+      </div>
+
+      @if (messageErreurProposition) {
+        <p class="erreur">{{ messageErreurProposition }}</p>
+      }
+
+      <button class="btn-primary" [disabled]="propositionEnCours" (click)="proposerPartie()">
+        {{ propositionEnCours ? 'Envoi...' : 'Proposer la partie' }}
+      </button>
+    </div>
+
+  } @else if (maPartie.statut === 'en_attente' && maPartie.je_suis_blanc) {
+
+    <!-- J'ai envoyé une invitation, j'attends la réponse -->
+    <div class="carte-attente">
+      <p>
+        En attente de réponse de
+        <strong>{{ maPartie.joueur_noir.prenom }} {{ maPartie.joueur_noir.nom }}</strong>...
+      </p>
+      <p class="detail-partie">{{ maPartie.classee ? 'Partie classée' : 'Partie libre (non classée)' }}</p>
+      <button class="btn-refuser" (click)="demanderConfirmationAnnulation()">Annuler l'invitation</button>
+    </div>
+
+  } @else if (maPartie.statut === 'en_attente' && !maPartie.je_suis_blanc) {
+
+    <!-- On m'a invité, je dois répondre -->
+    <div class="carte-invitation">
+      <p>
+        <strong>{{ maPartie.joueur_blanc.prenom }} {{ maPartie.joueur_blanc.nom }}</strong>
+        vous propose une partie !
+      </p>
+      <p class="detail-partie">{{ maPartie.classee ? 'Partie classée' : 'Partie libre (non classée)' }}</p>
+
+      @if (messageErreurAcceptation) {
+        <p class="erreur">{{ messageErreurAcceptation }}</p>
+      }
+
+      <button class="btn-valider" [disabled]="accepterEnCours" (click)="accepterInvitation()">
+        {{ accepterEnCours ? 'Acceptation...' : 'Accepter' }}
+      </button>
+      <button class="btn-refuser" (click)="demanderConfirmationAnnulation()">Refuser</button>
+    </div>
+
+  } @else if (maPartie.statut === 'en_cours') {
+
+    <!-- Partie en cours : le plateau viendra à l'étape 2 -->
+    <div class="carte-partie-en-cours">
+      <p>
+        Partie en cours contre
+        <strong>
+          {{ maPartie.je_suis_blanc ? (maPartie.joueur_noir.prenom + ' ' + maPartie.joueur_noir.nom) : (maPartie.joueur_blanc.prenom + ' ' + maPartie.joueur_blanc.nom) }}
+        </strong>
+      </p>
+      <p class="detail-partie">
+        Vous jouez les {{ maPartie.je_suis_blanc ? 'blancs' : 'noirs' }} —
+        {{ maPartie.classee ? 'partie classée' : 'partie libre' }}
+      </p>
+      <p class="a-venir">Le plateau de jeu sera disponible ici prochainement.</p>
+    </div>
+
+  }
+
+  <!-- ========== Confirmation annulation / refus ========== -->
+  @if (confirmationAnnulationEnCours) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Confirmer ?</p>
+        <button (click)="confirmerAnnulation()">Oui</button>
+        <button (click)="annulerConfirmationAnnulation()">Non</button>
+      </div>
+    </div>
+  }
+</div>

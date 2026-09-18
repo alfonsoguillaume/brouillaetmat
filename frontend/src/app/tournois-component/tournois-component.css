@@ -1,0 +1,276 @@
+.tournois-page {
+  max-width: 700px;
+  margin: 0 auto 1rem auto;
+}
+
+.btn-ajouter {
+  width: auto;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Liste des tournois --- */
+.liste-tournois {
+  border: 1.5px solid #7D9982;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ligne-tournoi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.ligne-tournoi:last-child {
+  border-bottom: none;
+}
+
+.ligne-tournoi:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.ligne-tournoi-texte {
+  display: flex;
+  flex-direction: column;
+}
+
+.ligne-tournoi-texte strong {
+  color: #D9A24B;
+}
+
+.ligne-tournoi-texte span {
+  font-size: 0.9rem;
+  color: #7D9982;
+}
+
+.badge-statut {
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #D9A24B;
+  padding: 0.3rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.badge-statut.en-cours {
+  background-color: #688D6A;
+  color: #2D302C;
+}
+
+.badge-statut.termine {
+  background-color: #CE865A;
+  color: #2D302C;
+}
+
+/* --- Archives (tournois annulés / terminés) --- */
+.titre-archives {
+  color: #688D6A;
+  margin-top: 2.5rem;
+}
+
+.liste-archives {
+  max-height: 350px;
+  overflow-y: auto;
+  opacity: 0.85;
+}
+
+/* --- Boutons --- */
+.btn-valider,
+.btn-refuser {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  margin-right: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-valider {
+  background-color: #688D6A;
+  color: #2D302C;
+}
+
+.btn-valider:hover {
+  background-color: #7D9982;
+  transform: translateY(-2px);
+}
+
+.btn-refuser {
+  background-color: #ff6b6b;
+  color: #2D302C;
+}
+
+.btn-refuser:hover {
+  background-color: #ff8787;
+  transform: translateY(-2px);
+}
+
+.actions-tournoi {
+  margin-bottom: 1rem;
+}
+
+/* --- Détail : participants --- */
+.info-tournoi {
+  color: #7D9982;
+  margin-top: -0.5rem;
+}
+
+.liste-participants {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.liste-participants li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.liste-participants li:last-child {
+  border-bottom: none;
+}
+
+.liste-participants .btn-refuser {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  margin-right: 0;
+}
+
+.ajout-participant {
+  margin: 1.5rem 0;
+}
+
+.ajout-participant select {
+  margin-bottom: 0.75rem;
+}
+
+/* --- Formulaire / champs partagés --- */
+select,
+input[type="text"],
+input[type="date"] {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+}
+
+textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+  resize: vertical;
+}
+
+/* --- Modales --- */
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modale-contenu {
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #D9A24B;
+}
+
+.modale-contenu h2 {
+  color: #688D6A;
+  margin-top: 0;
+}
+
+.modale-contenu h3 {
+  color: #688D6A;
+  font-size: 1.1rem;
+}
+
+.btn-fermer {
+  background-color: transparent;
+  border: 1.5px solid #7D9982;
+  color: #D9A24B;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.confirmation-contenu {
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 400px;
+  text-align: center;
+  color: #D9A24B;
+}
+
+.confirmation-contenu button {
+  margin: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.confirmation-contenu button:first-of-type {
+  background-color: #CE865A;
+  color: #2D302C;
+}
+
+.confirmation-contenu button:last-of-type {
+  background-color: transparent;
+  border: 1.5px solid #7D9982;
+  color: #D9A24B;
+}

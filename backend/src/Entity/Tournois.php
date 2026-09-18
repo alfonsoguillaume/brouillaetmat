@@ -20,8 +20,17 @@ class Tournois
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date = null;
 
+    // Valeurs possibles : 'planifie', 'en_cours', 'annule'.
     #[ORM\Column(length: 15)]
     private ?string $statut = null;
+
+    // Rempli uniquement si statut = 'annule' — la raison de l'annulation,
+    // conservée pour l'historique/archives.
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $motif_annulation = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTime $date_annulation = null;
 
     public function getId(): ?int
     {
@@ -67,6 +76,30 @@ class Tournois
     public function setStatut(string $statut): static
     {
         $this->statut = $statut;
+
+        return $this;
+    }
+
+    public function getMotifAnnulation(): ?string
+    {
+        return $this->motif_annulation;
+    }
+
+    public function setMotifAnnulation(?string $motif_annulation): static
+    {
+        $this->motif_annulation = $motif_annulation;
+
+        return $this;
+    }
+
+    public function getDateAnnulation(): ?\DateTime
+    {
+        return $this->date_annulation;
+    }
+
+    public function setDateAnnulation(?\DateTime $date_annulation): static
+    {
+        $this->date_annulation = $date_annulation;
 
         return $this;
     }

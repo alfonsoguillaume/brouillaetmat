@@ -1,1 +1,253 @@
-<p>tournois-component works!</p>
+<div class="tournois-page">
+  <h2>Tournois</h2>
+
+  @if (estAdmin()) {
+    <button class="btn-primary btn-ajouter" (click)="ouvrirModaleCreation()">Créer un tournoi</button>
+  }
+
+  @if (tournois.length === 0) {
+    <p>Aucun tournoi pour l'instant.</p>
+  } @else {
+    <div class="liste-tournois">
+      @for (t of tournois; track t.id) {
+        <div class="ligne-tournoi" (click)="ouvrirDetail(t)">
+          <div class="ligne-tournoi-texte">
+            <strong>{{ t.nom }}</strong>
+            <span>{{ t.date | date:'dd/MM/yyyy' }} — {{ t.nombre_participants }} participant(s)</span>
+          </div>
+          <span class="badge-statut" [class.en-cours]="t.statut === 'en_cours'">
+            {{ t.statut === 'en_cours' ? 'Lancé' : 'Planifié' }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ========== Archives : tournois annulés (et, plus tard, terminés) ========== -->
+  <h3 class="titre-archives">Archive des tournois</h3>
+
+  @if (tournoisArchive.length === 0) {
+    <p>Aucun tournoi archivé pour l'instant.</p>
+  } @else {
+    <div class="liste-tournois liste-archives">
+      @for (t of tournoisArchive; track t.id) {
+        <div class="ligne-tournoi" (click)="ouvrirDetailArchive(t)">
+          <div class="ligne-tournoi-texte">
+            <strong>{{ t.nom }}</strong>
+            <span>
+              Prévu le {{ t.date | date:'dd/MM/yyyy' }}
+              @if (t.statut === 'annule') {
+                — annulé le {{ t.date_annulation | date:'dd/MM/yyyy' }}
+              }
+            </span>
+          </div>
+          <span class="badge-statut" [class.termine]="t.statut === 'termine'">
+            {{ t.statut === 'termine' ? 'Terminé' : 'Annulé' }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ========== Modale création ========== -->
+  @if (modaleCreationOuverte) {
+    <div class="modale-overlay" (click)="fermerModaleCreation()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>Créer un tournoi</h2>
+
+        <form [formGroup]="creationForm" (ngSubmit)="creerTournoi()">
+          <div class="form-group">
+            <label class="label" for="cNom">Nom*</label>
+            <input type="text" id="cNom" formControlName="nom">
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="cDate">Date*</label>
+            <input type="date" id="cDate" formControlName="date" [min]="dateMin">
+          </div>
+
+          @if (messagesErreursCreation.length > 0) {
+            <div class="erreur">
+              @for (msg of messagesErreursCreation; track msg) {
+                <p>{{ msg }}</p>
+              }
+            </div>
+          }
+
+          <button type="submit" class="btn-primary" [disabled]="creationEnCours">
+            {{ creationEnCours ? 'Création...' : 'Créer' }}
+          </button>
+        </form>
+
+        <button class="btn-fermer" (click)="fermerModaleCreation()">Fermer</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Modale détail ========== -->
+  @if (tournoiSelectionne; as tournoi) {
+    <div class="modale-overlay" (click)="fermerDetail()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+
+        @if (!modeEditionInfos) {
+          <h2>{{ tournoi.nom }}</h2>
+          <p class="info-tournoi">
+            {{ tournoi.date | date:'dd/MM/yyyy' }} —
+            {{ tournoi.statut === 'en_cours' ? 'Tournoi lancé' : 'Planifié' }}
+          </p>
+
+          @if (estAdmin()) {
+            <div class="actions-tournoi">
+              @if (tournoi.statut === 'planifie') {
+                <button class="btn-valider" (click)="basculerModeEdition()">Modifier</button>
+              }
+              <button class="btn-refuser" (click)="ouvrirModaleAnnulation()">Annuler le tournoi</button>
+            </div>
+          }
+
+          <h3>Participants</h3>
+
+          @if (tournoi.participants.length === 0) {
+            <p>Aucun participant inscrit pour l'instant.</p>
+          } @else {
+            <ul class="liste-participants">
+              @for (p of tournoi.participants; track p.utilisateur_id) {
+                <li>
+                  <span>{{ p.prenom }} {{ p.nom }}</span>
+                  @if (estAdmin() && tournoi.statut === 'planifie') {
+                    <button class="btn-refuser" (click)="demanderConfirmationRetrait(p)">Retirer</button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (estAdmin() && tournoi.statut === 'planifie') {
+            <div class="form-group ajout-participant">
+              <label class="label" for="pMembre">Ajouter un participant</label>
+              <select id="pMembre" #participantSelect (change)="onParticipantChange(participantSelect.value)">
+                <option value="" disabled selected>Choisir un membre</option>
+                @for (m of participantsDisponiblesPourAjout; track m.id) {
+                  <option [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
+                }
+              </select>
+              <button class="btn-valider" (click)="ajouterParticipant()">Ajouter</button>
+            </div>
+
+            @if (messageErreurParticipant) {
+              <p class="erreur">{{ messageErreurParticipant }}</p>
+            }
+
+            <button class="btn-primary" (click)="demanderConfirmationLancement()">Lancer le tournoi</button>
+          }
+
+          <button class="btn-fermer" (click)="fermerDetail()">Fermer</button>
+
+        } @else {
+          <h2>Modifier le tournoi</h2>
+
+          <form [formGroup]="editionForm" (ngSubmit)="enregistrerEdition()">
+            <div class="form-group">
+              <label class="label" for="eNom">Nom*</label>
+              <input type="text" id="eNom" formControlName="nom">
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="eDate">Date*</label>
+              <input type="date" id="eDate" formControlName="date" [min]="dateMin">
+            </div>
+
+            @if (messagesErreursEdition.length > 0) {
+              <div class="erreur">
+                @for (msg of messagesErreursEdition; track msg) {
+                  <p>{{ msg }}</p>
+                }
+              </div>
+            }
+
+            <button type="submit" class="btn-primary" [disabled]="editionEnCours">
+              {{ editionEnCours ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+            <button type="button" class="btn-fermer" (click)="annulerEditionForm()">Annuler</button>
+          </form>
+        }
+
+      </div>
+    </div>
+  }
+
+  <!-- ========== Modale détail archive (annulé ou terminé) ========== -->
+  @if (archiveSelectionnee; as archive) {
+    <div class="modale-overlay" (click)="fermerDetailArchive()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>{{ archive.nom }}</h2>
+        <p class="info-tournoi">
+          Prévu le {{ archive.date | date:'dd/MM/yyyy' }}
+          @if (archive.statut === 'annule') {
+            — annulé le {{ archive.date_annulation | date:'dd/MM/yyyy' }}
+          }
+        </p>
+
+        @if (archive.statut === 'annule') {
+          <h3>Motif de l'annulation</h3>
+          <p>{{ archive.motif_annulation }}</p>
+        } @else {
+          <h3>Classement final</h3>
+          <p>
+            Le classement sera affiché ici une fois la méthode de notation
+            mise en place.
+          </p>
+        }
+
+        <button class="btn-fermer" (click)="fermerDetailArchive()">Fermer</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Modale annulation (motif obligatoire) ========== -->
+  @if (modaleAnnulationOuverte) {
+    <div class="modale-overlay" (click)="fermerModaleAnnulation()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>Annuler le tournoi</h2>
+        <p>Le tournoi restera visible dans les archives avec le motif indiqué ci-dessous.</p>
+
+        <div class="form-group">
+          <label class="label" for="motif">Motif de l'annulation*</label>
+          <textarea id="motif" rows="4" #motifInput (input)="onMotifAnnulationChange(motifInput.value)"></textarea>
+        </div>
+
+        @if (messageErreurAnnulation) {
+          <p class="erreur">{{ messageErreurAnnulation }}</p>
+        }
+
+        <button class="btn-refuser" [disabled]="annulationEnCours" (click)="confirmerAnnulation()">
+          {{ annulationEnCours ? 'Annulation...' : 'Confirmer l\'annulation' }}
+        </button>
+        <button class="btn-fermer" (click)="fermerModaleAnnulation()">Retour</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation retrait participant ========== -->
+  @if (confirmationRetraitEnCours; as participant) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Retirer {{ participant.prenom }} {{ participant.nom }} de ce tournoi ?</p>
+        <button (click)="confirmerRetrait()">Oui</button>
+        <button (click)="annulerConfirmationRetrait()">Annuler</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation lancement ========== -->
+  @if (confirmationLancementEnCours) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Lancer ce tournoi ? Les inscriptions seront verrouillées, plus aucun membre ne pourra être ajouté ou
+          retiré.</p>
+        <button (click)="confirmerLancement()">Oui</button>
+        <button (click)="annulerConfirmationLancement()">Annuler</button>
+      </div>
+    </div>
+  }
+</div>

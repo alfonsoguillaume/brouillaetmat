@@ -1,0 +1,157 @@
+.jouer-page {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.carte-proposition,
+.carte-attente,
+.carte-invitation,
+.carte-partie-en-cours {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid #7D9982;
+  border-top: 4px solid #CE865A;
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.carte-proposition h3 {
+  color: #688D6A;
+  text-align: center;
+  margin-top: 0;
+}
+
+select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+}
+
+.case-classee {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.case-classee label {
+  color: #D9A24B;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.case-classee input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #CE865A;
+  flex-shrink: 0;
+}
+
+.carte-attente,
+.carte-invitation,
+.carte-partie-en-cours {
+  text-align: center;
+}
+
+.carte-attente strong,
+.carte-invitation strong,
+.carte-partie-en-cours strong {
+  color: #D9A24B;
+}
+
+.detail-partie {
+  color: #7D9982;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.a-venir {
+  color: #7D9982;
+  font-style: italic;
+  margin-top: 1.5rem;
+}
+
+.btn-valider,
+.btn-refuser {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  margin: 0 0.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-valider {
+  background-color: #688D6A;
+  color: #2D302C;
+}
+
+.btn-valider:hover {
+  background-color: #7D9982;
+  transform: translateY(-2px);
+}
+
+.btn-refuser {
+  background-color: #ff6b6b;
+  color: #2D302C;
+}
+
+.btn-refuser:hover {
+  background-color: #ff8787;
+  transform: translateY(-2px);
+}
+
+.confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.confirmation-contenu {
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 400px;
+  text-align: center;
+  color: #D9A24B;
+}
+
+.confirmation-contenu button {
+  margin: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.confirmation-contenu button:first-of-type {
+  background-color: #CE865A;
+  color: #2D302C;
+}
+
+.confirmation-contenu button:last-of-type {
+  background-color: transparent;
+  border: 1.5px solid #7D9982;
+  color: #D9A24B;
+}
