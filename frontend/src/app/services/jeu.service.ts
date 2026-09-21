@@ -20,6 +20,15 @@ export interface PartieActive {
   joueur_blanc: JoueurInfo;
   joueur_noir: JoueurInfo;
   je_suis_blanc: boolean;
+  fen: string | null;
+  coups: string[] | null;
+  trait: string | null;
+  resultat: string | null;
+  temps_restant_blanc: number | null;
+  temps_restant_noir: number | null;
+  dernier_coup_le: string | null;
+  dernier_signal_blanc: string | null;
+  dernier_signal_noir: string | null;
 }
 
 @Injectable({providedIn: 'root'})
@@ -48,5 +57,25 @@ export class JeuService {
 
   annulerInvitation(id: number) {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+  }
+
+  jouerCoup(id: number, fen: string, coup: string) {
+    return this.http.post<PartieActive>(`${this.apiUrl}/${id}/coup`, {fen, coup});
+  }
+
+  terminerPartie(id: number, resultat: 'blanc' | 'noir' | 'nul') {
+    return this.http.post<{ message: string; resultat: string }>(`${this.apiUrl}/${id}/terminer`, {resultat});
+  }
+
+  tempsEcoule(id: number) {
+    return this.http.post<PartieActive>(`${this.apiUrl}/${id}/temps-ecoule`, {});
+  }
+
+  signal(id: number) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/signal`, {});
+  }
+
+  declarerDeconnexion(id: number) {
+    return this.http.post<PartieActive>(`${this.apiUrl}/${id}/deconnexion`, {});
   }
 }

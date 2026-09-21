@@ -29,7 +29,7 @@ class JeuController extends AbstractController
             ->where('(p.joueur_blanc_id = :u OR p.joueur_noir_id = :u)')
             ->andWhere('p.statut IN (:statuts)')
             ->setParameter('u', $utilisateur)
-            ->setParameter('statuts', ['en_attente', 'en_cours'])
+            ->setParameter('statuts', ['en_attente', 'en_cours', 'terminee'])
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -95,6 +95,19 @@ class JeuController extends AbstractController
             // partie (donc j'attends une réponse), ou est-ce à moi de
             // répondre à une invitation reçue ?
             'je_suis_blanc' => $blanc?->getId() === $moi->getId(),
+            // Ces champs restent "null" tant que la partie n'est pas
+            // "en_cours" (une invitation en attente n'a pas encore de plateau).
+            'fen' => $partie->getFen(),
+            'coups' => $partie->getCoups(),
+            'trait' => $partie->getTrait(),
+            'resultat' => $partie->getResultat(),
+            'temps_restant_blanc' => $partie->getTempsRestantBlanc(),
+            'temps_restant_noir' => $partie->getTempsRestantNoir(),
+            // Format ISO 8601 ("c") — facile à parser côté Angular avec
+            // new Date(...).
+            'dernier_coup_le' => $partie->getDernierCoupLe()?->format('c'),
+            'dernier_signal_blanc' => $partie->getDernierSignalBlanc()?->format('c'),
+            'dernier_signal_noir' => $partie->getDernierSignalNoir()?->format('c'),
         ];
     }
 
@@ -182,9 +195,13 @@ class JeuController extends AbstractController
     }
 
     /**
-     * Refuse une invitation reçue, ou annule une invitation qu'on a
-     * soi-même envoyée — dans les deux cas, la ligne est simplement
-     * supprimée (rien à archiver pour une invitation jamais jouée).
+     * Deux usages pour cette même route :
+     * 1. Refuser/annuler une invitation encore "en_attente" (rien à
+     *    archiver, jamais jouée).
+     * 2. Fermer/nettoyer une partie "terminee" (une fois que le joueur a
+     *    vu le résultat affiché) — la ligne n'est supprimée qu'à ce
+     *    moment-là, jamais automatiquement à la détection du mat (voir
+     *    terminer() ci-dessus pour l'explication complète).
      */
     #[Route('/api/jeu/{id<\d+>}', name: 'api_jeu_annuler_invitation', methods: ['DELETE'])]
     public function annulerInvitation(int $id, EntityManagerInterface $em): JsonResponse
@@ -194,22 +211,305 @@ class JeuController extends AbstractController
 
         $partie = $em->getRepository(Partie::class)->find($id);
         if (!$partie) {
-            return $this->json(['message' => 'Invitation introuvable.'], 404);
+            // Déjà supprimée — probablement par l'adversaire, qui a fermé
+            // le résultat de son côté en premier. Pas une erreur.
+            return $this->json(['message' => 'Déjà supprimée.']);
         }
 
         $estImplique = $partie->getJoueurBlancId()?->getId() === $moi->getId()
             || $partie->getJoueurNoirId()?->getId() === $moi->getId();
         if (!$estImplique) {
-            return $this->json(['message' => 'Cette invitation ne vous concerne pas.'], 403);
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
         }
 
-        if ($partie->getStatut() !== 'en_attente') {
-            return $this->json(['message' => 'Impossible d\'annuler une partie déjà commencée.'], 409);
+        if (!in_array($partie->getStatut(), ['en_attente', 'terminee'], true)) {
+            return $this->json(['message' => 'Impossible d\'annuler une partie en cours.'], 409);
         }
 
         $em->remove($partie);
         $em->flush();
 
-        return $this->json(['message' => 'Invitation annulée.']);
+        return $this->json(['message' => 'Supprimée.']);
+    }
+
+    /**
+     * Joue un coup. La validité du coup lui-même (règles d'échecs) est déjà
+     * vérifiée côté Angular via chess.js — ici, on vérifie seulement que
+     * c'est bien le tour de la personne qui envoie la requête, puis on
+     * enregistre le nouvel état.
+     */
+    #[Route('/api/jeu/{id<\d+>}/coup', name: 'api_jeu_jouer_coup', methods: ['POST'])]
+    public function jouerCoup(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        if ($partie->getStatut() !== 'en_cours') {
+            return $this->json(['message' => 'Cette partie n\'est pas en cours.'], 409);
+        }
+
+        $estBlanc = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estNoir = $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estBlanc && !$estNoir) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        $maCouleur = $estBlanc ? 'blanc' : 'noir';
+        if ($partie->getTrait() !== $maCouleur) {
+            return $this->json(['message' => 'Ce n\'est pas votre tour.'], 409);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (empty($data['fen']) || empty($data['coup'])) {
+            return $this->json(['message' => 'Coup invalide.'], 400);
+        }
+
+        // Calcule le temps RÉELLEMENT écoulé depuis le dernier coup, et le
+        // déduit du chrono de celui qui vient de jouer (pas de celui qui
+        // attendait — son chrono à lui ne tournait pas).
+        $maintenant = new \DateTime();
+        $dernierCoup = $partie->getDernierCoupLe() ?? $maintenant;
+        $secondesEcoulees = $maintenant->getTimestamp() - $dernierCoup->getTimestamp();
+
+        $tempsAvant = $estBlanc ? $partie->getTempsRestantBlanc() : $partie->getTempsRestantNoir();
+        $nouveauTemps = ($tempsAvant ?? 600) - $secondesEcoulees;
+
+        if ($nouveauTemps <= 0) {
+            // Le temps était déjà écoulé au moment où ce coup a été reçu —
+            // trop tard, la partie est perdue au chrono, ce coup est
+            // ignoré (pas appliqué).
+            $partie->setStatut('terminee');
+            $partie->setResultat($estBlanc ? 'noir' : 'blanc');
+            if ($estBlanc) {
+                $partie->setTempsRestantBlanc(0);
+            } else {
+                $partie->setTempsRestantNoir(0);
+            }
+            $em->flush();
+
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        if ($estBlanc) {
+            $partie->setTempsRestantBlanc($nouveauTemps);
+        } else {
+            $partie->setTempsRestantNoir($nouveauTemps);
+        }
+
+        $coups = $partie->getCoups() ?? [];
+        $coups[] = $data['coup'];
+
+        $partie->setFen($data['fen']);
+        $partie->setCoups($coups);
+        $partie->setTrait($maCouleur === 'blanc' ? 'noir' : 'blanc');
+        $partie->setDernierCoupLe($maintenant);
+
+        // Jouer un coup est en soi la preuve la plus fiable qu'on est
+        // toujours présent — met aussi à jour le "battement de cœur"
+        // (utile dès que la détection de déconnexion sera activée).
+        if ($estBlanc) {
+            $partie->setDernierSignalBlanc($maintenant);
+        } else {
+            $partie->setDernierSignalNoir($maintenant);
+        }
+
+        $em->flush();
+
+        return $this->json($this->formaterPartie($partie, $moi));
+    }
+
+    /**
+     * "Battement de cœur" — appelée régulièrement par le navigateur de
+     * chaque joueur pendant qu'une partie est en cours, pour dire "je suis
+     * toujours là". Met à jour uniquement le signal de SA PROPRE couleur.
+     */
+    #[Route('/api/jeu/{id<\d+>}/signal', name: 'api_jeu_signal', methods: ['POST'])]
+    public function signal(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie || $partie->getStatut() !== 'en_cours') {
+            return $this->json(['message' => 'Rien à signaler.']);
+        }
+
+        $estBlanc = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estNoir = $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estBlanc && !$estNoir) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        if ($estBlanc) {
+            $partie->setDernierSignalBlanc(new \DateTime());
+        } else {
+            $partie->setDernierSignalNoir(new \DateTime());
+        }
+        $em->flush();
+
+        return $this->json(['message' => 'Signal reçu.']);
+    }
+
+    /**
+     * Signale que l'ADVERSAIRE semble déconnecté (aucun signal depuis plus
+     * de 20 secondes). Peut être appelée par n'importe lequel des deux
+     * joueurs, mais ne fait gagner QUE si c'est vraiment l'autre camp qui
+     * est silencieux depuis trop longtemps — revérifié côté serveur.
+     */
+    #[Route('/api/jeu/{id<\d+>}/deconnexion', name: 'api_jeu_deconnexion', methods: ['POST'])]
+    public function declarerDeconnexion(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        $estBlanc = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estNoir = $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estBlanc && !$estNoir) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        if ($partie->getStatut() !== 'en_cours') {
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        // On vérifie le signal de L'ADVERSAIRE (pas le sien).
+        $dernierSignalAdversaire = $estBlanc ? $partie->getDernierSignalNoir() : $partie->getDernierSignalBlanc();
+        $reference = $dernierSignalAdversaire ?? $partie->getDernierCoupLe() ?? new \DateTime();
+        $secondesDepuisSignal = (new \DateTime())->getTimestamp() - $reference->getTimestamp();
+
+        if ($secondesDepuisSignal < 20) {
+            // Pas (encore) réellement déconnecté — fausse alerte.
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        $gagnant = $estBlanc ? 'blanc' : 'noir';
+        $partie->setStatut('terminee');
+        $partie->setResultat($gagnant);
+        $em->flush();
+
+        return $this->json($this->formaterPartie($partie, $moi));
+    }
+
+    /**
+     * Signale qu'un chrono est tombé à zéro. Peut être appelée par
+     * N'IMPORTE LEQUEL des deux joueurs (pas seulement celui dont le
+     * temps est écoulé) — utile si c'est justement CE joueur-là qui a
+     * fermé son navigateur et ne peut plus rien signaler lui-même.
+     *
+     * Revérifié côté serveur (jamais fait confiance à l'horloge locale du
+     * navigateur) : recalcule le temps réel à partir de ce qui est stocké
+     * + le temps écoulé depuis le dernier coup.
+     */
+    #[Route('/api/jeu/{id<\d+>}/temps-ecoule', name: 'api_jeu_temps_ecoule', methods: ['POST'])]
+    public function tempsEcoule(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        $estImplique = $partie->getJoueurBlancId()?->getId() === $moi->getId()
+            || $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estImplique) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        if ($partie->getStatut() !== 'en_cours') {
+            // Déjà terminée (par mat, ou par un autre signal de temps
+            // écoulé arrivé juste avant) — pas une erreur, on renvoie
+            // simplement l'état actuel.
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        $couleurAuTrait = $partie->getTrait();
+        $tempsStocke = $couleurAuTrait === 'blanc' ? $partie->getTempsRestantBlanc() : $partie->getTempsRestantNoir();
+        $dernierCoup = $partie->getDernierCoupLe() ?? new \DateTime();
+        $secondesEcoulees = (new \DateTime())->getTimestamp() - $dernierCoup->getTimestamp();
+        $tempsReel = ($tempsStocke ?? 600) - $secondesEcoulees;
+
+        if ($tempsReel > 0) {
+            // Fausse alerte (horloge locale du navigateur légèrement en
+            // avance, par exemple) — le temps n'est pas réellement écoulé.
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        $gagnant = $couleurAuTrait === 'blanc' ? 'noir' : 'blanc';
+        $partie->setStatut('terminee');
+        $partie->setResultat($gagnant);
+        if ($couleurAuTrait === 'blanc') {
+            $partie->setTempsRestantBlanc(0);
+        } else {
+            $partie->setTempsRestantNoir(0);
+        }
+        $em->flush();
+
+        return $this->json($this->formaterPartie($partie, $moi));
+    }
+
+    /**
+     * Marque une partie comme terminée (mat, pat, nul) — détecté côté
+     * Angular via chess.js, jamais revérifié ici (cohérent avec notre
+     * choix de scope : validation des règles uniquement côté client).
+     *
+     * IMPORTANT : ne supprime PAS la ligne tout de suite — les deux
+     * joueurs ne rafraîchissent pas au même instant (toutes les 3s au
+     * mieux), donc une suppression immédiate risquerait de faire
+     * disparaître la partie avant que l'adversaire n'ait eu la moindre
+     * chance de voir le résultat. La suppression réelle n'a lieu que
+     * lorsque CHAQUE joueur ferme le message de son côté (voir
+     * fermerPartieTerminee ci-dessous, qui réutilise la route DELETE).
+     *
+     * Idempotent : si déjà "terminee", renvoie simplement l'état actuel
+     * plutôt que d'échouer — les deux joueurs peuvent détecter la fin de
+     * partie chacun de leur côté et appeler cette route en double.
+     */
+    #[Route('/api/jeu/{id<\d+>}/terminer', name: 'api_jeu_terminer', methods: ['POST'])]
+    public function terminer(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        $estImplique = $partie->getJoueurBlancId()?->getId() === $moi->getId()
+            || $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estImplique) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        if ($partie->getStatut() === 'terminee') {
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $resultat = $data['resultat'] ?? null;
+        if (!in_array($resultat, ['blanc', 'noir', 'nul'], true)) {
+            return $this->json(['message' => 'Résultat invalide.'], 400);
+        }
+
+        // TODO (étape 3) : mettre à jour le classement Elo des deux
+        // joueurs ici, si $partie->isClassee() est vrai.
+
+        $partie->setStatut('terminee');
+        $partie->setResultat($resultat);
+        $em->flush();
+
+        return $this->json($this->formaterPartie($partie, $moi));
     }
 }

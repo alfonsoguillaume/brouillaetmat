@@ -125,3 +125,9 @@ input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px #2D302C inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* Décale les lettres de colonnes (chessground) un peu à gauche : par
+   défaut collées au bord droit de leur case, à cheval sur la case suivante. */
+.cg-wrap coords.squares coord {
+  padding-right: 10%;
+}
