@@ -1,0 +1,14 @@
+.plateau-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+/* chessground a besoin d'un conteneur avec une taille EXPLICITE — sans
+   largeur/hauteur définies, le plateau ne s'affiche pas du tout. */
+.plateau-conteneur {
+  width: 400px;
+  height: 400px;
+  max-width: 90vw;
+  max-height: 90vw;
+}

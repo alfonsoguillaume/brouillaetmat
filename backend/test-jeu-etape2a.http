@@ -1,0 +1,83 @@
+### 1. Connexion joueur A — copie le token
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Connexion joueur B — copie ce 2e token séparément
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "a@a.fr",
+    "password": "Aa123456789."
+}
+
+### 3. Joueur A propose une partie à joueur B (adapte adversaire_id si besoin)
+POST http://localhost:8000/api/jeu/proposer
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3MDEsImV4cCI6MTc4OTk3OTMwMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.Pr1WxyjV9c4lfO-H9KJUzE8v9N-KPPLIAS7phGh3Llahq2qfBmUrjzgmm3IKw5gNcK7BAexAJx1drwd9tBcpQuGxjYUNF2FHTPqjPBCLAVw_ih3I_qdF9LRzpzvZrI7eJhQdvnSSA0gsbxcLoWqyAljG33cnpg758P-j4SLF63wz5zxt3wr00Y5c56lB4eSAtxou39HaYYpBiU_SNGgN7joC2BqKjlWTbuJTmDJ8JK78GCzqGmR4o_TSogiDDTX5EJnVXrTO7jdiMbDegjZehcWU62RHC4tZQc5zETq10w5cmqnuzufNmR5f6j179pnV9lL65p8MtSa6UgZgjGxG5w
+Content-Type: application/json
+
+{
+    "adversaire_id": 23,
+    "classee": true
+}
+
+### 4. Joueur B accepte (remplace 1 par le vrai id de partie vu à l'étape 3)
+POST http://localhost:8000/api/jeu/5/accepter
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3NzUsImV4cCI6MTc4OTk3OTM3NSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.TU1oVAmKlY_C2zM94mXruIDkhSlmNGIrQTCG3Tk2gdckudd8o2wO1TYw1Qyai6EMMwugwWKz2YPYXX3e_sj2dN89yWKkj0e7WiVONZsJTFzIySgZwl_sBjOEP4wIA-ZTmR2nG5LJZDfNrzq-eJrFOUFzh0pRWHnWFBEXRSDdU8rWTg6BhCqzMsc4S9mi7IuhsTzKT8hS3Jgy1ykLNPFRqMeBxGdZrc9Vc9du4o37CGeOtd4rGdGgfgR0eRrCSOqi-8ehqEnH_p70PnWrr8XCF4AClzQ-4ky_Z7jFuDKkrN5Ynf6Fs_YGeKjaQDJh0pEEvmkHX9IoEQW0k2Y7Tzf1Fg
+
+### 5. Vérifier l'état initial (fen = position de départ, trait = "blanc", coups = [])
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3MDEsImV4cCI6MTc4OTk3OTMwMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.Pr1WxyjV9c4lfO-H9KJUzE8v9N-KPPLIAS7phGh3Llahq2qfBmUrjzgmm3IKw5gNcK7BAexAJx1drwd9tBcpQuGxjYUNF2FHTPqjPBCLAVw_ih3I_qdF9LRzpzvZrI7eJhQdvnSSA0gsbxcLoWqyAljG33cnpg758P-j4SLF63wz5zxt3wr00Y5c56lB4eSAtxou39HaYYpBiU_SNGgN7joC2BqKjlWTbuJTmDJ8JK78GCzqGmR4o_TSogiDDTX5EJnVXrTO7jdiMbDegjZehcWU62RHC4tZQc5zETq10w5cmqnuzufNmR5f6j179pnV9lL65p8MtSa6UgZgjGxG5w
+
+### 6. Joueur B essaie de jouer alors que c'est le tour des blancs (doit échouer en 409)
+POST http://localhost:8000/api/jeu/5/coup
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3NzUsImV4cCI6MTc4OTk3OTM3NSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.TU1oVAmKlY_C2zM94mXruIDkhSlmNGIrQTCG3Tk2gdckudd8o2wO1TYw1Qyai6EMMwugwWKz2YPYXX3e_sj2dN89yWKkj0e7WiVONZsJTFzIySgZwl_sBjOEP4wIA-ZTmR2nG5LJZDfNrzq-eJrFOUFzh0pRWHnWFBEXRSDdU8rWTg6BhCqzMsc4S9mi7IuhsTzKT8hS3Jgy1ykLNPFRqMeBxGdZrc9Vc9du4o37CGeOtd4rGdGgfgR0eRrCSOqi-8ehqEnH_p70PnWrr8XCF4AClzQ-4ky_Z7jFuDKkrN5Ynf6Fs_YGeKjaQDJh0pEEvmkHX9IoEQW0k2Y7Tzf1Fg
+Content-Type: application/json
+
+{
+    "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+    "coup": "e4"
+}
+
+### 7. Joueur A (les blancs) joue e4 (doit réussir)
+POST http://localhost:8000/api/jeu/5/coup
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3MDEsImV4cCI6MTc4OTk3OTMwMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.Pr1WxyjV9c4lfO-H9KJUzE8v9N-KPPLIAS7phGh3Llahq2qfBmUrjzgmm3IKw5gNcK7BAexAJx1drwd9tBcpQuGxjYUNF2FHTPqjPBCLAVw_ih3I_qdF9LRzpzvZrI7eJhQdvnSSA0gsbxcLoWqyAljG33cnpg758P-j4SLF63wz5zxt3wr00Y5c56lB4eSAtxou39HaYYpBiU_SNGgN7joC2BqKjlWTbuJTmDJ8JK78GCzqGmR4o_TSogiDDTX5EJnVXrTO7jdiMbDegjZehcWU62RHC4tZQc5zETq10w5cmqnuzufNmR5f6j179pnV9lL65p8MtSa6UgZgjGxG5w
+Content-Type: application/json
+
+{
+    "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+    "coup": "e4"
+}
+
+### 8. Vérifier que le trait est passé à "noir", et coups = ["e4"]
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3MDEsImV4cCI6MTc4OTk3OTMwMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.Pr1WxyjV9c4lfO-H9KJUzE8v9N-KPPLIAS7phGh3Llahq2qfBmUrjzgmm3IKw5gNcK7BAexAJx1drwd9tBcpQuGxjYUNF2FHTPqjPBCLAVw_ih3I_qdF9LRzpzvZrI7eJhQdvnSSA0gsbxcLoWqyAljG33cnpg758P-j4SLF63wz5zxt3wr00Y5c56lB4eSAtxou39HaYYpBiU_SNGgN7joC2BqKjlWTbuJTmDJ8JK78GCzqGmR4o_TSogiDDTX5EJnVXrTO7jdiMbDegjZehcWU62RHC4tZQc5zETq10w5cmqnuzufNmR5f6j179pnV9lL65p8MtSa6UgZgjGxG5w
+
+### 9. Joueur A essaie de rejouer alors que c'est au tour des noirs (doit échouer en 409)
+POST http://localhost:8000/api/jeu/5/coup
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3MDEsImV4cCI6MTc4OTk3OTMwMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.Pr1WxyjV9c4lfO-H9KJUzE8v9N-KPPLIAS7phGh3Llahq2qfBmUrjzgmm3IKw5gNcK7BAexAJx1drwd9tBcpQuGxjYUNF2FHTPqjPBCLAVw_ih3I_qdF9LRzpzvZrI7eJhQdvnSSA0gsbxcLoWqyAljG33cnpg758P-j4SLF63wz5zxt3wr00Y5c56lB4eSAtxou39HaYYpBiU_SNGgN7joC2BqKjlWTbuJTmDJ8JK78GCzqGmR4o_TSogiDDTX5EJnVXrTO7jdiMbDegjZehcWU62RHC4tZQc5zETq10w5cmqnuzufNmR5f6j179pnV9lL65p8MtSa6UgZgjGxG5w
+Content-Type: application/json
+
+{
+    "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+    "coup": "e5"
+}
+
+### 10. Joueur B (les noirs) joue e5 (doit réussir)
+POST http://localhost:8000/api/jeu/5/coup
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3NzUsImV4cCI6MTc4OTk3OTM3NSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.TU1oVAmKlY_C2zM94mXruIDkhSlmNGIrQTCG3Tk2gdckudd8o2wO1TYw1Qyai6EMMwugwWKz2YPYXX3e_sj2dN89yWKkj0e7WiVONZsJTFzIySgZwl_sBjOEP4wIA-ZTmR2nG5LJZDfNrzq-eJrFOUFzh0pRWHnWFBEXRSDdU8rWTg6BhCqzMsc4S9mi7IuhsTzKT8hS3Jgy1ykLNPFRqMeBxGdZrc9Vc9du4o37CGeOtd4rGdGgfgR0eRrCSOqi-8ehqEnH_p70PnWrr8XCF4AClzQ-4ky_Z7jFuDKkrN5Ynf6Fs_YGeKjaQDJh0pEEvmkHX9IoEQW0k2Y7Tzf1Fg
+Content-Type: application/json
+
+{
+    "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",
+    "coup": "e5"
+}
+
+### 11. Vérifier l'historique complet (coups = ["e4", "e5"], trait = "blanc")
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3ODk5NzU3MDEsImV4cCI6MTc4OTk3OTMwMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.Pr1WxyjV9c4lfO-H9KJUzE8v9N-KPPLIAS7phGh3Llahq2qfBmUrjzgmm3IKw5gNcK7BAexAJx1drwd9tBcpQuGxjYUNF2FHTPqjPBCLAVw_ih3I_qdF9LRzpzvZrI7eJhQdvnSSA0gsbxcLoWqyAljG33cnpg758P-j4SLF63wz5zxt3wr00Y5c56lB4eSAtxou39HaYYpBiU_SNGgN7joC2BqKjlWTbuJTmDJ8JK78GCzqGmR4o_TSogiDDTX5EJnVXrTO7jdiMbDegjZehcWU62RHC4tZQc5zETq10w5cmqnuzufNmR5f6j179pnV9lL65p8MtSa6UgZgjGxG5w

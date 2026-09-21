@@ -1,6 +1,6 @@
 .jouer-page {
   max-width: 500px;
-  margin: 0 auto;
+  margin: 0 auto 1rem auto;
   text-align: center;
 }
 
@@ -66,6 +66,12 @@ select {
   color: #D9A24B;
 }
 
+.carte-partie-en-cours h3 {
+  color: #D9A24B;
+  font-size: 1.6rem;
+  margin-top: 0;
+}
+
 .detail-partie {
   color: #7D9982;
   font-size: 0.9rem;
@@ -76,6 +82,52 @@ select {
   color: #7D9982;
   font-style: italic;
   margin-top: 1.5rem;
+}
+
+.indicateur-tour {
+  color: #D9A24B;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.chronos {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #7D9982;
+}
+
+.chronos span {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chronos .chrono-actif {
+  color: #2D302C;
+  background-color: #D9A24B;
+}
+
+.historique-coups {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.historique-coups h4 {
+  color: #688D6A;
+  margin: 0 0 0.5rem 0;
+}
+
+.historique-coups p {
+  color: #7D9982;
+  margin: 0;
+  word-break: break-word;
 }
 
 .btn-valider,
@@ -134,6 +186,12 @@ select {
   max-width: 400px;
   text-align: center;
   color: #D9A24B;
+}
+
+.confirmation-contenu h3 {
+  color: #688D6A;
+  margin-top: 0;
+  font-size: 1.6rem;
 }
 
 .confirmation-contenu button {

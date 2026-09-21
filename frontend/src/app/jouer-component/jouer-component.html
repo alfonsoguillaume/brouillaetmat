@@ -5,7 +5,6 @@
     <p>Chargement...</p>
   } @else if (!maPartie) {
 
-    <!-- Aucune partie active : proposer une partie -->
     <div class="carte-proposition">
       <h3>Proposer une partie</h3>
 
@@ -35,7 +34,6 @@
 
   } @else if (maPartie.statut === 'en_attente' && maPartie.je_suis_blanc) {
 
-    <!-- J'ai envoyé une invitation, j'attends la réponse -->
     <div class="carte-attente">
       <p>
         En attente de réponse de
@@ -47,7 +45,6 @@
 
   } @else if (maPartie.statut === 'en_attente' && !maPartie.je_suis_blanc) {
 
-    <!-- On m'a invité, je dois répondre -->
     <div class="carte-invitation">
       <p>
         <strong>{{ maPartie.joueur_blanc.prenom }} {{ maPartie.joueur_blanc.nom }}</strong>
@@ -67,7 +64,6 @@
 
   } @else if (maPartie.statut === 'en_cours') {
 
-    <!-- Partie en cours : le plateau viendra à l'étape 2 -->
     <div class="carte-partie-en-cours">
       <p>
         Partie en cours contre
@@ -79,12 +75,63 @@
         Vous jouez les {{ maPartie.je_suis_blanc ? 'blancs' : 'noirs' }} —
         {{ maPartie.classee ? 'partie classée' : 'partie libre' }}
       </p>
-      <p class="a-venir">Le plateau de jeu sera disponible ici prochainement.</p>
+
+      @if (maPartie.fen) {
+        <div class="chronos">
+          <span [class.chrono-actif]="maPartie.trait === 'noir'">
+            {{ maPartie.je_suis_blanc ? maPartie.joueur_noir.prenom : 'Vous' }} : {{ tempsAfficheNoir() }}
+          </span>
+          <span [class.chrono-actif]="maPartie.trait === 'blanc'">
+            {{ maPartie.je_suis_blanc ? 'Vous' : maPartie.joueur_blanc.prenom }} : {{ tempsAfficheBlanc() }}
+          </span>
+        </div>
+
+        <app-plateau
+          [fen]="maPartie.fen"
+          [jeSuisBlanc]="maPartie.je_suis_blanc"
+          [monTour]="estMonTour()"
+          (coupJoue)="onCoupJoue($event)"
+          (partieTerminee)="onPartieTerminee($event)">
+        </app-plateau>
+
+        <p class="indicateur-tour">
+          {{ estMonTour() ? 'À vous de jouer' : "En attente de l'adversaire" }}
+        </p>
+
+        @if (maPartie.coups && maPartie.coups.length > 0) {
+          <div class="historique-coups">
+            <h4>Coups joués</h4>
+            <p>{{ maPartie.coups.join(' · ') }}</p>
+          </div>
+        }
+      }
+    </div>
+
+  } @else if (maPartie.statut === 'terminee') {
+
+    <div class="carte-partie-en-cours">
+      <h3>{{ texteResultat() }}</h3>
+
+      @if (maPartie.fen) {
+        <app-plateau
+          [fen]="maPartie.fen"
+          [jeSuisBlanc]="maPartie.je_suis_blanc"
+          [monTour]="false">
+        </app-plateau>
+      }
+
+      @if (maPartie.coups && maPartie.coups.length > 0) {
+        <div class="historique-coups">
+          <h4>Coups joués</h4>
+          <p>{{ maPartie.coups.join(' · ') }}</p>
+        </div>
+      }
+
+      <button class="btn-primary" (click)="fermerPartieTerminee()">Fermer</button>
     </div>
 
   }
 
-  <!-- ========== Confirmation annulation / refus ========== -->
   @if (confirmationAnnulationEnCours) {
     <div class="confirmation-overlay">
       <div class="confirmation-contenu">
