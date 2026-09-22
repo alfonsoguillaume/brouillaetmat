@@ -104,6 +104,25 @@
             <p>{{ maPartie.coups.join(' · ') }}</p>
           </div>
         }
+
+        @if (maPartie.nul_propose_par) {
+          @if (jaiProposeNul()) {
+            <p class="detail-partie">Proposition de nulle envoyée, en attente de réponse...</p>
+          } @else {
+            <div class="proposition-nul">
+              <p>L'adversaire propose une nulle.</p>
+              <button class="btn-valider" (click)="repondreNul(true)">Accepter</button>
+              <button class="btn-refuser" (click)="repondreNul(false)">Refuser</button>
+            </div>
+          }
+        } @else {
+          <div class="actions-partie">
+            <button class="btn-valider" [disabled]="propositionNulEnCours" (click)="proposerNul()">
+              Proposer nul
+            </button>
+            <button class="btn-refuser" (click)="demanderConfirmationAbandon()">Abandonner</button>
+          </div>
+        }
       }
     </div>
 
@@ -139,6 +158,33 @@
         <button (click)="confirmerAnnulation()">Oui</button>
         <button (click)="annulerConfirmationAnnulation()">Non</button>
       </div>
+    </div>
+  }
+
+  @if (confirmationAbandonEnCours) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Abandonner la partie ? Cette action compte comme une défaite.</p>
+        <button (click)="confirmerAbandon()">Oui</button>
+        <button (click)="annulerConfirmationAbandon()">Non</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Classement, toujours visible ========== -->
+  <h3 class="titre-classement">Classement du club</h3>
+
+  @if (classementListe.length === 0) {
+    <p>Personne n'a encore joué de partie classée.</p>
+  } @else {
+    <div class="liste-classement">
+      @for (entree of classementListe; track entree.nom + entree.prenom; let i = $index) {
+        <div class="ligne-classement">
+          <span class="rang">{{ i + 1 }}</span>
+          <span class="nom-joueur">{{ entree.prenom }} {{ entree.nom }}</span>
+          <span class="elo">{{ entree.elo }}</span>
+        </div>
+      }
     </div>
   }
 </div>

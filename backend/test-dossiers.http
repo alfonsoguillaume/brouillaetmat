@@ -1,0 +1,16 @@
+### 1. Connexion — copie le token reçu
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Liste des dossiers (colle le token obtenu à l'étape 1)
+GET http://localhost:8000/api/documents/dossiers
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNjk0MjEsImV4cCI6MTc5MDA3MzAyMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.dnLAc4Nn8BVfpFvKt0gvsveh79HhBzvrHEOiJy3GOe82Cpq-NbxteIWjIH5SnnNhwZUd-7cNbp5bM3C51f9ntuJYxIeRY6DsP--BqD5PzIwtif9Z8wKpGCUH9tshCU719g28x9b1AMdsEk5x-lSxHrgOuYB9xTR5pD6AN_Jhzm-WVAwlMfwJMVuNN-32NacqiFkUwM8aCu1Yh3_aTbp5Ylsb8Z7upkc0buA-OthyeENpyJU6GlpatqQEcXzqLgkaCRN6kliDvgqNVnCbns2pX76N4ZX3d7OXFCnTpefeOd3MbuxYmapfrFnQzv2BGhkTM4EV2jFqasOcQ_rJQOQIMw
+
+### 3. Liste des documents à la racine (pour vérifier que ça fonctionne toujours)
+GET http://localhost:8000/api/documents
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNjk0MjEsImV4cCI6MTc5MDA3MzAyMSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.dnLAc4Nn8BVfpFvKt0gvsveh79HhBzvrHEOiJy3GOe82Cpq-NbxteIWjIH5SnnNhwZUd-7cNbp5bM3C51f9ntuJYxIeRY6DsP--BqD5PzIwtif9Z8wKpGCUH9tshCU719g28x9b1AMdsEk5x-lSxHrgOuYB9xTR5pD6AN_Jhzm-WVAwlMfwJMVuNN-32NacqiFkUwM8aCu1Yh3_aTbp5Ylsb8Z7upkc0buA-OthyeENpyJU6GlpatqQEcXzqLgkaCRN6kliDvgqNVnCbns2pX76N4ZX3d7OXFCnTpefeOd3MbuxYmapfrFnQzv2BGhkTM4EV2jFqasOcQ_rJQOQIMw

@@ -22,6 +22,7 @@ export interface Membre {
   email_tuteur: string | null;
   role: string;
   statut_inscription: string;
+  commentaire: string | null;
 }
 
 export interface ModificationMembre {
@@ -31,6 +32,7 @@ export interface ModificationMembre {
   email: string;
   telephone: string | null;
   email_tuteur: string | null;
+  commentaire: string | null;
 }
 
 @Injectable({providedIn: 'root'})

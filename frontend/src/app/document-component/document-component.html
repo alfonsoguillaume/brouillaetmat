@@ -1,10 +1,29 @@
 <div class="document-page">
   <h2>Documents administratifs</h2>
 
-  <button class="btn-primary btn-ajouter" (click)="ouvrirModaleAjout()">Ajouter un document</button>
+  <div class="barre-actions">
+    <button class="btn-primary btn-ajouter" (click)="ouvrirModaleAjout()">Ajouter un document</button>
+    <button class="btn-primary btn-ajouter" (click)="ouvrirModaleDossier()">Créer un dossier</button>
+  </div>
+
+  @if (dossiers.length > 0) {
+    <h4>Dossiers</h4>
+    <div class="liste-dossiers">
+      @for (dossier of dossiers; track dossier.id) {
+        <div class="ligne-dossier">
+          <span class="nom-dossier" (click)="ouvrirDossier(dossier)">
+            📁 {{ dossier.nom }} ({{ dossier.nombre_documents }})
+          </span>
+          <button class="btn-refuser" (click)="demanderConfirmationSuppressionDossier(dossier)">Supprimer</button>
+        </div>
+      }
+    </div>
+  }
+
+  <h4>Documents (hors dossier)</h4>
 
   @if (documents.length === 0) {
-    <p>Aucun document pour l'instant.</p>
+    <p>Aucun document ici pour l'instant.</p>
   } @else {
     <table class="table-documents">
       <thead>
@@ -30,6 +49,49 @@
     </table>
   }
 
+  <!-- ========== Modale : contenu d'un dossier ========== -->
+  @if (dossierSelectionne; as dossier) {
+    <div class="modale-overlay" (click)="fermerDossier()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>📁 {{ dossier.nom }}</h2>
+
+        @if (documentsDossier.length === 0) {
+          <p>Ce dossier est vide.</p>
+        } @else {
+          <table class="table-documents">
+            <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Ajouté le</th>
+              <th>Ajouté par</th>
+              <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (doc of documentsDossier; track doc.id) {
+                <tr>
+                  <td><a (click)="telechargerDocument(doc)" class="lien-document">{{ doc.nom }}</a></td>
+                  <td>{{ doc.date_ajout | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ doc.ajoute_par }}</td>
+                  <td>
+                    <button class="btn-refuser" (click)="demanderConfirmationSuppression(doc)">Supprimer</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        <div class="barre-actions">
+          <button class="btn-primary btn-ajouter" (click)="ouvrirModaleAjout()">Ajouter ici</button>
+        </div>
+
+        <button class="btn-fermer" (click)="fermerDossier()">Fermer</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Modale : ajouter un document ========== -->
   @if (modaleAjoutOuverte) {
     <div class="modale-overlay" (click)="fermerModaleAjout()">
       <div class="modale-contenu" (click)="$event.stopPropagation()">
@@ -46,6 +108,23 @@
             <label class="label" for="dFichier">Fichier*</label>
             <input type="file" id="dFichier" accept=".pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png"
                    (change)="onFichierSelectionne($event)">
+          </div>
+
+          <div class="form-group">
+            <label class="label">Dossier</label>
+            <details class="menu-dossier" #menuDossier>
+              <summary>{{ texteDossierChoisiPourAjout() }}</summary>
+              <div class="menu-dossier-options">
+                <div class="menu-dossier-option" (click)="onDossierAjoutChange('', menuDossier)">
+                  Racine (aucun dossier)
+                </div>
+                @for (d of dossiers; track d.id) {
+                  <div class="menu-dossier-option" (click)="onDossierAjoutChange(d.id.toString(), menuDossier)">
+                    📁 {{ d.nom }}
+                  </div>
+                }
+              </div>
+            </details>
           </div>
 
           @if (messagesErreursAjout.length > 0) {
@@ -67,6 +146,30 @@
     </div>
   }
 
+  <!-- ========== Modale : créer un dossier ========== -->
+  @if (modaleDossierOuverte) {
+    <div class="modale-overlay" (click)="fermerModaleDossier()">
+      <div class="modale-contenu" (click)="$event.stopPropagation()">
+        <h2>Créer un dossier</h2>
+
+        <div class="form-group">
+          <label class="label" for="dossierNom">Nom du dossier*</label>
+          <input type="text" id="dossierNom" #dossierInput (input)="onNomDossierChange(dossierInput.value)">
+        </div>
+
+        @if (messageErreurDossier) {
+          <p class="erreur">{{ messageErreurDossier }}</p>
+        }
+
+        <button class="btn-primary" [disabled]="creationDossierEnCours" (click)="creerDossier()">
+          {{ creationDossierEnCours ? 'Création...' : 'Créer' }}
+        </button>
+        <button class="btn-fermer" (click)="fermerModaleDossier()">Fermer</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation suppression document ========== -->
   @if (confirmationSuppressionEnCours) {
     <div class="confirmation-overlay">
       <div class="confirmation-contenu">
@@ -74,6 +177,26 @@
           irréversible.</p>
         <button (click)="confirmerSuppression()">Oui</button>
         <button (click)="annulerConfirmationSuppression()">Annuler</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation suppression dossier (cascade) ========== -->
+  @if (confirmationSuppressionDossierEnCours; as dossierASupprimer) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        @if (messageErreurSuppressionDossier) {
+          <p class="erreur">{{ messageErreurSuppressionDossier }}</p>
+        }
+        <p>
+          Supprimer le dossier « {{ dossierASupprimer.nom }} » ?
+          @if (dossierASupprimer.nombre_documents > 0) {
+            <strong>Les {{ dossierASupprimer.nombre_documents }} fichier(s) qu'il contient seront supprimés
+              définitivement en même temps.</strong>
+          }
+        </p>
+        <button (click)="confirmerSuppressionDossier()">Oui, supprimer</button>
+        <button (click)="annulerConfirmationSuppressionDossier()">Annuler</button>
       </div>
     </div>
   }

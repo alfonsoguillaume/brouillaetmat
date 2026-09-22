@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {JeuService, MembreJeu, PartieActive} from '../services/jeu.service';
+import {ClassementEntry, JeuService, MembreJeu, PartieActive} from '../services/jeu.service';
 import {PlateauComponent} from '../plateau-component/plateau-component';
 
 @Component({
@@ -39,6 +39,7 @@ export class JouerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.chargerMembres();
     this.chargerMaPartie(true);
+    this.chargerClassement();
 
     this.intervalId = setInterval(() => {
       this.chargerMaPartie(false);
@@ -85,6 +86,19 @@ export class JouerComponent implements OnInit, OnDestroy {
     this.jeuService.membresDisponibles().subscribe({
       next: (data) => {
         this.membres = data;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ---------- Classement ----------
+
+  classementListe: ClassementEntry[] = [];
+
+  private chargerClassement(): void {
+    this.jeuService.classement().subscribe({
+      next: (data) => {
+        this.classementListe = data;
         this.cdr.detectChanges();
       }
     });
@@ -367,12 +381,78 @@ export class JouerComponent implements OnInit, OnDestroy {
     this.jeuService.annulerInvitation(this.maPartie.id).subscribe({
       next: () => {
         this.maPartie = null;
+        this.chargerClassement();
         this.cdr.detectChanges();
       },
       error: () => {
         this.maPartie = null;
+        this.chargerClassement();
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  // ---------- Abandonner ----------
+
+  confirmationAbandonEnCours = false;
+
+  demanderConfirmationAbandon(): void {
+    this.confirmationAbandonEnCours = true;
+  }
+
+  annulerConfirmationAbandon(): void {
+    this.confirmationAbandonEnCours = false;
+  }
+
+  confirmerAbandon(): void {
+    if (!this.maPartie) {
+      return;
+    }
+    this.jeuService.abandonner(this.maPartie.id).subscribe({
+      next: () => {
+        this.confirmationAbandonEnCours = false;
+        this.chargerMaPartie(false);
+      }
+    });
+  }
+
+  // ---------- Proposer / répondre à une nulle ----------
+
+  propositionNulEnCours = false;
+
+  proposerNul(): void {
+    if (!this.maPartie || this.propositionNulEnCours) {
+      return;
+    }
+    this.propositionNulEnCours = true;
+
+    this.jeuService.proposerNul(this.maPartie.id).subscribe({
+      next: () => {
+        this.propositionNulEnCours = false;
+        this.chargerMaPartie(false);
+      },
+      error: () => {
+        this.propositionNulEnCours = false;
+      },
+    });
+  }
+
+  // "C'est MOI qui ai proposé" vs "l'adversaire me propose, à moi de répondre"
+  jaiProposeNul(): boolean {
+    if (!this.maPartie || !this.maPartie.nul_propose_par) {
+      return false;
+    }
+    return this.maPartie.nul_propose_par === (this.maPartie.je_suis_blanc ? 'blanc' : 'noir');
+  }
+
+  repondreNul(accepter: boolean): void {
+    if (!this.maPartie) {
+      return;
+    }
+    this.jeuService.repondreNul(this.maPartie.id, accepter).subscribe({
+      next: () => {
+        this.chargerMaPartie(false);
+      }
     });
   }
 }

@@ -98,6 +98,7 @@ class AdminController extends AbstractController
                 'email_tuteur' => $utilisateur->getEmailTuteur(),
                 'role' => $utilisateur->getRole(),
                 'statut_inscription' => $utilisateur->getStatutInscription(),
+                'commentaire' => $utilisateur->getCommentaire(),
             ];
         }, $utilisateurs);
 
@@ -183,6 +184,7 @@ class AdminController extends AbstractController
         $utilisateur->setEmail($data['email']);
         $utilisateur->setTelephone($data['telephone'] ?? null);
         $utilisateur->setEmailTuteur($data['email_tuteur'] ?? null);
+        $utilisateur->setCommentaire($data['commentaire'] ?? null);
 
         $em->flush();
 

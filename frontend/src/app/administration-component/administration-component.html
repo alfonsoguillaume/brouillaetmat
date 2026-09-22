@@ -130,6 +130,11 @@
           <input type="email" id="mEmailTuteur" formControlName="emailTuteur">
         </div>
 
+        <div class="form-group">
+          <label class="label" for="mCommentaire">Commentaire (visible uniquement par les admins)</label>
+          <textarea id="mCommentaire" formControlName="commentaire" rows="4"></textarea>
+        </div>
+
         @if (messagesErreursMembre.length > 0) {
           <div class="erreur">
             @for (msg of messagesErreursMembre; track msg) {

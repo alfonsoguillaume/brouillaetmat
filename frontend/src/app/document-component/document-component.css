@@ -34,6 +34,91 @@
   color: #D9A24B;
 }
 
+.btn-refuser {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  background-color: #ff6b6b;
+  color: #2D302C;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-refuser:hover {
+  background-color: #ff8787;
+  transform: translateY(-2px);
+}
+
+.barre-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.barre-actions button {
+  flex: 1;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+h4 {
+  color: #688D6A;
+  margin-top: 1.5rem;
+}
+
+.lien-retour {
+  background: transparent;
+  border: none;
+  color: #CE865A;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.lien-retour:hover {
+  color: #D9A24B;
+}
+
+.liste-dossiers {
+  border: 1.5px solid #7D9982;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.ligne-dossier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ligne-dossier:last-child {
+  border-bottom: none;
+}
+
+.nom-dossier {
+  cursor: pointer;
+  color: #D9A24B;
+  font-weight: bold;
+}
+
+.nom-dossier:hover {
+  color: #CE865A;
+}
+
+.detail-partie {
+  color: #7D9982;
+  font-size: 0.9rem;
+}
+
 textarea {
   width: 100%;
   padding: 0.85rem 1rem;
@@ -49,6 +134,54 @@ textarea {
 
 input[type="file"] {
   color: #D9A24B;
+}
+
+/* Menu déroulant "maison" (details/summary) — contrairement à <select>,
+   entièrement stylable, sa liste ouverte ne dépend jamais des couleurs
+   imposées par le navigateur. */
+.menu-dossier {
+  position: relative;
+}
+
+.menu-dossier summary {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+  cursor: pointer;
+  list-style: none;
+}
+
+.menu-dossier summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-dossier-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.menu-dossier-option {
+  padding: 0.7rem 1rem;
+  color: #D9A24B;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.menu-dossier-option:hover {
+  background: linear-gradient(90deg, rgba(104, 141, 106, 0.4), rgba(125, 153, 130, 0.15));
 }
 
 .modale-overlay {

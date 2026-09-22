@@ -55,6 +55,7 @@ export class AdministrationComponent {
     email: ['', [Validators.required, Validators.email]],
     telephone: [''],
     emailTuteur: [''],
+    commentaire: [''],
   });
 
   // --- Changement de rôle ---
@@ -161,6 +162,7 @@ export class AdministrationComponent {
       email: membre.email,
       telephone: membre.telephone ?? '',
       emailTuteur: membre.email_tuteur ?? '',
+      commentaire: membre.commentaire ?? '',
     });
   }
 
@@ -213,6 +215,7 @@ export class AdministrationComponent {
       email: valeurs.email,
       telephone: valeurs.telephone || null,
       email_tuteur: valeurs.emailTuteur || null,
+      commentaire: valeurs.commentaire || null,
     }).subscribe({
       next: () => {
         this.messageSuccesMembre = 'Membre mis à jour.';

@@ -90,6 +90,17 @@ select {
   margin-top: 0.5rem;
 }
 
+.actions-partie {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.proposition-nul {
+  margin-top: 1rem;
+  text-align: center;
+  color: #D9A24B;
+}
+
 .chronos {
   display: flex;
   justify-content: space-between;
@@ -212,4 +223,48 @@ select {
   background-color: transparent;
   border: 1.5px solid #7D9982;
   color: #D9A24B;
+}
+
+/* --- Classement --- */
+.titre-classement {
+  color: #688D6A;
+  margin-top: 2.5rem;
+  text-align: center;
+}
+
+.liste-classement {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1.5px solid #7D9982;
+  border-radius: 8px;
+}
+
+.ligne-classement {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ligne-classement:last-child {
+  border-bottom: none;
+}
+
+.rang {
+  color: #7D9982;
+  font-weight: bold;
+  width: 2rem;
+  flex-shrink: 0;
+}
+
+.nom-joueur {
+  flex: 1;
+  color: #D9A24B;
+  text-align: left;
+}
+
+.elo {
+  color: #CE865A;
+  font-weight: bold;
 }
