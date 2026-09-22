@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Document;
+use App\Entity\Dossier;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -38,12 +39,24 @@ class DocumentController extends AbstractController
     private const TAILLE_MAX_OCTETS = 10 * 1024 * 1024; // 10 Mo
 
     /**
-     * Liste tous les documents, du plus récent au plus ancien.
+     * Liste les documents d'un dossier précis (?dossier_id=5), ou ceux "à
+     * la racine" (hors de tout dossier) si aucun paramètre n'est fourni.
      */
     #[Route('/api/documents', name: 'api_documents_liste', methods: ['GET'])]
-    public function liste(EntityManagerInterface $em): JsonResponse
+    public function liste(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $documents = $em->getRepository(Document::class)->findBy([], ['date_ajout' => 'DESC']);
+        $dossierId = $request->query->get('dossier_id');
+
+        $qb = $em->getRepository(Document::class)->createQueryBuilder('d')
+            ->orderBy('d.date_ajout', 'DESC');
+
+        if ($dossierId) {
+            $qb->where('d.dossier_id = :dossierId')->setParameter('dossierId', $dossierId);
+        } else {
+            $qb->where('d.dossier_id IS NULL');
+        }
+
+        $documents = $qb->getQuery()->getResult();
 
         $resultat = array_map(fn(Document $document) => [
             'id' => $document->getId(),
@@ -54,6 +67,78 @@ class DocumentController extends AbstractController
         ], $documents);
 
         return $this->json($resultat);
+    }
+
+    /**
+     * Liste les dossiers, avec le nombre de documents qu'ils contiennent.
+     */
+    #[Route('/api/documents/dossiers', name: 'api_dossiers_liste', methods: ['GET'])]
+    public function listeDossiers(EntityManagerInterface $em): JsonResponse
+    {
+        $dossiers = $em->getRepository(Dossier::class)->findBy([], ['nom' => 'ASC']);
+
+        $resultat = array_map(fn(Dossier $dossier) => [
+            'id' => $dossier->getId(),
+            'nom' => $dossier->getNom(),
+            'nombre_documents' => $dossier->getDocuments()->count(),
+        ], $dossiers);
+
+        return $this->json($resultat);
+    }
+
+    /**
+     * Crée un nouveau dossier, vide au départ.
+     */
+    #[Route('/api/documents/dossiers', name: 'api_dossier_creer', methods: ['POST'])]
+    public function creerDossier(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['nom'])) {
+            return $this->json(['message' => 'Le nom du dossier est obligatoire.'], 400);
+        }
+
+        /** @var Utilisateur $utilisateur */
+        $utilisateur = $this->getUser();
+
+        $dossier = new Dossier();
+        $dossier->setNom($data['nom']);
+        $dossier->setDateCreation(new \DateTime());
+        $dossier->setCreeParId($utilisateur);
+
+        $em->persist($dossier);
+        $em->flush();
+
+        return $this->json(['message' => 'Dossier créé.', 'id' => $dossier->getId()], 201);
+    }
+
+    /**
+     * Supprime un dossier ET tout son contenu (documents + fichiers sur le
+     * disque). Décision assumée : plutôt que de bloquer la suppression
+     * d'un dossier non vide, on la permet, mais seulement après
+     * confirmation explicite côté Angular (le message prévient bien que
+     * le contenu sera perdu).
+     */
+    #[Route('/api/documents/dossiers/{id<\d+>}', name: 'api_dossier_supprimer', methods: ['DELETE'])]
+    public function supprimerDossier(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $dossier = $em->getRepository(Dossier::class)->find($id);
+        if (!$dossier) {
+            return $this->json(['message' => 'Dossier introuvable.'], 404);
+        }
+
+        foreach ($dossier->getDocuments() as $document) {
+            $cheminFichier = self::DOSSIER_DOCUMENTS . '/' . $document->getFichier();
+            if (file_exists($cheminFichier)) {
+                unlink($cheminFichier);
+            }
+            $em->remove($document);
+        }
+
+        $em->remove($dossier);
+        $em->flush();
+
+        return $this->json(['message' => 'Dossier et son contenu supprimés.']);
     }
 
     /**
@@ -99,6 +184,14 @@ class DocumentController extends AbstractController
         $document->setFichier($nouveauNom);
         $document->setDateAjout(new \DateTime());
         $document->setAjouteParId($utilisateur);
+
+        $dossierId = $request->request->get('dossier_id');
+        if ($dossierId) {
+            $dossier = $em->getRepository(Dossier::class)->find($dossierId);
+            if ($dossier) {
+                $document->setDossierId($dossier);
+            }
+        }
 
         $em->persist($document);
         $em->flush();

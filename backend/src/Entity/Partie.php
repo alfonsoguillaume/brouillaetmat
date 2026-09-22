@@ -72,6 +72,11 @@ class Partie
     #[ORM\Column(nullable: true)]
     private ?\DateTime $dernier_signal_noir = null;
 
+    // 'blanc' ou 'noir' si ce camp vient de proposer une nulle, en attente
+    // de la réponse de l'adversaire — null sinon.
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $nul_propose_par = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -248,6 +253,18 @@ class Partie
     public function setDernierSignalNoir(?\DateTime $dernier_signal_noir): static
     {
         $this->dernier_signal_noir = $dernier_signal_noir;
+
+        return $this;
+    }
+
+    public function getNulProposePar(): ?string
+    {
+        return $this->nul_propose_par;
+    }
+
+    public function setNulProposePar(?string $nul_propose_par): static
+    {
+        $this->nul_propose_par = $nul_propose_par;
 
         return $this;
     }

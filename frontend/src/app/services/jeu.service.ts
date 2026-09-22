@@ -29,6 +29,13 @@ export interface PartieActive {
   dernier_coup_le: string | null;
   dernier_signal_blanc: string | null;
   dernier_signal_noir: string | null;
+  nul_propose_par: string | null;
+}
+
+export interface ClassementEntry {
+  nom: string;
+  prenom: string;
+  elo: number;
 }
 
 @Injectable({providedIn: 'root'})
@@ -77,5 +84,21 @@ export class JeuService {
 
   declarerDeconnexion(id: number) {
     return this.http.post<PartieActive>(`${this.apiUrl}/${id}/deconnexion`, {});
+  }
+
+  classement() {
+    return this.http.get<ClassementEntry[]>(`${this.apiUrl}/classement`);
+  }
+
+  abandonner(id: number) {
+    return this.http.post<PartieActive>(`${this.apiUrl}/${id}/abandonner`, {});
+  }
+
+  proposerNul(id: number) {
+    return this.http.post<PartieActive>(`${this.apiUrl}/${id}/proposer-nul`, {});
+  }
+
+  repondreNul(id: number, accepter: boolean) {
+    return this.http.post<PartieActive>(`${this.apiUrl}/${id}/repondre-nul`, {accepter});
   }
 }

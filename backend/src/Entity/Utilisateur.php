@@ -51,6 +51,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $email_tuteur = null;
 
+    // Note interne visible et modifiable uniquement par les admins (pas
+    // les gestionnaires) — jamais exposée sur les routes accessibles au
+    // membre lui-même (/api/profil) ni aux gestionnaires.
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $commentaire = null;
+
     /**
      * @var Collection<int, Article>
      */
@@ -230,6 +236,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmailTuteur(?string $email_tuteur): static
     {
         $this->email_tuteur = $email_tuteur;
+
+        return $this;
+    }
+
+    public function getCommentaire(): ?string
+    {
+        return $this->commentaire;
+    }
+
+    public function setCommentaire(?string $commentaire): static
+    {
+        $this->commentaire = $commentaire;
 
         return $this;
     }

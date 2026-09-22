@@ -11,19 +11,41 @@ export interface DocumentAdmin {
   ajoute_par: string;
 }
 
+export interface Dossier {
+  id: number;
+  nom: string;
+  nombre_documents: number;
+}
+
 @Injectable({providedIn: 'root'})
 export class DocumentService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api/documents';
 
-  liste() {
-    return this.http.get<DocumentAdmin[]>(this.apiUrl);
+  liste(dossierId: number | null) {
+    const params = dossierId ? `?dossier_id=${dossierId}` : '';
+    return this.http.get<DocumentAdmin[]>(`${this.apiUrl}${params}`);
   }
 
-  ajouter(nom: string, fichier: File) {
+  listeDossiers() {
+    return this.http.get<Dossier[]>(`${this.apiUrl}/dossiers`);
+  }
+
+  creerDossier(nom: string) {
+    return this.http.post<{ message: string; id: number }>(`${this.apiUrl}/dossiers`, {nom});
+  }
+
+  supprimerDossier(id: number) {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/dossiers/${id}`);
+  }
+
+  ajouter(nom: string, fichier: File, dossierId: number | null) {
     const formData = new FormData();
     formData.append('nom', nom);
     formData.append('fichier', fichier);
+    if (dossierId) {
+      formData.append('dossier_id', dossierId.toString());
+    }
 
     return this.http.post<{ message: string; id: number }>(this.apiUrl, formData);
   }

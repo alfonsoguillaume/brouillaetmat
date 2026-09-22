@@ -1,7 +1,7 @@
 import {ChangeDetectorRef, Component, inject} from '@angular/core';
 import {DatePipe} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {DocumentAdmin, DocumentService} from '../services/document.service';
+import {DocumentAdmin, DocumentService, Dossier} from '../services/document.service';
 
 @Component({
   selector: 'app-document-component',
@@ -15,27 +15,17 @@ export class DocumentComponent {
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
+  // Documents "à la racine" (hors de tout dossier) — toujours visibles.
   documents: DocumentAdmin[] = [];
-
-  modaleAjoutOuverte = false;
-  fichierSelectionne: File | null = null;
-  messagesErreursAjout: string[] = [];
-  ajoutEnCours = false;
-
-  ajoutForm: FormGroup = this.fb.group({
-    nom: ['', Validators.required],
-  });
-
-  confirmationSuppressionEnCours: DocumentAdmin | null = null;
+  dossiers: Dossier[] = [];
 
   constructor() {
-    // Route déjà protégée par adminGuard (voir app.routes.ts) — pas besoin
-    // de revérifier le rôle ici, on peut charger directement.
     this.chargerDocuments();
+    this.chargerDossiers();
   }
 
   chargerDocuments(): void {
-    this.documentService.liste().subscribe({
+    this.documentService.liste(null).subscribe({
       next: (data) => {
         this.documents = data;
         this.cdr.detectChanges();
@@ -43,12 +33,123 @@ export class DocumentComponent {
     });
   }
 
+  chargerDossiers(): void {
+    this.documentService.listeDossiers().subscribe({
+      next: (data) => {
+        this.dossiers = data;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ---------- Détail d'un dossier (modale) ----------
+
+  dossierSelectionne: Dossier | null = null;
+  documentsDossier: DocumentAdmin[] = [];
+
+  ouvrirDossier(dossier: Dossier): void {
+    this.dossierSelectionne = dossier;
+    this.documentsDossier = [];
+    this.documentService.liste(dossier.id).subscribe({
+      next: (data) => {
+        this.documentsDossier = data;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  fermerDossier(): void {
+    this.dossierSelectionne = null;
+  }
+
+  // ---------- Créer un dossier ----------
+
+  modaleDossierOuverte = false;
+  nomNouveauDossier = '';
+  messageErreurDossier = '';
+  creationDossierEnCours = false;
+
+  ouvrirModaleDossier(): void {
+    this.nomNouveauDossier = '';
+    this.messageErreurDossier = '';
+    this.modaleDossierOuverte = true;
+  }
+
+  fermerModaleDossier(): void {
+    this.modaleDossierOuverte = false;
+  }
+
+  onNomDossierChange(valeur: string): void {
+    this.nomNouveauDossier = valeur;
+  }
+
+  creerDossier(): void {
+    if (this.creationDossierEnCours) {
+      return;
+    }
+
+    if (!this.nomNouveauDossier.trim()) {
+      this.messageErreurDossier = 'Remplissez le nom du dossier.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.creationDossierEnCours = true;
+
+    this.documentService.creerDossier(this.nomNouveauDossier.trim()).subscribe({
+      next: () => {
+        this.creationDossierEnCours = false;
+        this.fermerModaleDossier();
+        this.chargerDossiers();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.creationDossierEnCours = false;
+        this.messageErreurDossier = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ---------- Supprimer un dossier (cascade : vide son contenu aussi) ----------
+
+  confirmationSuppressionDossierEnCours: Dossier | null = null;
+  messageErreurSuppressionDossier = '';
+
+  demanderConfirmationSuppressionDossier(dossier: Dossier): void {
+    this.messageErreurSuppressionDossier = '';
+    this.confirmationSuppressionDossierEnCours = dossier;
+  }
+
+  annulerConfirmationSuppressionDossier(): void {
+    this.confirmationSuppressionDossierEnCours = null;
+  }
+
+  confirmerSuppressionDossier(): void {
+    if (!this.confirmationSuppressionDossierEnCours) {
+      return;
+    }
+
+    this.documentService.supprimerDossier(this.confirmationSuppressionDossierEnCours.id).subscribe({
+      next: () => {
+        this.confirmationSuppressionDossierEnCours = null;
+        this.fermerDossier();
+        this.chargerDossiers();
+        this.chargerDocuments();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messageErreurSuppressionDossier = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ---------- Télécharger ----------
+
   telechargerDocument(doc: DocumentAdmin): void {
     this.documentService.telecharger(doc.id).subscribe({
       next: (blob) => {
-        // On crée une URL temporaire, propre au navigateur, pointant vers
-        // les données binaires reçues — puis on simule un clic sur un lien
-        // invisible pour déclencher le téléchargement, avant de nettoyer.
         const url = window.URL.createObjectURL(blob);
         const lien = window.document.createElement('a');
         lien.href = url;
@@ -59,9 +160,24 @@ export class DocumentComponent {
     });
   }
 
+  // ---------- Ajouter un document (avec choix explicite du dossier) ----------
+
+  modaleAjoutOuverte = false;
+  fichierSelectionne: File | null = null;
+  dossierChoisiPourAjout = ''; // '' = racine
+  messagesErreursAjout: string[] = [];
+  ajoutEnCours = false;
+
+  ajoutForm: FormGroup = this.fb.group({
+    nom: ['', Validators.required],
+  });
+
   ouvrirModaleAjout(): void {
     this.modaleAjoutOuverte = true;
     this.fichierSelectionne = null;
+    // Si on ouvre l'ajout depuis l'intérieur d'un dossier (modale de
+    // détail déjà ouverte), on pré-sélectionne ce dossier — sinon racine.
+    this.dossierChoisiPourAjout = this.dossierSelectionne ? this.dossierSelectionne.id.toString() : '';
     this.messagesErreursAjout = [];
     this.ajoutForm.reset();
   }
@@ -73,6 +189,19 @@ export class DocumentComponent {
   onFichierSelectionne(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.fichierSelectionne = input.files && input.files.length > 0 ? input.files[0] : null;
+  }
+
+  onDossierAjoutChange(valeur: string, menu: HTMLDetailsElement): void {
+    this.dossierChoisiPourAjout = valeur;
+    menu.open = false; // referme le menu après le choix
+  }
+
+  texteDossierChoisiPourAjout(): string {
+    if (!this.dossierChoisiPourAjout) {
+      return 'Racine (aucun dossier)';
+    }
+    const d = this.dossiers.find(x => x.id.toString() === this.dossierChoisiPourAjout);
+    return d ? '📁 ' + d.nom : 'Racine (aucun dossier)';
   }
 
   ajouterDocument(): void {
@@ -96,13 +225,20 @@ export class DocumentComponent {
     }
 
     const {nom} = this.ajoutForm.value;
+    const dossierId = this.dossierChoisiPourAjout ? +this.dossierChoisiPourAjout : null;
     this.ajoutEnCours = true;
 
-    this.documentService.ajouter(nom, this.fichierSelectionne!).subscribe({
+    this.documentService.ajouter(nom, this.fichierSelectionne!, dossierId).subscribe({
       next: () => {
         this.ajoutEnCours = false;
         this.fermerModaleAjout();
         this.chargerDocuments();
+        this.chargerDossiers();
+        // Si on avait ajouté dans le dossier actuellement ouvert, on
+        // rafraîchit aussi sa liste pour voir le nouveau fichier tout de suite.
+        if (this.dossierSelectionne) {
+          this.ouvrirDossier(this.dossierSelectionne);
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -112,6 +248,10 @@ export class DocumentComponent {
       },
     });
   }
+
+  // ---------- Supprimer un document ----------
+
+  confirmationSuppressionEnCours: DocumentAdmin | null = null;
 
   demanderConfirmationSuppression(doc: DocumentAdmin): void {
     this.confirmationSuppressionEnCours = doc;
@@ -130,6 +270,10 @@ export class DocumentComponent {
       next: () => {
         this.confirmationSuppressionEnCours = null;
         this.chargerDocuments();
+        this.chargerDossiers();
+        if (this.dossierSelectionne) {
+          this.ouvrirDossier(this.dossierSelectionne);
+        }
         this.cdr.detectChanges();
       }
     });

@@ -26,6 +26,10 @@ class Document
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $ajoute_par_id = null;
 
+    // null = document "à la racine", pas rangé dans un dossier.
+    #[ORM\ManyToOne(inversedBy: 'documents')]
+    private ?Dossier $dossier_id = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -82,6 +86,18 @@ class Document
     public function setAjouteParId(?Utilisateur $ajoute_par_id): static
     {
         $this->ajoute_par_id = $ajoute_par_id;
+
+        return $this;
+    }
+
+    public function getDossierId(): ?Dossier
+    {
+        return $this->dossier_id;
+    }
+
+    public function setDossierId(?Dossier $dossier_id): static
+    {
+        $this->dossier_id = $dossier_id;
 
         return $this;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Classement;
 use App\Entity\Partie;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,6 +19,192 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class JeuController extends AbstractController
 {
+    /**
+     * Renvoie le classement Elo d'un membre, en le créant à 800 points
+     * s'il n'en a pas encore (première partie classée de sa "carrière").
+     */
+    private function obtenirOuCreerClassement(Utilisateur $utilisateur, EntityManagerInterface $em): Classement
+    {
+        $classement = $em->getRepository(Classement::class)->findOneBy(['utilisateur_id' => $utilisateur]);
+
+        if (!$classement) {
+            $classement = new Classement();
+            $classement->setUtilisateurId($utilisateur);
+            $classement->setValeurElo(800);
+            $classement->setDateMaj(new \DateTime());
+            $em->persist($classement);
+        }
+
+        return $classement;
+    }
+
+    /**
+     * Formule Elo classique. K = 32 (facteur de volatilité — plus élevé
+     * que la valeur "compétition officielle" habituelle de 16-24, choisi
+     * ici pour que les scores bougent de façon visible sur un club de
+     * loisir, où les joueurs ne disputent pas des centaines de parties).
+     */
+    private function mettreAJourElo(Partie $partie, string $resultat, EntityManagerInterface $em): void
+    {
+        $blanc = $partie->getJoueurBlancId();
+        $noir = $partie->getJoueurNoirId();
+        if (!$blanc || !$noir) {
+            return;
+        }
+
+        $classementBlanc = $this->obtenirOuCreerClassement($blanc, $em);
+        $classementNoir = $this->obtenirOuCreerClassement($noir, $em);
+
+        $eloBlanc = $classementBlanc->getValeurElo();
+        $eloNoir = $classementNoir->getValeurElo();
+
+        $scoreBlanc = match ($resultat) {
+            'blanc' => 1.0,
+            'noir' => 0.0,
+            default => 0.5,
+        };
+        $scoreNoir = 1.0 - $scoreBlanc;
+
+        // Score "attendu" : probabilité théorique de victoire selon
+        // l'écart de classement actuel entre les deux joueurs.
+        $attenduBlanc = 1 / (1 + (10 ** (($eloNoir - $eloBlanc) / 400)));
+        $attenduNoir = 1 - $attenduBlanc;
+
+        $k = 32;
+        $nouvelEloBlanc = (int)round($eloBlanc + $k * ($scoreBlanc - $attenduBlanc));
+        $nouvelEloNoir = (int)round($eloNoir + $k * ($scoreNoir - $attenduNoir));
+
+        $classementBlanc->setValeurElo($nouvelEloBlanc);
+        $classementBlanc->setDateMaj(new \DateTime());
+        $classementNoir->setValeurElo($nouvelEloNoir);
+        $classementNoir->setDateMaj(new \DateTime());
+    }
+
+    /**
+     * Point d'entrée UNIQUE pour terminer une partie, réutilisé par les 3
+     * routes qui peuvent y mener (mat/pat/nul, temps écoulé, déconnexion)
+     * — évite de dupliquer la logique de mise à jour Elo trois fois.
+     */
+    private function marquerTerminee(Partie $partie, string $resultat, EntityManagerInterface $em): void
+    {
+        $partie->setStatut('terminee');
+        $partie->setResultat($resultat);
+
+        if ($partie->isClassee()) {
+            $this->mettreAJourElo($partie, $resultat, $em);
+        }
+
+        $em->flush();
+    }
+
+    /**
+     * Abandon immédiat — défaite pour celui qui clique, sans confirmation
+     * de l'adversaire nécessaire (contrairement à la nulle).
+     */
+    #[Route('/api/jeu/{id<\d+>}/abandonner', name: 'api_jeu_abandonner', methods: ['POST'])]
+    public function abandonner(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        $estBlanc = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estNoir = $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estBlanc && !$estNoir) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        if ($partie->getStatut() !== 'en_cours') {
+            return $this->json($this->formaterPartie($partie, $moi));
+        }
+
+        $this->marquerTerminee($partie, $estBlanc ? 'noir' : 'blanc', $em);
+
+        return $this->json($this->formaterPartie($partie, $moi));
+    }
+
+    /**
+     * Propose une nulle à l'adversaire — ne termine rien tout de suite,
+     * juste une demande en attente de réponse.
+     */
+    #[Route('/api/jeu/{id<\d+>}/proposer-nul', name: 'api_jeu_proposer_nul', methods: ['POST'])]
+    public function proposerNul(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        $estBlanc = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estNoir = $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estBlanc && !$estNoir) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        if ($partie->getStatut() !== 'en_cours') {
+            return $this->json(['message' => 'Cette partie n\'est pas en cours.'], 409);
+        }
+
+        if ($partie->getNulProposePar() !== null) {
+            return $this->json(['message' => 'Une proposition de nulle est déjà en attente.'], 409);
+        }
+
+        $partie->setNulProposePar($estBlanc ? 'blanc' : 'noir');
+        $em->flush();
+
+        return $this->json($this->formaterPartie($partie, $moi));
+    }
+
+    /**
+     * Répond à une proposition de nulle reçue — seul l'adversaire de celui
+     * qui a proposé peut répondre (pas soi-même).
+     */
+    #[Route('/api/jeu/{id<\d+>}/repondre-nul', name: 'api_jeu_repondre_nul', methods: ['POST'])]
+    public function repondreNul(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+
+        $partie = $em->getRepository(Partie::class)->find($id);
+        if (!$partie) {
+            return $this->json(['message' => 'Partie introuvable.'], 404);
+        }
+
+        $estBlanc = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estNoir = $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        if (!$estBlanc && !$estNoir) {
+            return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
+        }
+
+        $maCouleur = $estBlanc ? 'blanc' : 'noir';
+        if ($partie->getNulProposePar() === null) {
+            return $this->json(['message' => 'Aucune proposition de nulle en attente.'], 409);
+        }
+        if ($partie->getNulProposePar() === $maCouleur) {
+            return $this->json(['message' => 'Vous ne pouvez pas répondre à votre propre proposition.'], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $accepter = $data['accepter'] ?? false;
+
+        if ($accepter) {
+            $partie->setNulProposePar(null);
+            $this->marquerTerminee($partie, 'nul', $em);
+        } else {
+            $partie->setNulProposePar(null);
+            $em->flush();
+        }
+
+        return $this->json($this->formaterPartie($partie, $moi));
+    }
+
     /**
      * Cherche une partie active (en_attente ou en_cours) impliquant cet
      * utilisateur, peu importe sa couleur. Centralise la règle "un membre
@@ -58,6 +245,34 @@ class JeuController extends AbstractController
             'nom' => $u->getNom(),
             'prenom' => $u->getPrenom(),
         ], $membres);
+
+        return $this->json($resultat);
+    }
+
+    /**
+     * Classement Elo du club, du plus fort au plus faible. Contrairement à
+     * une version précédente, inclut TOUS les membres validés — ceux qui
+     * n'ont encore jamais joué de partie classée apparaissent à 800
+     * points (la valeur de départ), sans qu'une ligne Classement existe
+     * réellement pour eux en base (elle n'est créée qu'à leur première
+     * partie classée terminée, voir obtenirOuCreerClassement).
+     */
+    #[Route('/api/jeu/classement', name: 'api_jeu_classement', methods: ['GET'])]
+    public function classement(EntityManagerInterface $em): JsonResponse
+    {
+        $membres = $em->getRepository(Utilisateur::class)->findBy(['statut_inscription' => 'valide']);
+
+        $resultat = array_map(function (Utilisateur $u) use ($em) {
+            $classement = $em->getRepository(Classement::class)->findOneBy(['utilisateur_id' => $u]);
+
+            return [
+                'nom' => $u->getNom(),
+                'prenom' => $u->getPrenom(),
+                'elo' => $classement?->getValeurElo() ?? 800,
+            ];
+        }, $membres);
+
+        usort($resultat, fn(array $a, array $b) => $b['elo'] <=> $a['elo']);
 
         return $this->json($resultat);
     }
@@ -108,6 +323,7 @@ class JeuController extends AbstractController
             'dernier_coup_le' => $partie->getDernierCoupLe()?->format('c'),
             'dernier_signal_blanc' => $partie->getDernierSignalBlanc()?->format('c'),
             'dernier_signal_noir' => $partie->getDernierSignalNoir()?->format('c'),
+            'nul_propose_par' => $partie->getNulProposePar(),
         ];
     }
 
@@ -184,7 +400,11 @@ class JeuController extends AbstractController
         $partie->setTrait('blanc');
         $partie->setTempsRestantBlanc(600);
         $partie->setTempsRestantNoir(600);
-        $partie->setDernierCoupLe(new \DateTime());
+        // +5 secondes de battement : laisse le temps au plateau de se
+        // charger côté Angular avant que le chrono ne commence vraiment
+        // à décompter (tout le calcul du temps se base sur cette valeur,
+        // donc ce seul changement suffit à tout décaler proprement).
+        $partie->setDernierCoupLe((new \DateTime())->modify('+5 seconds'));
         $partie->setDernierSignalBlanc(new \DateTime());
         $partie->setDernierSignalNoir(new \DateTime());
         $partie->setStatut('en_cours');
@@ -283,14 +503,12 @@ class JeuController extends AbstractController
             // Le temps était déjà écoulé au moment où ce coup a été reçu —
             // trop tard, la partie est perdue au chrono, ce coup est
             // ignoré (pas appliqué).
-            $partie->setStatut('terminee');
-            $partie->setResultat($estBlanc ? 'noir' : 'blanc');
             if ($estBlanc) {
                 $partie->setTempsRestantBlanc(0);
             } else {
                 $partie->setTempsRestantNoir(0);
             }
-            $em->flush();
+            $this->marquerTerminee($partie, $estBlanc ? 'noir' : 'blanc', $em);
 
             return $this->json($this->formaterPartie($partie, $moi));
         }
@@ -393,9 +611,7 @@ class JeuController extends AbstractController
         }
 
         $gagnant = $estBlanc ? 'blanc' : 'noir';
-        $partie->setStatut('terminee');
-        $partie->setResultat($gagnant);
-        $em->flush();
+        $this->marquerTerminee($partie, $gagnant, $em);
 
         return $this->json($this->formaterPartie($partie, $moi));
     }
@@ -447,14 +663,12 @@ class JeuController extends AbstractController
         }
 
         $gagnant = $couleurAuTrait === 'blanc' ? 'noir' : 'blanc';
-        $partie->setStatut('terminee');
-        $partie->setResultat($gagnant);
         if ($couleurAuTrait === 'blanc') {
             $partie->setTempsRestantBlanc(0);
         } else {
             $partie->setTempsRestantNoir(0);
         }
-        $em->flush();
+        $this->marquerTerminee($partie, $gagnant, $em);
 
         return $this->json($this->formaterPartie($partie, $moi));
     }
@@ -503,12 +717,7 @@ class JeuController extends AbstractController
             return $this->json(['message' => 'Résultat invalide.'], 400);
         }
 
-        // TODO (étape 3) : mettre à jour le classement Elo des deux
-        // joueurs ici, si $partie->isClassee() est vrai.
-
-        $partie->setStatut('terminee');
-        $partie->setResultat($resultat);
-        $em->flush();
+        $this->marquerTerminee($partie, $resultat, $em);
 
         return $this->json($this->formaterPartie($partie, $moi));
     }
