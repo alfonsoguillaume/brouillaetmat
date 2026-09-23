@@ -1,0 +1,39 @@
+.confirmer-email-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 1rem;
+}
+
+.carte {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 2.5rem 2rem;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.icone-succes,
+.icone-erreur {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  color: #688D6A;
+  margin-bottom: 1rem;
+}
+
+p {
+  color: #D9A24B;
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  text-decoration: none;
+  width: auto;
+}

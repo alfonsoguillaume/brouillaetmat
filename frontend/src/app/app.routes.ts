@@ -12,6 +12,10 @@ import {AdministrationComponent} from './administration-component/administration
 import {ProfilComponent} from './profil-component/profil-component';
 import {InscriptionComponent} from './inscription-component/inscription-component';
 import {OublieComponent} from './oublie-component/oublie-component';
+import {ConfirmerEmailComponent} from './confirmer-email-component/confirmer-email-component';
+import {
+  ReinitialiserMotDePasseComponent
+} from './reinitialiser-mot-de-passe-component/reinitialiser-mot-de-passe-component';
 import {DocumentComponent} from './document-component/document-component';
 import {BibliothequeComponent} from './bibliotheque-component/bibliotheque-component';
 import {adminGuard, gestionnaireGuard} from './guards/role.guard';
@@ -32,6 +36,8 @@ export const routes: Routes = [
   {path: 'inscription', component: InscriptionComponent},
   {path: 'connexion', component: ConnexionComponent},
   {path: 'oublie', component: OublieComponent},
+  {path: 'confirmer-email/:token', component: ConfirmerEmailComponent},
+  {path: 'reinitialiser-mot-de-passe/:token', component: ReinitialiserMotDePasseComponent},
   {path: 'document', component: DocumentComponent, canActivate: [adminGuard]},
   {path: 'bibliotheque', component: BibliothequeComponent, canActivate: [gestionnaireGuard]},
 

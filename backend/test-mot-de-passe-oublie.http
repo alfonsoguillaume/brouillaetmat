@@ -1,0 +1,56 @@
+### 1. Email inexistant — même message générique attendu (pas d'indice que le compte n'existe pas)
+POST http://localhost:8000/api/mot-de-passe-oublie
+Content-Type: application/json
+
+{
+    "email": "nimportequoi@inexistant.fr"
+}
+
+### 2. Email existant — adapte avec un vrai email de ta base, même message générique en retour, mais cette fois un email part réellement
+POST http://localhost:8000/api/mot-de-passe-oublie
+Content-Type: application/json
+
+{
+    "email": "guillaume.alfonso@sfr.fr"
+}
+
+### 3. Réinitialisation avec un jeton invalide (doit échouer en 404)
+POST http://localhost:8000/api/reinitialiser-mot-de-passe/jetoninvalide123
+Content-Type: application/json
+
+{
+    "nouveau_mot_de_passe": "NouveauMotDePasse123!"
+}
+
+### 4. Mot de passe trop faible avec un vrai jeton (adapte avec le jeton reçu dans l'email de l'étape 2 — doit échouer en 400)
+POST http://localhost:8000/api/reinitialiser-mot-de-passe/e822c674174e7e1b6e89580ce2ac17ee0f27261b5a5700343e83a85c66ada765
+Content-Type: application/json
+
+{
+    "nouveau_mot_de_passe": "faible"
+}
+
+### 5. Réinitialisation valide (même jeton, mot de passe conforme)
+POST http://localhost:8000/api/reinitialiser-mot-de-passe/e822c674174e7e1b6e89580ce2ac17ee0f27261b5a5700343e83a85c66ada765
+Content-Type: application/json
+
+{
+    "nouveau_mot_de_passe": "NouveauMotDePasse123!"
+}
+
+### 6. Réutiliser le MÊME jeton une 2e fois (doit échouer en 404 — le jeton a été effacé après usage)
+POST http://localhost:8000/api/reinitialiser-mot-de-passe/e822c674174e7e1b6e89580ce2ac17ee0f27261b5a5700343e83a85c66ada765
+Content-Type: application/json
+
+{
+    "nouveau_mot_de_passe": "AutreMotDePasse456!"
+}
+
+### 7. Connexion avec le NOUVEAU mot de passe (doit fonctionner)
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "guillaume.alfonso@sfr.fr",
+    "password": "NouveauMotDePasse123!"
+}

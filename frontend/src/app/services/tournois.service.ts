@@ -39,6 +39,15 @@ export interface TournoiArchive {
   date_annulation: string | null;
 }
 
+export interface MatchPlanifie {
+  joueur1_id: number;
+  joueur1_nom: string;
+  joueur2_id: number;
+  joueur2_nom: string;
+  joue: boolean;
+  resultat: string | null;
+}
+
 @Injectable({providedIn: 'root'})
 export class TournoisService {
   private http = inject(HttpClient);
@@ -84,5 +93,21 @@ export class TournoisService {
 
   lancer(id: number) {
     return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/lancer`, {});
+  }
+
+  saisirMatch(tournoiId: number, joueur1Id: number, joueur2Id: number, resultat: 'joueur1' | 'joueur2' | 'nul') {
+    return this.http.post<TournoiDetail>(`${this.apiUrl}/${tournoiId}/matchs`, {
+      joueur1_id: joueur1Id,
+      joueur2_id: joueur2Id,
+      resultat,
+    });
+  }
+
+  listeMatchs(tournoiId: number) {
+    return this.http.get<MatchPlanifie[]>(`${this.apiUrl}/${tournoiId}/matchs`);
+  }
+
+  terminerTournoi(id: number) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/terminer`, {});
   }
 }

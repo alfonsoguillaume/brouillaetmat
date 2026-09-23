@@ -1,0 +1,58 @@
+<div class="reinitialiser-page">
+  <div class="carte">
+
+    @if (lienIncomplet) {
+
+      <div class="icone-erreur">⚠️</div>
+      <h2>Lien invalide</h2>
+      <p>Ce lien de réinitialisation est incomplet. Merci de refaire une demande.</p>
+      <a routerLink="/oublie" class="btn-primary">Refaire une demande</a>
+
+    } @else if (succes) {
+
+      <div class="icone-succes">✅</div>
+      <h2>Mot de passe réinitialisé</h2>
+      <p>Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+      <a routerLink="/connexion" class="btn-primary">Se connecter</a>
+
+    } @else {
+
+      <h2>Choisir un nouveau mot de passe</h2>
+
+      <form [formGroup]="motDePasseForm" (ngSubmit)="reinitialiser()">
+
+        <div class="form-group">
+          <label class="label" for="nouveauMotDePasse">Nouveau mot de passe*</label>
+          <input [type]="afficherMotDePasse ? 'text' : 'password'" id="nouveauMotDePasse"
+                 formControlName="nouveauMotDePasse">
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="confirmationNouveauMotDePasse">Vérification du nouveau mot de passe*</label>
+          <input [type]="afficherMotDePasse ? 'text' : 'password'" id="confirmationNouveauMotDePasse"
+                 formControlName="confirmationNouveauMotDePasse">
+        </div>
+
+        <div class="case-afficher-mdp">
+          <input type="checkbox" id="afficherMdp" (change)="afficherMotDePasse = !afficherMotDePasse">
+          <label for="afficherMdp">Afficher les mots de passe</label>
+        </div>
+
+        @if (messagesErreurs.length > 0) {
+          <div class="erreur">
+            @for (msg of messagesErreurs; track msg) {
+              <p>{{ msg }}</p>
+            }
+          </div>
+        }
+
+        <button type="submit" class="btn-primary" [disabled]="envoiEnCours">
+          {{ envoiEnCours ? 'Envoi en cours...' : 'Réinitialiser mon mot de passe' }}
+        </button>
+
+      </form>
+
+    }
+
+  </div>
+</div>

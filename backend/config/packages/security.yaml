@@ -46,6 +46,9 @@ security:
     access_control:
         - { path: ^/api/inscription, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/profil/confirmer-email, roles: PUBLIC_ACCESS }
+        - { path: ^/api/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
+        - { path: ^/api/reinitialiser-mot-de-passe, roles: PUBLIC_ACCESS }
         - { path: ^/api/articles, roles: PUBLIC_ACCESS, methods: [ GET ] }
         - { path: ^/api/articles, roles: ROLE_GESTIONNAIRE }
         - { path: ^/api/admin, roles: ROLE_ADMIN }

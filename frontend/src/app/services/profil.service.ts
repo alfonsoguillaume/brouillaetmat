@@ -25,6 +25,11 @@ export interface ChangementMotDePasse {
   nouveau_mot_de_passe: string;
 }
 
+export interface DemandeChangementEmail {
+  mot_de_passe_actuel: string;
+  nouvel_email: string;
+}
+
 @Injectable({providedIn: 'root'})
 export class ProfilService {
   private http = inject(HttpClient);
@@ -40,5 +45,13 @@ export class ProfilService {
 
   changerMotDePasse(payload: ChangementMotDePasse) {
     return this.http.patch<{ message: string }>(`${this.apiUrl}/mot-de-passe`, payload);
+  }
+
+  changerEmail(payload: DemandeChangementEmail) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/changer-email`, payload);
+  }
+
+  confirmerEmail(token: string) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/confirmer-email/${token}`, {});
   }
 }
