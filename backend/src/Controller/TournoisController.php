@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\MatchTournoi;
 use App\Entity\Participation;
 use App\Entity\Tournois;
 use App\Entity\Utilisateur;
@@ -30,8 +31,8 @@ class TournoisController extends AbstractController
     public function liste(EntityManagerInterface $em): JsonResponse
     {
         $tournois = $em->getRepository(Tournois::class)->createQueryBuilder('t')
-            ->where('t.statut != :annule')
-            ->setParameter('annule', 'annule')
+            ->where('t.statut NOT IN (:statutsArchives)')
+            ->setParameter('statutsArchives', ['annule', 'termine'])
             ->orderBy('t.date', 'DESC')
             ->getQuery()
             ->getResult();
@@ -57,7 +58,12 @@ class TournoisController extends AbstractController
     #[Route('/api/tournois/annules', name: 'api_tournois_annules_liste', methods: ['GET'])]
     public function listeAnnules(EntityManagerInterface $em): JsonResponse
     {
-        $tournois = $em->getRepository(Tournois::class)->findBy(['statut' => 'annule'], ['date_annulation' => 'DESC']);
+        $tournois = $em->getRepository(Tournois::class)->createQueryBuilder('t')
+            ->where('t.statut IN (:statutsArchives)')
+            ->setParameter('statutsArchives', ['annule', 'termine'])
+            ->orderBy('t.date', 'DESC')
+            ->getQuery()
+            ->getResult();
 
         $resultat = array_map(fn(Tournois $t) => [
             'id' => $t->getId(),
@@ -166,6 +172,145 @@ class TournoisController extends AbstractController
         $em->flush();
 
         return $this->json(['message' => 'Tournoi mis à jour.']);
+    }
+
+    /**
+     * Calcule la liste COMPLÈTE des matchs d'un tournoi round-robin (chaque
+     * participant affronte chaque autre une fois), en croisant avec les
+     * matchs déjà saisis pour indiquer lesquels restent à faire — sans
+     * cette route, l'organisateur n'a aucun moyen de savoir s'il a oublié
+     * une rencontre.
+     */
+    #[Route('/api/tournois/{id<\d+>}/matchs', name: 'api_tournoi_matchs_liste', methods: ['GET'])]
+    public function listeMatchs(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $tournoi = $em->getRepository(Tournois::class)->find($id);
+        if (!$tournoi) {
+            return $this->json(['message' => 'Tournoi introuvable.'], 404);
+        }
+
+        $participations = $em->getRepository(Participation::class)->findBy(['tournois_id' => $tournoi]);
+        $joueurs = array_map(fn(Participation $p) => $p->getUtilisateurId(), $participations);
+
+        // "Dictionnaire" des matchs déjà joués, indexé par une clé qui ne
+        // dépend pas de l'ordre des 2 joueurs (min-max), pour retrouver un
+        // match peu importe qui était "joueur1" ou "joueur2" au moment de la saisie.
+        $dejaJoues = [];
+        foreach ($em->getRepository(MatchTournoi::class)->findBy(['tournois_id' => $tournoi]) as $match) {
+            $idA = $match->getJoueur1Id()->getId();
+            $idB = $match->getJoueur2Id()->getId();
+            $cle = min($idA, $idB) . '-' . max($idA, $idB);
+            $dejaJoues[$cle] = $match;
+        }
+
+        $resultat = [];
+        $nombreJoueurs = count($joueurs);
+        for ($i = 0; $i < $nombreJoueurs; $i++) {
+            for ($j = $i + 1; $j < $nombreJoueurs; $j++) {
+                $joueurA = $joueurs[$i];
+                $joueurB = $joueurs[$j];
+                $cle = min($joueurA->getId(), $joueurB->getId()) . '-' . max($joueurA->getId(), $joueurB->getId());
+                $match = $dejaJoues[$cle] ?? null;
+
+                $resultat[] = [
+                    'joueur1_id' => $joueurA->getId(),
+                    'joueur1_nom' => $joueurA->getPrenom() . ' ' . $joueurA->getNom(),
+                    'joueur2_id' => $joueurB->getId(),
+                    'joueur2_nom' => $joueurB->getPrenom() . ' ' . $joueurB->getNom(),
+                    'joue' => $match !== null,
+                    'resultat' => $match?->getResultat(),
+                ];
+            }
+        }
+
+        return $this->json($resultat);
+    }
+
+    /**
+     * Enregistre le résultat d'un match entre 2 participants, et met à
+     * jour leurs points en conséquence (victoire = 1, nul = 0,5, défaite =
+     * 0 — méthode confirmée par la tutrice). Le champ "resultat" de
+     * Participation sert de compteur de points cumulés pour ce tournoi.
+     */
+    #[Route('/api/tournois/{id<\d+>}/matchs', name: 'api_tournoi_match_saisir', methods: ['POST'])]
+    public function saisirMatch(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $tournoi = $em->getRepository(Tournois::class)->find($id);
+        if (!$tournoi) {
+            return $this->json(['message' => 'Tournoi introuvable.'], 404);
+        }
+
+        if ($tournoi->getStatut() !== 'en_cours') {
+            return $this->json(['message' => 'Le tournoi doit être en cours pour saisir un résultat.'], 409);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $joueur1Id = $data['joueur1_id'] ?? null;
+        $joueur2Id = $data['joueur2_id'] ?? null;
+        $resultat = $data['resultat'] ?? null;
+
+        if (empty($joueur1Id) || empty($joueur2Id) || !in_array($resultat, ['joueur1', 'joueur2', 'nul'], true)) {
+            return $this->json(['message' => 'Sélectionnez les 2 joueurs et un résultat valide.'], 400);
+        }
+
+        if ($joueur1Id === $joueur2Id) {
+            return $this->json(['message' => 'Choisissez deux joueurs différents.'], 400);
+        }
+
+        $joueur1 = $em->getRepository(Utilisateur::class)->find($joueur1Id);
+        $joueur2 = $em->getRepository(Utilisateur::class)->find($joueur2Id);
+
+        $participation1 = $em->getRepository(Participation::class)->findOneBy(['tournois_id' => $tournoi, 'utilisateur_id' => $joueur1]);
+        $participation2 = $em->getRepository(Participation::class)->findOneBy(['tournois_id' => $tournoi, 'utilisateur_id' => $joueur2]);
+
+        if (!$participation1 || !$participation2) {
+            return $this->json(['message' => 'Les deux joueurs doivent être inscrits à ce tournoi.'], 400);
+        }
+
+        $match = new MatchTournoi();
+        $match->setTournoisId($tournoi);
+        $match->setJoueur1Id($joueur1);
+        $match->setJoueur2Id($joueur2);
+        $match->setResultat($resultat);
+        $match->setDateSaisie(new \DateTime());
+        $em->persist($match);
+
+        // Points selon le résultat : victoire = 1, nul = 0,5, défaite = 0.
+        [$pointsJoueur1, $pointsJoueur2] = match ($resultat) {
+            'joueur1' => [1.0, 0.0],
+            'joueur2' => [0.0, 1.0],
+            'nul' => [0.5, 0.5],
+        };
+
+        $participation1->setResultat((string)((float)($participation1->getResultat() ?? 0) + $pointsJoueur1));
+        $participation2->setResultat((string)((float)($participation2->getResultat() ?? 0) + $pointsJoueur2));
+
+        $em->flush();
+
+        return $this->detail($id, $em);
+    }
+
+    /**
+     * Termine un tournoi : verrouille tout, déplace le tournoi dans
+     * l'archive avec le classement final (déjà calculé au fil des
+     * matchs saisis, rien à recalculer ici).
+     */
+    #[Route('/api/tournois/{id<\d+>}/terminer', name: 'api_tournoi_terminer', methods: ['POST'])]
+    public function terminerTournoi(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $tournoi = $em->getRepository(Tournois::class)->find($id);
+        if (!$tournoi) {
+            return $this->json(['message' => 'Tournoi introuvable.'], 404);
+        }
+
+        if ($tournoi->getStatut() !== 'en_cours') {
+            return $this->json(['message' => 'Seul un tournoi en cours peut être terminé.'], 409);
+        }
+
+        $tournoi->setStatut('termine');
+        $em->flush();
+
+        return $this->json(['message' => 'Tournoi terminé.']);
     }
 
     /**

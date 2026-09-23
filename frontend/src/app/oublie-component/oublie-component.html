@@ -1,26 +1,35 @@
 <h2>Mot de passe oublié</h2>
 
-<form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
+@if (!isSubmitted) {
 
-  <div class="form-fields">
-    <div class="form-group">
-      <label class="label" for="email">E-mail</label>
-      <input
-        type="email"
-        id="email"
-        formControlName="email"
-        placeholder="votre.email@exemple.fr"
-        autocomplete="email">
+  <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
 
-      <!-- Message d'erreur d'invalidation (FALC) -->
-      @if (forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched) {
-        <span class="erreur">Veuillez entrer une adresse e-mail valide.</span>
-      }
+    <div class="form-fields">
+      <div class="form-group">
+        <label class="label" for="email">E-mail</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="votre.email@exemple.fr"
+          autocomplete="email">
+
+        <!-- Message d'erreur d'invalidation (FALC) -->
+        @if (forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched) {
+          <span class="erreur">Veuillez entrer une adresse e-mail valide.</span>
+        }
+      </div>
     </div>
-  </div>
 
-  <button type="submit" class="btn-primary" [disabled]="forgotPasswordForm.invalid">
-    Envoyer le lien de réinitialisation
-  </button>
+    <button type="submit" class="btn-primary" [disabled]="forgotPasswordForm.invalid || envoiEnCours">
+      {{ envoiEnCours ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation' }}
+    </button>
 
-</form>
+  </form>
+
+} @else {
+
+  <p class="succes">{{ message }}</p>
+  <p>Pensez à vérifier vos spams si vous ne voyez rien arriver.</p>
+
+}

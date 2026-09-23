@@ -1,0 +1,19 @@
+<div class="confirmer-email-page">
+  <div class="carte">
+
+    @if (chargementEnCours) {
+      <p>Vérification en cours...</p>
+    } @else if (succes) {
+      <div class="icone-succes">✅</div>
+      <h2>E-mail confirmé</h2>
+      <p>{{ message }}</p>
+      <a routerLink="/connexion" class="btn-primary">Se connecter</a>
+    } @else {
+      <div class="icone-erreur">⚠️</div>
+      <h2>Lien invalide</h2>
+      <p>{{ message }}</p>
+      <a routerLink="/profil" class="btn-primary">Retour à mon profil</a>
+    }
+
+  </div>
+</div>

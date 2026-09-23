@@ -59,6 +59,50 @@
 
     <hr>
 
+    <h3>Changer mon e-mail de connexion</h3>
+
+    <p class="explication-email">
+      Après validation, un e-mail de confirmation sera envoyé à la nouvelle adresse.
+      Votre e-mail de connexion ne changera qu'une fois le lien reçu cliqué.
+    </p>
+
+    <form [formGroup]="emailForm" (ngSubmit)="demanderChangementEmail()">
+
+      <div class="form-group">
+        <label class="label" for="motDePasseActuelEmail">Mot de passe actuel*</label>
+        <input [type]="afficherMotDePassePourEmail ? 'text' : 'password'" id="motDePasseActuelEmail"
+               formControlName="motDePasseActuel">
+      </div>
+
+      <div class="form-group">
+        <label class="label" for="nouvelEmail">Nouvel e-mail*</label>
+        <input type="email" id="nouvelEmail" formControlName="nouvelEmail">
+      </div>
+
+      <div class="case-afficher-mdp">
+        <input type="checkbox" id="afficherMdpEmail"
+               (change)="afficherMotDePassePourEmail = !afficherMotDePassePourEmail">
+        <label for="afficherMdpEmail">Afficher le mot de passe</label>
+      </div>
+
+      @if (messagesErreursEmail.length > 0) {
+        <div class="erreur">
+          @for (msg of messagesErreursEmail; track msg) {
+            <p>{{ msg }}</p>
+          }
+        </div>
+      }
+
+      @if (messageSuccesEmail) {
+        <p class="succes">{{ messageSuccesEmail }}</p>
+      }
+
+      <button type="submit" class="btn-primary">Demander le changement</button>
+
+    </form>
+
+    <hr>
+
     <h3>Changer mon mot de passe</h3>
 
     <form [formGroup]="motDePasseForm" (ngSubmit)="changerMotDePasse()">

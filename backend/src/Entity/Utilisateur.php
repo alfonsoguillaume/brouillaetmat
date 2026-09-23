@@ -57,6 +57,27 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $commentaire = null;
 
+    // Changement d'email en attente de confirmation — l'email "officiel"
+    // (colonne $email) ne change qu'une fois le lien de confirmation
+    // cliqué, jamais avant.
+    #[ORM\Column(length: 191, nullable: true)]
+    private ?string $nouvel_email_en_attente = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $token_changement_email = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTime $token_changement_email_expire_le = null;
+
+    // Réinitialisation de mot de passe ("mot de passe oublié") — même
+    // principe que le changement d'email : un jeton temporaire, jamais
+    // le mot de passe lui-même, envoyé par email.
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $token_reinitialisation = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTime $token_reinitialisation_expire_le = null;
+
     /**
      * @var Collection<int, Article>
      */
@@ -248,6 +269,66 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCommentaire(?string $commentaire): static
     {
         $this->commentaire = $commentaire;
+
+        return $this;
+    }
+
+    public function getNouvelEmailEnAttente(): ?string
+    {
+        return $this->nouvel_email_en_attente;
+    }
+
+    public function setNouvelEmailEnAttente(?string $nouvel_email_en_attente): static
+    {
+        $this->nouvel_email_en_attente = $nouvel_email_en_attente;
+
+        return $this;
+    }
+
+    public function getTokenChangementEmail(): ?string
+    {
+        return $this->token_changement_email;
+    }
+
+    public function setTokenChangementEmail(?string $token_changement_email): static
+    {
+        $this->token_changement_email = $token_changement_email;
+
+        return $this;
+    }
+
+    public function getTokenChangementEmailExpireLe(): ?\DateTime
+    {
+        return $this->token_changement_email_expire_le;
+    }
+
+    public function setTokenChangementEmailExpireLe(?\DateTime $token_changement_email_expire_le): static
+    {
+        $this->token_changement_email_expire_le = $token_changement_email_expire_le;
+
+        return $this;
+    }
+
+    public function getTokenReinitialisation(): ?string
+    {
+        return $this->token_reinitialisation;
+    }
+
+    public function setTokenReinitialisation(?string $token_reinitialisation): static
+    {
+        $this->token_reinitialisation = $token_reinitialisation;
+
+        return $this;
+    }
+
+    public function getTokenReinitialisationExpireLe(): ?\DateTime
+    {
+        return $this->token_reinitialisation_expire_le;
+    }
+
+    public function setTokenReinitialisationExpireLe(?\DateTime $token_reinitialisation_expire_le): static
+    {
+        $this->token_reinitialisation_expire_le = $token_reinitialisation_expire_le;
 
         return $this;
     }

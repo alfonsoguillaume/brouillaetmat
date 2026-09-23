@@ -101,6 +101,9 @@
               @if (tournoi.statut === 'planifie') {
                 <button class="btn-valider" (click)="basculerModeEdition()">Modifier</button>
               }
+              @if (tournoi.statut === 'en_cours') {
+                <button class="btn-primary" (click)="demanderConfirmationTerminer()">Terminer le tournoi</button>
+              }
               <button class="btn-refuser" (click)="ouvrirModaleAnnulation()">Annuler le tournoi</button>
             </div>
           }
@@ -113,7 +116,12 @@
             <ul class="liste-participants">
               @for (p of tournoi.participants; track p.utilisateur_id) {
                 <li>
-                  <span>{{ p.prenom }} {{ p.nom }}</span>
+                  <span>
+                    {{ p.prenom }} {{ p.nom }}
+                    @if (tournoi.statut === 'en_cours') {
+                      — {{ p.resultat ?? '0' }} pt(s)
+                    }
+                  </span>
                   @if (estAdmin() && tournoi.statut === 'planifie') {
                     <button class="btn-refuser" (click)="demanderConfirmationRetrait(p)">Retirer</button>
                   }
@@ -122,10 +130,73 @@
             </ul>
           }
 
+          @if (tournoi.statut === 'en_cours' && matchsPlanifies.length > 0) {
+            <h3>Matchs</h3>
+            <ul class="liste-matchs">
+              @for (m of matchsPlanifies; track m.joueur1_id + '-' + m.joueur2_id) {
+                <li [class.match-joue]="m.joue">
+                  <span class="statut-match">{{ m.joue ? '✅' : '⏳' }}</span>
+                  <span class="noms-match">{{ m.joueur1_nom }} vs {{ m.joueur2_nom }}</span>
+                  @if (m.joue) {
+                    <span class="resultat-match">
+                      {{ m.resultat === 'nul' ? 'Nul' : (m.resultat === 'joueur1' ? m.joueur1_nom + ' gagne' : m.joueur2_nom + ' gagne') }}
+                    </span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (estAdmin() && tournoi.statut === 'en_cours') {
+            <h3>Saisir un résultat</h3>
+
+            <div class="form-group">
+              <label class="label" for="mJoueur1">Joueur 1</label>
+              <select id="mJoueur1" #joueur1Select [value]="joueur1Choisi"
+                      (change)="onJoueur1Change(joueur1Select.value)">
+                <option value="" disabled selected>Choisir un joueur</option>
+                @for (p of tournoi.participants; track p.utilisateur_id) {
+                  <option [value]="p.utilisateur_id">{{ p.prenom }} {{ p.nom }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="mJoueur2">Joueur 2</label>
+              <select id="mJoueur2" #joueur2Select [value]="joueur2Choisi"
+                      (change)="onJoueur2Change(joueur2Select.value)">
+                <option value="" disabled selected>Choisir un joueur</option>
+                @for (p of tournoi.participants; track p.utilisateur_id) {
+                  <option [value]="p.utilisateur_id">{{ p.prenom }} {{ p.nom }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="mResultat">Résultat</label>
+              <select id="mResultat" #resultatSelect [value]="resultatChoisi"
+                      (change)="onResultatChange(resultatSelect.value)">
+                <option value="" disabled selected>Choisir un résultat</option>
+                <option value="joueur1">Victoire du joueur 1</option>
+                <option value="joueur2">Victoire du joueur 2</option>
+                <option value="nul">Match nul</option>
+              </select>
+            </div>
+
+            @if (messageErreurMatch) {
+              <p class="erreur">{{ messageErreurMatch }}</p>
+            }
+
+            <button class="btn-valider" [disabled]="saisieMatchEnCours" (click)="saisirMatch()">
+              {{ saisieMatchEnCours ? 'Envoi...' : 'Valider' }}
+            </button>
+          }
+
           @if (estAdmin() && tournoi.statut === 'planifie') {
             <div class="form-group ajout-participant">
               <label class="label" for="pMembre">Ajouter un participant</label>
-              <select id="pMembre" #participantSelect (change)="onParticipantChange(participantSelect.value)">
+              <select id="pMembre" #participantSelect [value]="participantChoisi"
+                      (change)="onParticipantChange(participantSelect.value)">
                 <option value="" disabled selected>Choisir un membre</option>
                 @for (m of participantsDisponiblesPourAjout; track m.id) {
                   <option [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
@@ -193,10 +264,18 @@
           <p>{{ archive.motif_annulation }}</p>
         } @else {
           <h3>Classement final</h3>
-          <p>
-            Le classement sera affiché ici une fois la méthode de notation
-            mise en place.
-          </p>
+          @if (classementTrie.length === 0) {
+            <p>Chargement du classement...</p>
+          } @else {
+            <ul class="liste-participants">
+              @for (p of classementTrie; track p.utilisateur_id; let i = $index) {
+                <li>
+                  <span>{{ i + 1 }}. {{ p.prenom }} {{ p.nom }}</span>
+                  <span>{{ p.resultat ?? '0' }} pt(s)</span>
+                </li>
+              }
+            </ul>
+          }
         }
 
         <button class="btn-fermer" (click)="fermerDetailArchive()">Fermer</button>
@@ -247,6 +326,18 @@
           retiré.</p>
         <button (click)="confirmerLancement()">Oui</button>
         <button (click)="annulerConfirmationLancement()">Annuler</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== Confirmation fin de tournoi ========== -->
+  @if (confirmationTerminerEnCours) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>Terminer ce tournoi ? Le classement actuel deviendra définitif, et le tournoi sera déplacé dans
+          l'archive.</p>
+        <button (click)="confirmerTerminer()">Oui</button>
+        <button (click)="annulerConfirmationTerminer()">Annuler</button>
       </div>
     </div>
   }

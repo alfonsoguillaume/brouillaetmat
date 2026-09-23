@@ -52,6 +52,15 @@ export class ProfilComponent implements OnInit {
     confirmationNouveauMotDePasse: ['', Validators.required],
   });
 
+  afficherMotDePassePourEmail = false;
+  messagesErreursEmail: string[] = [];
+  messageSuccesEmail = '';
+
+  emailForm: FormGroup = this.fb.group({
+    motDePasseActuel: ['', Validators.required],
+    nouvelEmail: ['', [Validators.required, Validators.email]],
+  });
+
   ngOnInit(): void {
     this.profilService.getProfil().subscribe({
       next: (profil) => {
@@ -195,6 +204,45 @@ export class ProfilComponent implements OnInit {
       },
       error: (err) => {
         this.messagesErreursMotDePasse = [err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.'];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  demanderChangementEmail(): void {
+    this.messagesErreursEmail = [];
+    this.messageSuccesEmail = '';
+
+    if (!this.emailForm.valid) {
+      const messages: string[] = [];
+
+      if (this.emailForm.get('motDePasseActuel')?.errors?.['required']) {
+        messages.push('Remplissez votre mot de passe actuel.');
+      }
+      if (this.emailForm.get('nouvelEmail')?.errors?.['required']) {
+        messages.push('Remplissez le nouvel e-mail.');
+      } else if (this.emailForm.get('nouvelEmail')?.errors?.['email']) {
+        messages.push('Écrivez le nouvel e-mail avec un @, par exemple : nom@exemple.fr.');
+      }
+
+      this.messagesErreursEmail = messages;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const valeurs = this.emailForm.value;
+
+    this.profilService.changerEmail({
+      mot_de_passe_actuel: valeurs.motDePasseActuel,
+      nouvel_email: valeurs.nouvelEmail,
+    }).subscribe({
+      next: () => {
+        this.messageSuccesEmail = 'Un e-mail de confirmation a été envoyé à votre nouvelle adresse. Votre e-mail de connexion ne changera qu\'une fois le lien cliqué.';
+        this.emailForm.reset();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messagesErreursEmail = [err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.'];
         this.cdr.detectChanges();
       },
     });

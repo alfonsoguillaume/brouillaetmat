@@ -1,0 +1,12 @@
+### 1. Connexion — copie le token reçu
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "test@brouillaetmat.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Liste des matchs planifiés (remplace 6 par l'id d'un vrai tournoi EN COURS chez toi)
+GET http://localhost:8000/api/tournois/9/matchs
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzc5MjMsImV4cCI6MTc5MDA4MTUyMywicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.olclzTTMBPXpYBpQrlju3nnp2Pn5PePgk9hEpOtM8YrTdHChijKkTOsb9H6ArebOwFCv3FkmF4SzGwRrHrK7WZIRYnUvLsCbKMYxpoYwUas4F6cGwl6kTJhBGbTmg7Fgkdfftzc6wLyCOtl15YDU4Pl0o7aGELAbn9P36Z62S4quuC1aC9VZ0DWJFdYnkiCw-gr_FeoU8DwrJp1ZhRCkxAkH-kz4YNkQpTK8ET9XD_ZkXGm89p4IB5UlUJCw5WRA7pmHxN2u9B7iTwW6_uJMb0b5iCJRCQixKlkJ1ls_nqKdBbqUTQysLwcpBIG2sLo95WAub0puFEYX1pzXzw3F6w

@@ -151,6 +151,49 @@
   margin-right: 0;
 }
 
+/* --- Suivi des matchs (faits / à faire) --- */
+.liste-matchs {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1.5px solid #7D9982;
+  border-radius: 8px;
+}
+
+.liste-matchs li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.liste-matchs li:last-child {
+  border-bottom: none;
+}
+
+.liste-matchs li.match-joue {
+  background-color: rgba(104, 141, 106, 0.12);
+}
+
+.statut-match {
+  flex-shrink: 0;
+}
+
+.noms-match {
+  color: #D9A24B;
+  flex: 1;
+}
+
+.resultat-match {
+  color: #688D6A;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
 .ajout-participant {
   margin: 1.5rem 0;
 }

@@ -2,6 +2,7 @@ import {ChangeDetectorRef, Component, inject} from '@angular/core';
 import {DatePipe} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {
+  MatchPlanifie,
   MembreLeger,
   ParticipantTournoi,
   TournoiArchive,
@@ -60,16 +61,41 @@ export class TournoisComponent {
     });
   }
 
-  // ---------- Détail d'un tournoi archivé (annulé ou, plus tard, terminé) ----------
+  // ---------- Détail d'un tournoi archivé (annulé ou terminé) ----------
 
   archiveSelectionnee: TournoiArchive | null = null;
+  // Rempli seulement si le tournoi est "terminé" — contient le classement
+  // final (participants + points), récupéré via la même route de détail
+  // que pour un tournoi actif.
+  archiveDetailComplet: TournoiDetail | null = null;
 
   ouvrirDetailArchive(t: TournoiArchive): void {
     this.archiveSelectionnee = t;
+    this.archiveDetailComplet = null;
+
+    if (t.statut === 'termine') {
+      this.tournoisService.detail(t.id).subscribe({
+        next: (data) => {
+          this.archiveDetailComplet = data;
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   fermerDetailArchive(): void {
     this.archiveSelectionnee = null;
+    this.archiveDetailComplet = null;
+  }
+
+  // Classement trié du meilleur score au moins bon — pour l'affichage.
+  get classementTrie(): ParticipantTournoi[] {
+    if (!this.archiveDetailComplet) {
+      return [];
+    }
+    return [...this.archiveDetailComplet.participants].sort(
+      (a, b) => parseFloat(b.resultat ?? '0') - parseFloat(a.resultat ?? '0')
+    );
   }
 
   private chargerMembresDisponibles(): void {
@@ -167,6 +193,21 @@ export class TournoisComponent {
         this.messageErreurParticipant = '';
         this.participantChoisi = '';
         this.cdr.detectChanges();
+
+        if (data.statut === 'en_cours') {
+          this.chargerMatchsPlanifies(tournoi.id);
+        }
+      }
+    });
+  }
+
+  matchsPlanifies: MatchPlanifie[] = [];
+
+  private chargerMatchsPlanifies(tournoiId: number): void {
+    this.tournoisService.listeMatchs(tournoiId).subscribe({
+      next: (data) => {
+        this.matchsPlanifies = data;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -174,6 +215,7 @@ export class TournoisComponent {
   fermerDetail(): void {
     this.tournoiSelectionne = null;
     this.modeEditionInfos = false;
+    this.matchsPlanifies = [];
   }
 
   private rechargerDetail(): void {
@@ -343,6 +385,98 @@ export class TournoisComponent {
         this.messageErreurParticipant = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  // ---------- Saisie des résultats de match ----------
+
+  joueur1Choisi = '';
+  joueur2Choisi = '';
+  resultatChoisi: 'joueur1' | 'joueur2' | 'nul' | '' = '';
+  messageErreurMatch = '';
+  saisieMatchEnCours = false;
+
+  onJoueur1Change(valeur: string): void {
+    this.joueur1Choisi = valeur;
+  }
+
+  onJoueur2Change(valeur: string): void {
+    this.joueur2Choisi = valeur;
+  }
+
+  onResultatChange(valeur: string): void {
+    this.resultatChoisi = valeur as 'joueur1' | 'joueur2' | 'nul' | '';
+  }
+
+  saisirMatch(): void {
+    if (!this.tournoiSelectionne || this.saisieMatchEnCours) {
+      return;
+    }
+
+    this.messageErreurMatch = '';
+
+    if (!this.joueur1Choisi || !this.joueur2Choisi || !this.resultatChoisi) {
+      this.messageErreurMatch = 'Choisissez les 2 joueurs et un résultat.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.joueur1Choisi === this.joueur2Choisi) {
+      this.messageErreurMatch = 'Choisissez deux joueurs différents.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.saisieMatchEnCours = true;
+
+    this.tournoisService.saisirMatch(
+      this.tournoiSelectionne.id,
+      +this.joueur1Choisi,
+      +this.joueur2Choisi,
+      this.resultatChoisi
+    ).subscribe({
+      next: (data) => {
+        this.saisieMatchEnCours = false;
+        this.joueur1Choisi = '';
+        this.joueur2Choisi = '';
+        this.resultatChoisi = '';
+        this.tournoiSelectionne = data;
+        this.chargerMatchsPlanifies(data.id);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.saisieMatchEnCours = false;
+        this.messageErreurMatch = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ---------- Terminer le tournoi ----------
+
+  confirmationTerminerEnCours = false;
+
+  demanderConfirmationTerminer(): void {
+    this.confirmationTerminerEnCours = true;
+  }
+
+  annulerConfirmationTerminer(): void {
+    this.confirmationTerminerEnCours = false;
+  }
+
+  confirmerTerminer(): void {
+    if (!this.tournoiSelectionne) {
+      return;
+    }
+
+    this.tournoisService.terminerTournoi(this.tournoiSelectionne.id).subscribe({
+      next: () => {
+        this.confirmationTerminerEnCours = false;
+        this.fermerDetail();
+        this.chargerTournois();
+        this.chargerArchive();
+        this.cdr.detectChanges();
+      }
     });
   }
 

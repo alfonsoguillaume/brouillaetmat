@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, effect, inject} from '@angular/core';
+import {ChangeDetectorRef, Component, effect, inject, OnDestroy} from '@angular/core';
 import {DatePipe} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AdminService, InscriptionEnAttente, Membre} from '../services/admin.service';
@@ -12,7 +12,7 @@ import {RouterLink} from '@angular/router';
   styleUrl: './administration-component.css',
   templateUrl: './administration-component.html',
 })
-export class AdministrationComponent {
+export class AdministrationComponent implements OnDestroy {
   private adminService = inject(AdminService);
   private authService = inject(AuthService);
   private articleService = inject(ArticleService);
@@ -20,6 +20,7 @@ export class AdministrationComponent {
   private cdr = inject(ChangeDetectorRef);
 
   private listesDejaChargees = false;
+  private intervalleInscriptions: ReturnType<typeof setInterval> | null = null;
 
   // --- Inscriptions en attente (déjà existant) ---
   inscriptions: InscriptionEnAttente[] = [];
@@ -39,8 +40,21 @@ export class AdministrationComponent {
         this.listesDejaChargees = true;
         this.chargerInscriptions();
         this.chargerMembres();
+
+        // Sans ça, une nouvelle inscription n'apparaît que si l'admin
+        // recharge la page entière — on vérifie donc en tâche de fond,
+        // toutes les 10 secondes, tant que cette page reste ouverte.
+        this.intervalleInscriptions = setInterval(() => {
+          this.chargerInscriptions();
+        }, 10000);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervalleInscriptions) {
+      clearInterval(this.intervalleInscriptions);
+    }
   }
 
   // --- Modale de modification d'un membre ---

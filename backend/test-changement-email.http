@@ -1,0 +1,51 @@
+### 1. Connexion — copie le token JWT reçu
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "guillaume.alfonso@sfr.fr",
+    "password": "motdepasse123"
+}
+
+### 2. Mauvais mot de passe (doit échouer en 400)
+POST http://localhost:8000/api/profil/changer-email
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNTMwOTksImV4cCI6MTc5MDE1NjY5OSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.h_MupgeUsls7EnLvgKgbENtBpom8bVHD_28eu1WV4w2z5906BwbbJY4hH__OAaV8BcaZ8YQ5VsVYx6K4uQ5cg-rQxRBzy4r3GPMrR9iHgQOLZAI8eRYdsqq7tqyNPEO1IcdInXksU46mBqPeFD4G3tBUr9YS1PCY933d0WBVEJ4coRJM-OZBXqC3_H9QkTqexRvKgZzguYlG8KNBBIUspJlq28tOe9OjjkLeGFtQxFrMAjtNd1atqbNgmWn7Y2pG7rELjfZ9Cyf5E8gVYOeArSKgTjTUqoJiXdlT7VxdgpU5vN6Tg6l8-IvIuM6OYufpxifPcZKjJFC3lhQ88DJVHw
+Content-Type: application/json
+
+{
+    "mot_de_passe_actuel": "MauvaisMotDePasse123!",
+    "nouvel_email": "nouvelle-adresse@exemple.fr"
+}
+
+### 3. Email déjà utilisé par un autre compte (doit échouer en 409 — adapte avec un email qui existe vraiment chez toi)
+POST http://localhost:8000/api/profil/changer-email
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNTMwOTksImV4cCI6MTc5MDE1NjY5OSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.h_MupgeUsls7EnLvgKgbENtBpom8bVHD_28eu1WV4w2z5906BwbbJY4hH__OAaV8BcaZ8YQ5VsVYx6K4uQ5cg-rQxRBzy4r3GPMrR9iHgQOLZAI8eRYdsqq7tqyNPEO1IcdInXksU46mBqPeFD4G3tBUr9YS1PCY933d0WBVEJ4coRJM-OZBXqC3_H9QkTqexRvKgZzguYlG8KNBBIUspJlq28tOe9OjjkLeGFtQxFrMAjtNd1atqbNgmWn7Y2pG7rELjfZ9Cyf5E8gVYOeArSKgTjTUqoJiXdlT7VxdgpU5vN6Tg6l8-IvIuM6OYufpxifPcZKjJFC3lhQ88DJVHw
+Content-Type: application/json
+
+{
+    "mot_de_passe_actuel": "motdepasse123",
+    "nouvel_email": "a@a.fr"
+}
+
+### 4. Demande valide (adapte le mot de passe et l'email — utilise une adresse que TU peux consulter)
+POST http://localhost:8000/api/profil/changer-email
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNTMwOTksImV4cCI6MTc5MDE1NjY5OSwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6InRlc3RAYnJvdWlsbGFldG1hdC5mciJ9.h_MupgeUsls7EnLvgKgbENtBpom8bVHD_28eu1WV4w2z5906BwbbJY4hH__OAaV8BcaZ8YQ5VsVYx6K4uQ5cg-rQxRBzy4r3GPMrR9iHgQOLZAI8eRYdsqq7tqyNPEO1IcdInXksU46mBqPeFD4G3tBUr9YS1PCY933d0WBVEJ4coRJM-OZBXqC3_H9QkTqexRvKgZzguYlG8KNBBIUspJlq28tOe9OjjkLeGFtQxFrMAjtNd1atqbNgmWn7Y2pG7rELjfZ9Cyf5E8gVYOeArSKgTjTUqoJiXdlT7VxdgpU5vN6Tg6l8-IvIuM6OYufpxifPcZKjJFC3lhQ88DJVHw
+Content-Type: application/json
+
+{
+    "mot_de_passe_actuel": "motdepasse123",
+    "nouvel_email": "guillaume.alfonso@sfr.fr"
+}
+
+### 5. Confirmation avec un jeton invalide (doit échouer en 404)
+POST http://localhost:8000/api/profil/confirmer-email/jetoninvalide123
+Content-Type: application/json
+
+### 6. Confirmation avec le VRAI jeton — va chercher le lien reçu dans l'email de l'étape 4,
+### copie uniquement la partie après "/confirmer-email/" et colle-la dans l'URL ci-dessous
+POST http://localhost:8000/api/profil/confirmer-email/dc58ca352d53be4fa704a34ace1a10975cbb98119ee67329ad12999ac348311a
+Content-Type: application/json
+
+### 7. Vérifie que l'email a bien changé (doit afficher le NOUVEL email)
+GET http://localhost:8000/api/profil
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNTM3OTAsImV4cCI6MTc5MDE1NzM5MCwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6Imd1aWxsYXVtZS5hbGZvbnNvQHNmci5mciJ9.LA0juo7VQRDU_1VZvshk2zKCrq3nZtntaV9zpCA4IvfhOBLH-dHW5NarOd8MWhMyTnS_TUfvdkpbHY2VIaV5Frt--eHB1gBY1vAAsgz-aHij4a9TkXv70eS-bNW_cZyDD2UFOU5McaX1_jVXEcYCr3o4Un8--GAcLI4Okupbq9BFH5cbuM2_ikKMI1OIP9L8C9DAPHEjzsxfC_-gq7yVskPKkTVXmxfblfG2frY8vSWwuGmXlibCLcjn0ERI6XjH9L83gpLGCS-qAYF7XyTAT9yzr5jt8VCUao5xwWSET1teCRxxqcaZgfJ9zS06-ytcEoT4o0F-KQcSXsefhdsRqg
