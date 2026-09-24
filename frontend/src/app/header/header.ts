@@ -42,10 +42,12 @@ export class Header implements OnDestroy {
 
     this.intervalleNotifJeu = setInterval(() => {
       this.verifierNotificationJeu();
+      this.envoyerSignalPresence();
     }, 5000);
     // Premier contrôle immédiat, pas besoin d'attendre 5 secondes après
     // le chargement de la page.
     this.verifierNotificationJeu();
+    this.envoyerSignalPresence();
   }
 
   ngOnDestroy(): void {
@@ -78,6 +80,18 @@ export class Header implements OnDestroy {
       error: () => {
         // Pas grave si ça échoue une fois — le prochain essai, 5s plus
         // tard, retentera tout seul.
+      }
+    });
+  }
+
+  private envoyerSignalPresence(): void {
+    if (!this.authService.isLoggedIn()) {
+      return;
+    }
+    // Pas besoin de traiter la réponse — sert juste à mettre à jour
+    // "dernière activité" côté serveur, aucun affichage local à changer.
+    this.jeuService.signalPresence().subscribe({
+      error: () => {
       }
     });
   }

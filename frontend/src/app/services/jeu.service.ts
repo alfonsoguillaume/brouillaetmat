@@ -5,6 +5,7 @@ export interface MembreJeu {
   id: number;
   nom: string;
   prenom: string;
+  en_ligne: boolean;
 }
 
 export interface JoueurInfo {
@@ -36,6 +37,7 @@ export interface ClassementEntry {
   nom: string;
   prenom: string;
   elo: number;
+  en_ligne: boolean;
 }
 
 @Injectable({providedIn: 'root'})
@@ -100,5 +102,9 @@ export class JeuService {
 
   repondreNul(id: number, accepter: boolean) {
     return this.http.post<PartieActive>(`${this.apiUrl}/${id}/repondre-nul`, {accepter});
+  }
+
+  signalPresence() {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/signal-presence`, {});
   }
 }

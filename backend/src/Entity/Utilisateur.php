@@ -7,8 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
@@ -77,6 +77,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(nullable: true)]
     private ?\DateTime $token_reinitialisation_expire_le = null;
+
+    // Mis à jour à chaque signal de présence envoyé par le navigateur
+    // (voir Header côté Angular) — sert à déterminer qui est "en ligne"
+    // (dernière activité récente) sans infrastructure temps réel dédiée.
+    #[ORM\Column(nullable: true)]
+    private ?\DateTime $derniere_activite = null;
 
     /**
      * @var Collection<int, Article>
@@ -333,6 +339,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getDerniereActivite(): ?\DateTime
+    {
+        return $this->derniere_activite;
+    }
+
+    public function setDerniereActivite(?\DateTime $derniere_activite): static
+    {
+        $this->derniere_activite = $derniere_activite;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Article>
      */
@@ -484,11 +502,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Email sert à retrouver le bon login
+    Email sert à retrouver le bon login
      */
     public function getUserIdentifier(): string
     {
-        return (string)$this->email;
+        return (string) $this->email;
     }
 
     /**
@@ -504,7 +522,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Rècupèration et comparation du mot de passe (hashé) lors du login
+    Rècupèration et comparation du mot de passe (hashé) lors du login
      */
     public function getPassword(): ?string
     {

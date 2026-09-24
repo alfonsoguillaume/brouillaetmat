@@ -1,5 +1,5 @@
 .jouer-page {
-  max-width: 500px;
+  max-width: 640px;
   margin: 0 auto 1rem auto;
   text-align: center;
 }
@@ -280,6 +280,71 @@ select {
   font-weight: bold;
   width: 2rem;
   flex-shrink: 0;
+}
+
+.point-statut {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #6b6b6b;
+  flex-shrink: 0;
+}
+
+.point-statut.en-ligne {
+  background-color: #688D6A;
+  box-shadow: 0 0 4px rgba(104, 141, 106, 0.8);
+}
+
+/* Menu déroulant "maison" (details/summary) — un <select> natif ne peut
+   pas afficher un point coloré ni contrôler les couleurs de sa liste
+   ouverte dans tous les navigateurs. */
+.menu-adversaire {
+  position: relative;
+}
+
+.menu-adversaire summary {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  color: #D9A24B;
+  cursor: pointer;
+  list-style: none;
+}
+
+.menu-adversaire summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-adversaire-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: #2D302C;
+  border: 1.5px solid #7D9982;
+  border-radius: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.menu-adversaire-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  color: #D9A24B;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.menu-adversaire-option:hover {
+  background: linear-gradient(90deg, rgba(104, 141, 106, 0.4), rgba(125, 153, 130, 0.15));
 }
 
 .nom-joueur {
