@@ -221,6 +221,38 @@ class JeuController extends AbstractController
             ->getOneOrNullResult();
     }
 
+    // Durée sans signal de présence au-delà de laquelle un membre est
+    // considéré hors ligne — cohérente avec le rythme d'envoi du signal
+    // (toutes les 5s), laisse une marge raisonnable (ex: un onglet mis en
+    // arrière-plan par le navigateur, qui ralentit parfois les timers).
+    private const SEUIL_EN_LIGNE_SECONDES = 60;
+
+    private function estEnLigne(Utilisateur $utilisateur): bool
+    {
+        $derniere = $utilisateur->getDerniereActivite();
+        if (!$derniere) {
+            return false;
+        }
+        return (new \DateTime())->getTimestamp() - $derniere->getTimestamp() < self::SEUIL_EN_LIGNE_SECONDES;
+    }
+
+    /**
+     * Signal de présence — appelé régulièrement par le navigateur (header)
+     * pendant qu'un membre est connecté au site, peu importe la page sur
+     * laquelle il se trouve. Même principe que le "battement de cœur"
+     * déjà utilisé pendant une partie, mais ici pour tout le site.
+     */
+    #[Route('/api/jeu/signal-presence', name: 'api_jeu_signal_presence', methods: ['POST'])]
+    public function signalPresence(EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $moi */
+        $moi = $this->getUser();
+        $moi->setDerniereActivite(new \DateTime());
+        $em->flush();
+
+        return $this->json(['message' => 'Signal reçu.']);
+    }
+
     /**
      * Liste des membres qu'on peut défier (tous les membres validés, sauf
      * soi-même).
@@ -244,6 +276,7 @@ class JeuController extends AbstractController
             'id' => $u->getId(),
             'nom' => $u->getNom(),
             'prenom' => $u->getPrenom(),
+            'en_ligne' => $this->estEnLigne($u),
         ], $membres);
 
         return $this->json($resultat);
@@ -269,6 +302,7 @@ class JeuController extends AbstractController
                 'nom' => $u->getNom(),
                 'prenom' => $u->getPrenom(),
                 'elo' => $classement?->getValeurElo() ?? 800,
+                'en_ligne' => $this->estEnLigne($u),
             ];
         }, $membres);
 

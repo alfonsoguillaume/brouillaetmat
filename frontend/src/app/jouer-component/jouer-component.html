@@ -9,13 +9,18 @@
       <h3>Proposer une partie</h3>
 
       <div class="form-group">
-        <label class="label" for="adversaire">Adversaire*</label>
-        <select id="adversaire" #adversaireSelect (change)="onAdversaireChange(adversaireSelect.value)">
-          <option value="" disabled selected>Choisir un membre</option>
-          @for (m of membres; track m.id) {
-            <option [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
-          }
-        </select>
+        <label class="label">Adversaire*</label>
+        <details class="menu-adversaire" #menuAdversaire>
+          <summary>{{ texteAdversaireChoisi() }}</summary>
+          <div class="menu-adversaire-options">
+            @for (m of membres; track m.id) {
+              <div class="menu-adversaire-option" (click)="onAdversaireChange(m.id.toString(), menuAdversaire)">
+                <span class="point-statut" [class.en-ligne]="m.en_ligne"></span>
+                {{ m.prenom }} {{ m.nom }}
+              </div>
+            }
+          </div>
+        </details>
       </div>
 
       <div class="case-classee">
@@ -194,6 +199,8 @@
       @for (entree of classementListe; track entree.nom + entree.prenom; let i = $index) {
         <div class="ligne-classement">
           <span class="rang">{{ i + 1 }}</span>
+          <span class="point-statut" [class.en-ligne]="entree.en_ligne"
+                [attr.aria-label]="entree.en_ligne ? 'En ligne' : 'Hors ligne'"></span>
           <span class="nom-joueur">{{ entree.prenom }} {{ entree.nom }}</span>
           <span class="elo">{{ entree.elo }}</span>
         </div>

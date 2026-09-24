@@ -4,11 +4,14 @@
   margin: 1.5rem 0;
 }
 
-/* chessground a besoin d'un conteneur avec une taille EXPLICITE — sans
-   largeur/hauteur définies, le plateau ne s'affiche pas du tout. */
+/* chessground a besoin d'un conteneur avec une taille EXPLICITE en
+   pixels — sans ça (ex: pourcentage, flex-grow), le plateau ne se
+   dessine pas correctement, chessground lit sa taille UNE SEULE FOIS au
+   chargement (voir ngAfterViewInit dans plateau-component.ts). */
 .plateau-conteneur {
-  width: 400px;
-  height: 400px;
+  width: 560px;
+  height: 560px;
   max-width: 90vw;
   max-height: 90vw;
+  flex-shrink: 0;
 }

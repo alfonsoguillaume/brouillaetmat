@@ -229,8 +229,17 @@ export class JouerComponent implements OnInit, OnDestroy {
   messageErreurProposition = '';
   propositionEnCours = false;
 
-  onAdversaireChange(valeur: string): void {
+  onAdversaireChange(valeur: string, menu: HTMLDetailsElement): void {
     this.adversaireChoisi = valeur;
+    menu.open = false; // referme le menu après le choix
+  }
+
+  texteAdversaireChoisi(): string {
+    if (!this.adversaireChoisi) {
+      return 'Choisir un membre';
+    }
+    const m = this.membres.find(x => x.id.toString() === this.adversaireChoisi);
+    return m ? `${m.prenom} ${m.nom}` : 'Choisir un membre';
   }
 
   proposerPartie(): void {
