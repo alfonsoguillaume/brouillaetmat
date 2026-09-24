@@ -142,3 +142,14 @@ a img {
   margin-left: -5px;
   display: block;
 }
+
+/* Badge "quelque chose vous attend" sur le lien Jouer */
+.badge-notification {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  vertical-align: middle;
+}

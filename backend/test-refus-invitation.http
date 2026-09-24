@@ -1,0 +1,47 @@
+### 1. Connexion joueur A (le proposeur — adapte avec un vrai compte)
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "a@a.fr",
+    "password": "Aa123456789."
+}
+
+### 2. Connexion joueur B (celui qui va refuser — adapte avec un 2e vrai compte)
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email": "b@b.fr",
+    "password": "Bb123456789."
+}
+
+### 3. Joueur A propose une partie à joueur B (adapte adversaire_id avec le vrai id de B, token de A)
+POST http://localhost:8000/api/jeu/proposer
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMzU1MTksImV4cCI6MTc5MDIzOTExOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.K3F-R7N7_T_Suf-O8GsRDq6RMxe4EYHVIMYtIIuTWBI9T3WZ511d-TpEoHtp1081fIWnlWFdX9ky8p2b0K2AYcMMfSvo5PdNGukvv4c0M_tyIZ4F3QUatGLhbLuY3k33KEizwVaUrKsE7nkBh_EiOxisqmL0fplfLJ7KbPy5_ec0BJsVmzJRmw-zrvO8ctb5sCOo07I1KRVOmnK_pfbp-vLLBy5UEaZijULmKrhDRY8WuVDPAuOon0g7r2dgYRw3AYKAZ2BklCsqDw_JlGM9Pf-MUXY0YX3XidBKkpEOxfj9BH17FEQWj1nWbsnBdNsgGahhYibKHke1mU5_771qtA
+Content-Type: application/json
+
+{
+    "adversaire_id": 24,
+    "classee": false
+}
+
+### 4. Joueur B refuse (adapte l'id de la partie reçu à l'étape 3, token de B)
+DELETE http://localhost:8000/api/jeu/27
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMzU2NTcsImV4cCI6MTc5MDIzOTI1Nywicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYkBiLmZyIn0.xmSNG4PZbh9C_sZsP_PPpWhfFbIXiRLXunL3b3-mCPIJFRhuutvPB6EpJW7dNfVAcsXi84ZKVXNJKwCzl_xAJzD-pvQpaKFq_0OBsFr6LPmYBRZcb2BWvE9I-40XQRvvErgFaa7VwxMgAWp6XhS71rMcwqI3gt2vX2r65StyyB-dAVofedpWzTpbOvcewsUI_BXh6JYob7W4rWl2Efu9a6tTvkCyobv_0v6rFHlV-kk0gYriQycItTEX7m4Tl3PlL7lxzEeT6Tl4An-FM4HIVaVRbfvMXmIy8BtHnIEk2_cF6EhUlybgIkf4mjOcGSdvwCkYvpn9o9bLJXED28PLjA
+
+### 5. Joueur A consulte "ma partie" — doit afficher statut "refusee" (token de A)
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMzU1MTksImV4cCI6MTc5MDIzOTExOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.K3F-R7N7_T_Suf-O8GsRDq6RMxe4EYHVIMYtIIuTWBI9T3WZ511d-TpEoHtp1081fIWnlWFdX9ky8p2b0K2AYcMMfSvo5PdNGukvv4c0M_tyIZ4F3QUatGLhbLuY3k33KEizwVaUrKsE7nkBh_EiOxisqmL0fplfLJ7KbPy5_ec0BJsVmzJRmw-zrvO8ctb5sCOo07I1KRVOmnK_pfbp-vLLBy5UEaZijULmKrhDRY8WuVDPAuOon0g7r2dgYRw3AYKAZ2BklCsqDw_JlGM9Pf-MUXY0YX3XidBKkpEOxfj9BH17FEQWj1nWbsnBdNsgGahhYibKHke1mU5_771qtA
+
+### 6. Joueur B essaie de fermer le message à la place de A — doit échouer en 403 (token de B)
+DELETE http://localhost:8000/api/jeu/27
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMzU2NTcsImV4cCI6MTc5MDIzOTI1Nywicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYkBiLmZyIn0.xmSNG4PZbh9C_sZsP_PPpWhfFbIXiRLXunL3b3-mCPIJFRhuutvPB6EpJW7dNfVAcsXi84ZKVXNJKwCzl_xAJzD-pvQpaKFq_0OBsFr6LPmYBRZcb2BWvE9I-40XQRvvErgFaa7VwxMgAWp6XhS71rMcwqI3gt2vX2r65StyyB-dAVofedpWzTpbOvcewsUI_BXh6JYob7W4rWl2Efu9a6tTvkCyobv_0v6rFHlV-kk0gYriQycItTEX7m4Tl3PlL7lxzEeT6Tl4An-FM4HIVaVRbfvMXmIy8BtHnIEk2_cF6EhUlybgIkf4mjOcGSdvwCkYvpn9o9bLJXED28PLjA
+
+### 7. Joueur A ferme le message après l'avoir vu — doit réussir (token de A)
+DELETE http://localhost:8000/api/jeu/27
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMzU1MTksImV4cCI6MTc5MDIzOTExOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.K3F-R7N7_T_Suf-O8GsRDq6RMxe4EYHVIMYtIIuTWBI9T3WZ511d-TpEoHtp1081fIWnlWFdX9ky8p2b0K2AYcMMfSvo5PdNGukvv4c0M_tyIZ4F3QUatGLhbLuY3k33KEizwVaUrKsE7nkBh_EiOxisqmL0fplfLJ7KbPy5_ec0BJsVmzJRmw-zrvO8ctb5sCOo07I1KRVOmnK_pfbp-vLLBy5UEaZijULmKrhDRY8WuVDPAuOon0g7r2dgYRw3AYKAZ2BklCsqDw_JlGM9Pf-MUXY0YX3XidBKkpEOxfj9BH17FEQWj1nWbsnBdNsgGahhYibKHke1mU5_771qtA
+
+### 8. Vérifier que "ma partie" est bien redevenue vide/null pour A (token de A)
+GET http://localhost:8000/api/jeu/ma-partie
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMzU1MTksImV4cCI6MTc5MDIzOTExOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiYUBhLmZyIn0.K3F-R7N7_T_Suf-O8GsRDq6RMxe4EYHVIMYtIIuTWBI9T3WZ511d-TpEoHtp1081fIWnlWFdX9ky8p2b0K2AYcMMfSvo5PdNGukvv4c0M_tyIZ4F3QUatGLhbLuY3k33KEizwVaUrKsE7nkBh_EiOxisqmL0fplfLJ7KbPy5_ec0BJsVmzJRmw-zrvO8ctb5sCOo07I1KRVOmnK_pfbp-vLLBy5UEaZijULmKrhDRY8WuVDPAuOon0g7r2dgYRw3AYKAZ2BklCsqDw_JlGM9Pf-MUXY0YX3XidBKkpEOxfj9BH17FEQWj1nWbsnBdNsgGahhYibKHke1mU5_771qtA

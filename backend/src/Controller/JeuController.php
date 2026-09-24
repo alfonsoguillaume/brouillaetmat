@@ -216,7 +216,7 @@ class JeuController extends AbstractController
             ->where('(p.joueur_blanc_id = :u OR p.joueur_noir_id = :u)')
             ->andWhere('p.statut IN (:statuts)')
             ->setParameter('u', $utilisateur)
-            ->setParameter('statuts', ['en_attente', 'en_cours', 'terminee'])
+            ->setParameter('statuts', ['en_attente', 'en_cours', 'terminee', 'refusee'])
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -415,10 +415,19 @@ class JeuController extends AbstractController
     }
 
     /**
-     * Deux usages pour cette même route :
-     * 1. Refuser/annuler une invitation encore "en_attente" (rien à
-     *    archiver, jamais jouée).
-     * 2. Fermer/nettoyer une partie "terminee" (une fois que le joueur a
+     * Plusieurs usages pour cette même route, selon qui appelle et le
+     * statut actuel de la partie :
+     * 1. Le PROPOSEUR annule sa propre invitation encore "en_attente" →
+     *    suppression immédiate (rien à archiver, jamais jouée, personne
+     *    d'autre n'a besoin d'être informé puisque c'est lui-même qui agit).
+     * 2. L'ADVERSAIRE refuse une invitation reçue "en_attente" → on ne
+     *    supprime PAS tout de suite, on marque juste "refusee" — le temps
+     *    que le proposeur la voie à son prochain rafraîchissement (même
+     *    principe que "terminee" pour la fin d'une partie).
+     * 3. Le PROPOSEUR ferme le message "refusée" une fois qu'il l'a vu →
+     *    suppression définitive, réservée à lui seul (l'adversaire n'a
+     *    plus rien à faire ici, il a déjà agi à l'étape 2).
+     * 4. Fermer/nettoyer une partie "terminee" (une fois que le joueur a
      *    vu le résultat affiché) — la ligne n'est supprimée qu'à ce
      *    moment-là, jamais automatiquement à la détection du mat (voir
      *    terminer() ci-dessus pour l'explication complète).
@@ -436,16 +445,41 @@ class JeuController extends AbstractController
             return $this->json(['message' => 'Déjà supprimée.']);
         }
 
-        $estImplique = $partie->getJoueurBlancId()?->getId() === $moi->getId()
-            || $partie->getJoueurNoirId()?->getId() === $moi->getId();
+        $estProposeur = $partie->getJoueurBlancId()?->getId() === $moi->getId();
+        $estImplique = $estProposeur || $partie->getJoueurNoirId()?->getId() === $moi->getId();
         if (!$estImplique) {
             return $this->json(['message' => 'Cette partie ne vous concerne pas.'], 403);
         }
 
-        if (!in_array($partie->getStatut(), ['en_attente', 'terminee'], true)) {
+        if ($partie->getStatut() === 'en_attente') {
+            if ($estProposeur) {
+                // Cas 1 : j'annule ma propre invitation.
+                $em->remove($partie);
+                $em->flush();
+                return $this->json(['message' => 'Invitation annulée.']);
+            }
+
+            // Cas 2 : je refuse une invitation reçue.
+            $partie->setStatut('refusee');
+            $em->flush();
+            return $this->json(['message' => 'Invitation refusée.']);
+        }
+
+        if ($partie->getStatut() === 'refusee') {
+            // Cas 3 : seul le proposeur peut fermer ce message.
+            if (!$estProposeur) {
+                return $this->json(['message' => 'Cette action ne vous concerne pas.'], 403);
+            }
+            $em->remove($partie);
+            $em->flush();
+            return $this->json(['message' => 'Supprimée.']);
+        }
+
+        if ($partie->getStatut() !== 'terminee') {
             return $this->json(['message' => 'Impossible d\'annuler une partie en cours.'], 409);
         }
 
+        // Cas 4 : nettoyage d'une partie terminée.
         $em->remove($partie);
         $em->flush();
 

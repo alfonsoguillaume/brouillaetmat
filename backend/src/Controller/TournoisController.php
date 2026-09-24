@@ -175,6 +175,46 @@ class TournoisController extends AbstractController
     }
 
     /**
+     * Vrai si chaque paire de participants s'est déjà affrontée une fois —
+     * vérifie précisément CHAQUE paire (même logique que listeMatchs()),
+     * pas seulement un total de lignes : rejouer 3 fois "A vs B" donne 3
+     * lignes en base, mais ne fait avancer AUCUNE des autres paires.
+     */
+    private function tousLesMatchsJoues(Tournois $tournoi, EntityManagerInterface $em): bool
+    {
+        $participations = $em->getRepository(Participation::class)->findBy(['tournois_id' => $tournoi]);
+        $joueurs = array_map(fn(Participation $p) => $p->getUtilisateurId(), $participations);
+
+        $nombreJoueurs = count($joueurs);
+        if ($nombreJoueurs < 2) {
+            // Moins de 2 participants : rien à jouer, donc rien à
+            // terminer automatiquement (évite un tournoi vide qui se
+            // clôturerait tout seul dès son lancement).
+            return false;
+        }
+
+        $dejaJoues = [];
+        foreach ($em->getRepository(MatchTournoi::class)->findBy(['tournois_id' => $tournoi]) as $match) {
+            $idA = $match->getJoueur1Id()->getId();
+            $idB = $match->getJoueur2Id()->getId();
+            $cle = min($idA, $idB) . '-' . max($idA, $idB);
+            $dejaJoues[$cle] = true;
+        }
+
+        for ($i = 0; $i < $nombreJoueurs; $i++) {
+            for ($j = $i + 1; $j < $nombreJoueurs; $j++) {
+                $cle = min($joueurs[$i]->getId(), $joueurs[$j]->getId()) . '-' . max($joueurs[$i]->getId(), $joueurs[$j]->getId());
+                if (!isset($dejaJoues[$cle])) {
+                    // Cette paire précise n'a pas encore joué — pas terminé.
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Calcule la liste COMPLÈTE des matchs d'un tournoi round-robin (chaque
      * participant affronte chaque autre une fois), en croisant avec les
      * matchs déjà saisis pour indiquer lesquels restent à faire — sans
@@ -267,6 +307,19 @@ class TournoisController extends AbstractController
             return $this->json(['message' => 'Les deux joueurs doivent être inscrits à ce tournoi.'], 400);
         }
 
+        // Empêche de rejouer 2 fois la même paire — sans ça, "A bat B" 3
+        // fois de suite compterait comme 3 matchs différents et pourrait
+        // faire croire (à tort) que le tournoi est terminé.
+        foreach ($em->getRepository(MatchTournoi::class)->findBy(['tournois_id' => $tournoi]) as $matchExistant) {
+            $idExistantA = $matchExistant->getJoueur1Id()->getId();
+            $idExistantB = $matchExistant->getJoueur2Id()->getId();
+            $memePaire = (in_array((int)$joueur1Id, [$idExistantA, $idExistantB], true))
+                && (in_array((int)$joueur2Id, [$idExistantA, $idExistantB], true));
+            if ($memePaire) {
+                return $this->json(['message' => 'Ce match a déjà été joué.'], 409);
+            }
+        }
+
         $match = new MatchTournoi();
         $match->setTournoisId($tournoi);
         $match->setJoueur1Id($joueur1);
@@ -285,7 +338,16 @@ class TournoisController extends AbstractController
         $participation1->setResultat((string)((float)($participation1->getResultat() ?? 0) + $pointsJoueur1));
         $participation2->setResultat((string)((float)($participation2->getResultat() ?? 0) + $pointsJoueur2));
 
+        // Ce flush() enregistre le match qu'on vient de créer AVANT de
+        // vérifier s'il ne reste plus rien à jouer — sinon,
+        // tousLesMatchsJoues() le compterait comme "pas encore joué"
+        // (il ne serait pas encore visible en base au moment du calcul).
         $em->flush();
+
+        if ($this->tousLesMatchsJoues($tournoi, $em)) {
+            $tournoi->setStatut('termine');
+            $em->flush();
+        }
 
         return $this->detail($id, $em);
     }

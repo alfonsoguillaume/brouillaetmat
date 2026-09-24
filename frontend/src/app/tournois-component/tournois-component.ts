@@ -98,6 +98,18 @@ export class TournoisComponent {
     );
   }
 
+  // Même tri, mais pour la modale de détail d'un tournoi ACTIF (utile
+  // quand il vient de passer automatiquement à "termine" pendant qu'on
+  // avait la modale ouverte, sans avoir à la fermer/rouvrir depuis l'archive).
+  get classementTrieActif(): ParticipantTournoi[] {
+    if (!this.tournoiSelectionne) {
+      return [];
+    }
+    return [...this.tournoiSelectionne.participants].sort(
+      (a, b) => parseFloat(b.resultat ?? '0') - parseFloat(a.resultat ?? '0')
+    );
+  }
+
   private chargerMembresDisponibles(): void {
     this.tournoisService.membresDisponibles().subscribe({
       next: (data) => {
@@ -442,6 +454,13 @@ export class TournoisComponent {
         this.resultatChoisi = '';
         this.tournoiSelectionne = data;
         this.chargerMatchsPlanifies(data.id);
+        if (data.statut === 'termine') {
+          // Vient de se terminer tout seul (dernier match du round-robin
+          // saisi) — on rafraîchit les listes en tâche de fond, pour que
+          // tout soit déjà à jour au moment où l'admin ferme la modale.
+          this.chargerTournois();
+          this.chargerArchive();
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {

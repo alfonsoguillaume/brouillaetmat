@@ -108,17 +108,11 @@
         @if (maPartie.nul_propose_par) {
           @if (jaiProposeNul()) {
             <p class="detail-partie">Proposition de nulle envoyée, en attente de réponse...</p>
-          } @else {
-            <div class="proposition-nul">
-              <p>L'adversaire propose une nulle.</p>
-              <button class="btn-valider" (click)="repondreNul(true)">Accepter</button>
-              <button class="btn-refuser" (click)="repondreNul(false)">Refuser</button>
-            </div>
           }
         } @else {
           <div class="actions-partie">
-            <button class="btn-valider" [disabled]="propositionNulEnCours" (click)="proposerNul()">
-              Proposer nul
+            <button class="btn-nul" [disabled]="propositionNulEnCours" (click)="proposerNul()">
+              🤝 Proposer nul
             </button>
             <button class="btn-refuser" (click)="demanderConfirmationAbandon()">Abandonner</button>
           </div>
@@ -167,6 +161,25 @@
         <p>Abandonner la partie ? Cette action compte comme une défaite.</p>
         <button (click)="confirmerAbandon()">Oui</button>
         <button (click)="annulerConfirmationAbandon()">Non</button>
+      </div>
+    </div>
+  }
+
+  @if (maPartie?.nul_propose_par && !jaiProposeNul()) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>🤝 L'adversaire propose une nulle. Acceptez-vous ?</p>
+        <button (click)="repondreNul(true)">Accepter</button>
+        <button (click)="repondreNul(false)">Refuser</button>
+      </div>
+    </div>
+  }
+
+  @if (maPartie?.statut === 'refusee' && maPartie?.je_suis_blanc) {
+    <div class="confirmation-overlay">
+      <div class="confirmation-contenu">
+        <p>{{ nomAdversaire() }} a refusé votre partie.</p>
+        <button (click)="fermerMessageRefus()">OK</button>
       </div>
     </div>
   }
