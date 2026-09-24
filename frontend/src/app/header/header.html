@@ -18,7 +18,14 @@
       <li><a routerLink="/information" routerLinkActive="active" (click)="closeMenu()">Information</a></li>
       <!-- si connecté -->
       @if (isLoggedIn()) {
-        <li><a routerLink="/jouer" routerLinkActive="active" (click)="closeMenu()">Jouer</a></li>
+        <li>
+          <a routerLink="/jouer" routerLinkActive="active" (click)="closeMenu()">
+            Jouer
+            @if (aUneNotificationJeu) {
+              <span class="badge-notification" aria-label="Une action vous attend"></span>
+            }
+          </a>
+        </li>
         <li><a routerLink="/tournois" routerLinkActive="active" (click)="closeMenu()">Tournois</a></li>
       }
     </ul>

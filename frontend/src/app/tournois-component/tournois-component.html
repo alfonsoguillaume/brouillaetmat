@@ -93,7 +93,13 @@
           <h2>{{ tournoi.nom }}</h2>
           <p class="info-tournoi">
             {{ tournoi.date | date:'dd/MM/yyyy' }} —
-            {{ tournoi.statut === 'en_cours' ? 'Tournoi lancé' : 'Planifié' }}
+            @if (tournoi.statut === 'en_cours') {
+              Tournoi lancé
+            } @else if (tournoi.statut === 'termine') {
+              Terminé
+            } @else {
+              Planifié
+            }
           </p>
 
           @if (estAdmin()) {
@@ -108,111 +114,129 @@
             </div>
           }
 
-          <h3>Participants</h3>
-
-          @if (tournoi.participants.length === 0) {
-            <p>Aucun participant inscrit pour l'instant.</p>
-          } @else {
+          @if (tournoi.statut === 'termine') {
+            <h3>🏆 Tournoi terminé</h3>
+            <p class="detail-partie">Voici le classement final.</p>
             <ul class="liste-participants">
-              @for (p of tournoi.participants; track p.utilisateur_id) {
+              @for (p of classementTrieActif; track p.utilisateur_id; let i = $index) {
                 <li>
+                  <span>{{ i + 1 }}. {{ p.prenom }} {{ p.nom }}</span>
+                  <span>{{ p.resultat ?? '0' }} pt(s)</span>
+                </li>
+              }
+            </ul>
+            <button class="btn-primary" (click)="fermerDetail()">OK</button>
+          } @else {
+
+            <h3>Participants</h3>
+
+            @if (tournoi.participants.length === 0) {
+              <p>Aucun participant inscrit pour l'instant.</p>
+            } @else {
+              <ul class="liste-participants">
+                @for (p of tournoi.participants; track p.utilisateur_id) {
+                  <li>
                   <span>
                     {{ p.prenom }} {{ p.nom }}
                     @if (tournoi.statut === 'en_cours') {
                       — {{ p.resultat ?? '0' }} pt(s)
                     }
                   </span>
-                  @if (estAdmin() && tournoi.statut === 'planifie') {
-                    <button class="btn-refuser" (click)="demanderConfirmationRetrait(p)">Retirer</button>
-                  }
-                </li>
-              }
-            </ul>
-          }
+                    @if (estAdmin() && tournoi.statut === 'planifie') {
+                      <button class="btn-refuser" (click)="demanderConfirmationRetrait(p)">Retirer</button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
 
-          @if (tournoi.statut === 'en_cours' && matchsPlanifies.length > 0) {
-            <h3>Matchs</h3>
-            <ul class="liste-matchs">
-              @for (m of matchsPlanifies; track m.joueur1_id + '-' + m.joueur2_id) {
-                <li [class.match-joue]="m.joue">
-                  <span class="statut-match">{{ m.joue ? '✅' : '⏳' }}</span>
-                  <span class="noms-match">{{ m.joueur1_nom }} vs {{ m.joueur2_nom }}</span>
-                  @if (m.joue) {
-                    <span class="resultat-match">
+            @if (tournoi.statut === 'en_cours' && matchsPlanifies.length > 0) {
+              <h3>Matchs</h3>
+              <ul class="liste-matchs">
+                @for (m of matchsPlanifies; track m.joueur1_id + '-' + m.joueur2_id) {
+                  <li [class.match-joue]="m.joue">
+                    <span class="statut-match">{{ m.joue ? '✅' : '⏳' }}</span>
+                    <span class="noms-match">{{ m.joueur1_nom }} vs {{ m.joueur2_nom }}</span>
+                    @if (m.joue) {
+                      <span class="resultat-match">
                       {{ m.resultat === 'nul' ? 'Nul' : (m.resultat === 'joueur1' ? m.joueur1_nom + ' gagne' : m.joueur2_nom + ' gagne') }}
                     </span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (estAdmin() && tournoi.statut === 'en_cours') {
+              <h3>Saisir un résultat</h3>
+
+              <div class="form-group">
+                <label class="label" for="mJoueur1">Joueur 1</label>
+                <select id="mJoueur1" #joueur1Select [value]="joueur1Choisi"
+                        (change)="onJoueur1Change(joueur1Select.value)">
+                  <option value="" disabled selected>Choisir un joueur</option>
+                  @for (p of tournoi.participants; track p.utilisateur_id) {
+                    <option [value]="p.utilisateur_id">{{ p.prenom }} {{ p.nom }}</option>
                   }
-                </li>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="mJoueur2">Joueur 2</label>
+                <select id="mJoueur2" #joueur2Select [value]="joueur2Choisi"
+                        (change)="onJoueur2Change(joueur2Select.value)">
+                  <option value="" disabled selected>Choisir un joueur</option>
+                  @for (p of tournoi.participants; track p.utilisateur_id) {
+                    <option [value]="p.utilisateur_id">{{ p.prenom }} {{ p.nom }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="label" for="mResultat">Résultat</label>
+                <select id="mResultat" #resultatSelect [value]="resultatChoisi"
+                        (change)="onResultatChange(resultatSelect.value)">
+                  <option value="" disabled selected>Choisir un résultat</option>
+                  <option value="joueur1">Victoire du joueur 1</option>
+                  <option value="joueur2">Victoire du joueur 2</option>
+                  <option value="nul">Match nul</option>
+                </select>
+              </div>
+
+              @if (messageErreurMatch) {
+                <p class="erreur">{{ messageErreurMatch }}</p>
               }
-            </ul>
-          }
 
-          @if (estAdmin() && tournoi.statut === 'en_cours') {
-            <h3>Saisir un résultat</h3>
-
-            <div class="form-group">
-              <label class="label" for="mJoueur1">Joueur 1</label>
-              <select id="mJoueur1" #joueur1Select [value]="joueur1Choisi"
-                      (change)="onJoueur1Change(joueur1Select.value)">
-                <option value="" disabled selected>Choisir un joueur</option>
-                @for (p of tournoi.participants; track p.utilisateur_id) {
-                  <option [value]="p.utilisateur_id">{{ p.prenom }} {{ p.nom }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="label" for="mJoueur2">Joueur 2</label>
-              <select id="mJoueur2" #joueur2Select [value]="joueur2Choisi"
-                      (change)="onJoueur2Change(joueur2Select.value)">
-                <option value="" disabled selected>Choisir un joueur</option>
-                @for (p of tournoi.participants; track p.utilisateur_id) {
-                  <option [value]="p.utilisateur_id">{{ p.prenom }} {{ p.nom }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="label" for="mResultat">Résultat</label>
-              <select id="mResultat" #resultatSelect [value]="resultatChoisi"
-                      (change)="onResultatChange(resultatSelect.value)">
-                <option value="" disabled selected>Choisir un résultat</option>
-                <option value="joueur1">Victoire du joueur 1</option>
-                <option value="joueur2">Victoire du joueur 2</option>
-                <option value="nul">Match nul</option>
-              </select>
-            </div>
-
-            @if (messageErreurMatch) {
-              <p class="erreur">{{ messageErreurMatch }}</p>
+              <button class="btn-valider" [disabled]="saisieMatchEnCours" (click)="saisirMatch()">
+                {{ saisieMatchEnCours ? 'Envoi...' : 'Valider' }}
+              </button>
             }
 
-            <button class="btn-valider" [disabled]="saisieMatchEnCours" (click)="saisirMatch()">
-              {{ saisieMatchEnCours ? 'Envoi...' : 'Valider' }}
-            </button>
-          }
+            @if (estAdmin() && tournoi.statut === 'planifie') {
+              <div class="form-group ajout-participant">
+                <label class="label" for="pMembre">Ajouter un participant</label>
+                <select id="pMembre" #participantSelect [value]="participantChoisi"
+                        (change)="onParticipantChange(participantSelect.value)">
+                  <option value="" disabled selected>Choisir un membre</option>
+                  @for (m of participantsDisponiblesPourAjout; track m.id) {
+                    <option [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
+                  }
+                </select>
+                <button class="btn-valider" (click)="ajouterParticipant()">Ajouter</button>
+              </div>
 
-          @if (estAdmin() && tournoi.statut === 'planifie') {
-            <div class="form-group ajout-participant">
-              <label class="label" for="pMembre">Ajouter un participant</label>
-              <select id="pMembre" #participantSelect [value]="participantChoisi"
-                      (change)="onParticipantChange(participantSelect.value)">
-                <option value="" disabled selected>Choisir un membre</option>
-                @for (m of participantsDisponiblesPourAjout; track m.id) {
-                  <option [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
-                }
-              </select>
-              <button class="btn-valider" (click)="ajouterParticipant()">Ajouter</button>
-            </div>
+              @if (messageErreurParticipant) {
+                <p class="erreur">{{ messageErreurParticipant }}</p>
+              }
 
-            @if (messageErreurParticipant) {
-              <p class="erreur">{{ messageErreurParticipant }}</p>
+              <button class="btn-primary" (click)="demanderConfirmationLancement()">Lancer le tournoi</button>
             }
 
-            <button class="btn-primary" (click)="demanderConfirmationLancement()">Lancer le tournoi</button>
           }
 
-          <button class="btn-fermer" (click)="fermerDetail()">Fermer</button>
+          @if (tournoi.statut !== 'termine') {
+            <button class="btn-fermer" (click)="fermerDetail()">Fermer</button>
+          }
 
         } @else {
           <h2>Modifier le tournoi</h2>

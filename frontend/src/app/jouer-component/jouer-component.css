@@ -92,13 +92,37 @@ select {
 
 .actions-partie {
   margin-top: 1rem;
+  padding: 1rem;
   text-align: center;
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
-.proposition-nul {
-  margin-top: 1rem;
-  text-align: center;
+.btn-nul {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  margin: 0 0.5rem;
+  background-color: transparent;
   color: #D9A24B;
+  border: 1.5px solid #D9A24B;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-nul:hover:not(:disabled) {
+  background-color: rgba(217, 162, 75, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-nul:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .chronos {

@@ -313,6 +313,33 @@ export class JouerComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ---------- Invitation refusée par l'adversaire (vue du proposeur) ----------
+
+  // Nom de l'adversaire, peu importe sa couleur — utile pour personnaliser
+  // le message "X a refusé votre partie."
+  nomAdversaire(): string {
+    if (!this.maPartie) {
+      return '';
+    }
+    const adversaire = this.maPartie.je_suis_blanc ? this.maPartie.joueur_noir : this.maPartie.joueur_blanc;
+    return `${adversaire.prenom} ${adversaire.nom}`;
+  }
+
+  fermerMessageRefus(): void {
+    if (!this.maPartie) {
+      return;
+    }
+    // Réutilise la même route que l'annulation — côté backend, un
+    // proposeur qui appelle ça sur une partie "refusee" la supprime
+    // définitivement (voir JeuController::annulerInvitation).
+    this.jeuService.annulerInvitation(this.maPartie.id).subscribe({
+      next: () => {
+        this.maPartie = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   // ---------- Jouer un coup ----------
 
   onCoupJoue(evenement: {
