@@ -131,3 +131,74 @@ input:-webkit-autofill:active {
 .cg-wrap coords.squares coord {
   padding-right: 10%;
 }
+
+/* Lettres A-H et chiffres 1-8 du plateau : une couleur SOMBRE unie
+   (plutôt que le doré du site) contraste mieux sur les 2 tons de case,
+   qui sont tous les deux plutôt clairs/beiges — le doré s'y fondait.
+   Taille en "vw" (pourcentage de la largeur d'écran) plutôt qu'en pixels
+   fixes : le plateau lui-même rétrécit sur petit écran (max-width: 90vw
+   sur .plateau-conteneur), donc le texte doit rétrécir dans les MÊMES
+   proportions pour rester lisible sans devenir trop gros/écrasé par
+   rapport à des cases de plus en plus petites. clamp() fixe un minimum
+   (8px, jamais illisible) et un maximum (13px, jamais trop gros sur
+   grand écran) autour de cette taille proportionnelle. */
+.cg-wrap coords coord {
+  font-size: clamp(8px, 2.3vw, 13px);
+  font-weight: bold;
+  line-height: 1;
+  color: #2D302C;
+}
+
+/* La vraie règle qui gagnait (trouvée en inspectant l'élément) : chessground
+   pose ses propres classes "coord-light"/"coord-dark" sur chaque chiffre
+   et les colore différemment selon la case — avec un contraste insuffisant
+   ici. On cible ces classes exactes, avec !important pour être sûr de
+   l'emporter peu importe l'ordre de chargement des feuilles de style. */
+.cg-wrap coords coord.coord-light,
+.cg-wrap coords coord.coord-dark {
+  color: #2D302C !important;
+}
+
+/* En dessous de 500px, les lettres A-H (colonnes) sont recentrées au
+   milieu de leur case plutôt que décalées vers la gauche (réglage pensé
+   pour les tailles plus grandes) — chaque <coord> occupe déjà 1/8 de la
+   largeur du plateau (flex:1 1 auto posé par chessground), donc
+   text-align: center suffit à centrer le texte DANS cette portion. */
+@media (max-width: 500px) {
+  .cg-wrap coords.files coord {
+    text-align: center;
+    padding-right: 0;
+  }
+}
+
+/* Chessground décale par défaut les rangées de coordonnées de quelques
+   pixels vers la droite/le bas (left: 24px sur les lettres, left: 4px sur
+   les chiffres) — pensé pour un plateau avec un cadre/bordure autour,
+   ce qu'on n'a pas ici. Résultat : sur un petit plateau (mobile), ce
+   décalage devient proportionnellement énorme et les lettres sortent
+   du cadre du plateau (le "H" coupé, les autres lettres à cheval sur
+   2 cases). On annule ce décalage pour réaligner les coordonnées
+   exactement sur les bords du plateau (cg-board), qui lui est à left: 0.
+   Trouvé en comparant les deux éléments dans l'onglet "Mise en page"
+   des DevTools. */
+.cg-wrap coords.files {
+  left: 0 !important;
+}
+
+.cg-wrap coords.ranks {
+  left: 0 !important;
+}
+
+/* Chiffres 1-8 (rangées) : centrés verticalement au milieu de leur case,
+   comme les lettres A-H sont centrées horizontalement dans la leur —
+   pour traiter les deux jeux de coordonnées de la même façon et obtenir
+   un plateau visuellement homogène. Chaque <coord> occupe déjà 1/8 de la
+   hauteur du plateau (chessground le dimensionne via flexbox sur le
+   conteneur coords.ranks) ; on transforme juste ce <coord> en conteneur
+   flex à son tour, avec align-items: center, pour centrer le texte
+   VERTICALEMENT à l'intérieur de cette portion — sans toucher à sa
+   position horizontale, qui reste celle par défaut. */
+.cg-wrap coords.ranks coord {
+  display: flex;
+  align-items: center;
+}

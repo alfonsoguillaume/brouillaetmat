@@ -1,3 +1,53 @@
-p {
-  text-align: center
+.accueil {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Le texte d'intro reste dans un bloc centré sur la page, mais le texte
+   à l'intérieur du bloc est aligné à gauche : plus facile à suivre ligne
+   après ligne qu'un texte centré, surtout sur plusieurs phrases. */
+.accueil-intro {
+  max-width: 650px;
+  margin: 0 auto 2.5rem;
+  text-align: left;
+}
+
+.accueil-intro p {
+  margin-bottom: 1rem;
+}
+
+h3 {
+  text-align: center;
+  color: #688D6A;
+  margin-bottom: 1.5rem;
+}
+
+/* Grille de cartes : passe automatiquement de 4 colonnes (grand écran)
+   à 1 seule colonne (mobile) selon la place disponible, sans media query
+   à gérer à la main. */
+.grille-atouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.carte-atout {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid #7D9982;
+  border-radius: 10px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.atout-icone {
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.carte-atout p {
+  margin: 0;
+  font-size: 1rem;
 }
