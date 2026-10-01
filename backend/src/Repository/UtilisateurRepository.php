@@ -16,28 +16,48 @@ class UtilisateurRepository extends ServiceEntityRepository
         parent::__construct($registry, Utilisateur::class);
     }
 
-    //    /**
-    //     * @return Utilisateur[] Returns an array of Utilisateur objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('u.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Membres validés, comptes techniques exclus. Utilisé pour le classement Elo.
+     *
+     * @return Utilisateur[]
+     */
+    public function findMembresValides(): array
+    {
+        return $this->findBy(['statut_inscription' => 'valide', 'compte_technique' => false]);
+    }
 
-    //    public function findOneBySomeField($value): ?Utilisateur
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Adversaires possibles: membres validés, sauf soi-même et comptes techniques.
+     *
+     * @return Utilisateur[]
+     */
+    public function findAdversairesDisponibles(int $idUtilisateurConnecte): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.statut_inscription = :valide')
+            ->andWhere('u.id != :moi')
+            ->andWhere('u.compte_technique = :technique')
+            ->setParameter('valide', 'valide')
+            ->setParameter('moi', $idUtilisateurConnecte)
+            ->setParameter('technique', false)
+            ->orderBy('u.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Membres gérés en admin: statut différent de en_attente, comptes techniques exclus.
+     *
+     * @return Utilisateur[]
+     */
+    public function findMembresGeres(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.statut_inscription != :enAttente')
+            ->andWhere('u.compte_technique = :technique')
+            ->setParameter('enAttente', 'en_attente')
+            ->setParameter('technique', false)
+            ->getQuery()
+            ->getResult();
+    }
 }

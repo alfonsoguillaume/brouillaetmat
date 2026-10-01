@@ -3,6 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
+use App\Service\EmailUniciteService;
+use App\Service\LimiteurAppelsService;
+use App\Service\PolitiqueMotDePasseService;
+use App\Service\PseudoUniciteService;
+use App\Service\TelephoneService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -14,22 +19,22 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class InscriptionController extends AbstractController
 {
-    /**
-     * Route publique (voir access_control) : crée un nouveau compte membre,
-     * avec un statut "en_attente" tant qu'un admin ne l'a pas validé.
-     */
+    // Route publique, crée un compte en_attente jusqu'à validation admin
     #[Route('/api/inscription', name: 'api_inscription', methods: ['POST'])]
     public function inscription(
         Request                                                        $request,
         EntityManagerInterface                                         $em,
         UserPasswordHasherInterface                                    $passwordHasher,
+        PseudoUniciteService                                           $pseudoUniciteService,
+        EmailUniciteService                                            $emailUniciteService,
+        PolitiqueMotDePasseService                                     $politiqueMotDePasseService,
+        TelephoneService                                                $telephoneService,
+        LimiteurAppelsService                                           $limiteurAppelsService,
         #[Autowire(service: 'limiter.inscription')] RateLimiterFactory $inscriptionLimiter
     ): JsonResponse
     {
-        // Anti-spam : limite le nombre d'inscriptions par adresse IP,
-        // pour éviter qu'un robot crée des centaines de faux comptes.
-        $limiteur = $inscriptionLimiter->create($request->getClientIp());
-        if (!$limiteur->consume(1)->isAccepted()) {
+        // anti-spam, limite les inscriptions par IP
+        if ($limiteurAppelsService->depasse($inscriptionLimiter, $request->getClientIp())) {
             return $this->json([
                 'message' => 'Trop de tentatives d\'inscription. Réessayez plus tard.',
             ], 429);
@@ -37,8 +42,7 @@ class InscriptionController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        // 1. Champs obligatoires : on vérifie leur présence avant d'y toucher,
-        // pour éviter un plantage PHP brut si l'un d'eux manque.
+        // 1. champs obligatoires
         $champsRequis = ['nom', 'prenom', 'pseudo', 'email', 'date_naissance', 'password'];
         foreach ($champsRequis as $champ) {
             if (empty($data[$champ])) {
@@ -46,31 +50,13 @@ class InscriptionController extends AbstractController
             }
         }
 
-        // 2. Format de l'email : ne jamais faire confiance au frontend pour ça.
+        // 2. format email (jamais confiance au frontend)
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             return $this->json(['message' => 'Le format de l\'email est invalide.'], 400);
         }
 
-        // 3. Complexité du mot de passe : 12 caractères minimum, avec au moins
-        // une majuscule, une minuscule, un chiffre et un caractère spécial.
-        $motDePasse = $data['password'];
-        $erreursMotDePasse = [];
-
-        if (strlen($motDePasse) < 12) {
-            $erreursMotDePasse[] = '12 caractères minimum';
-        }
-        if (!preg_match('/[A-Z]/', $motDePasse)) {
-            $erreursMotDePasse[] = 'une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $motDePasse)) {
-            $erreursMotDePasse[] = 'une minuscule';
-        }
-        if (!preg_match('/\d/', $motDePasse)) {
-            $erreursMotDePasse[] = 'un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $motDePasse)) {
-            $erreursMotDePasse[] = 'un caractère spécial';
-        }
+        // 3. complexité mot de passe
+        $erreursMotDePasse = $politiqueMotDePasseService->erreurs($data['password']);
 
         if (!empty($erreursMotDePasse)) {
             return $this->json([
@@ -78,7 +64,7 @@ class InscriptionController extends AbstractController
             ], 400);
         }
 
-        // 4. Cohérence de la date de naissance.
+        // 4. cohérence date de naissance
         try {
             $dateNaissance = new \DateTime($data['date_naissance']);
         } catch (\Exception $e) {
@@ -95,7 +81,7 @@ class InscriptionController extends AbstractController
             return $this->json(['message' => 'La date de naissance est invalide.'], 400);
         }
 
-        // 5. Cohérence email du tuteur / minorité.
+        // 5. email tuteur / minorité
         $estMineur = $age < 18;
         if ($estMineur && empty($data['email_tuteur'])) {
             return $this->json(['message' => 'L\'email du tuteur légal est obligatoire pour un membre mineur.'], 400);
@@ -109,21 +95,16 @@ class InscriptionController extends AbstractController
             return $this->json(['message' => 'L\'email du membre et l\'email du tuteur doivent être différents.'], 400);
         }
 
-        // 6. Format du téléphone (champ optionnel, mais vérifié s'il est rempli).
-        if (!empty($data['telephone'])) {
-            $telephoneNettoye = preg_replace('/\s+/', '', $data['telephone']);
-            if (!preg_match('/^0\d{9}$/', $telephoneNettoye)) {
-                return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
-            }
+        // 6. format téléphone (optionnel, vérifié si rempli)
+        if (!empty($data['telephone']) && !$telephoneService->estValide($data['telephone'])) {
+            return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
         }
 
-        $utilisateurRepository = $em->getRepository(Utilisateur::class);
-
-        if ($utilisateurRepository->findOneBy(['email' => $data['email']])) {
+        if (!$emailUniciteService->estDisponible($data['email'])) {
             return $this->json(['message' => 'Cet email est déjà utilisé.'], 409);
         }
 
-        if ($utilisateurRepository->findOneBy(['pseudo' => $data['pseudo']])) {
+        if (!$pseudoUniciteService->estDisponible($data['pseudo'])) {
             return $this->json(['message' => 'Ce pseudo est déjà utilisé.'], 409);
         }
 
@@ -137,10 +118,10 @@ class InscriptionController extends AbstractController
         $utilisateur->setStatutInscription('en_attente');
         $utilisateur->setTelephone($data['telephone'] ?? null);
         $utilisateur->setEmailTuteur($data['email_tuteur'] ?? null);
-        // Le consentement est considéré donné si un email de tuteur a été fourni (mineur).
+        // consentement = donné si email tuteur fourni
         $utilisateur->setConsentementParental(!empty($data['email_tuteur']));
 
-        // On hashe le mot de passe avant de le stocker : jamais de mot de passe en clair en base.
+        // mot de passe hashé avant stockage
         $utilisateur->setMotDePasse(
             $passwordHasher->hashPassword($utilisateur, $data['password'])
         );
@@ -153,18 +134,16 @@ class InscriptionController extends AbstractController
         ], 201);
     }
 
-    /**
-     * Route protégée (nécessite un token JWT valide) : renvoie l'identité
-     * de l'utilisateur actuellement connecté. Utile pour qu'Angular sache
-     * "qui est connecté" et avec quel rôle, juste après le login.
-     */
+    // Route protégée (JWT), renvoie qui est connecté (pour Angular après login)
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
     public function me(): JsonResponse
     {
+        /** @var Utilisateur $user */
         $user = $this->getUser();
 
         return $this->json([
             'email' => $user->getUserIdentifier(),
+            'pseudo' => $user->getPseudo(),
             'roles' => $user->getRoles(),
         ]);
     }

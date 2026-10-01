@@ -30,21 +30,28 @@
       }
     </ul>
 
-    <ul class="navdroite">
-      <!-- si connecté -->
-      @if (isLoggedIn()) {
-        <!-- Menu pour admin et gestionnaire -->
-        @if (isAdmin() || isGestionnaire()) {
-          <li><a routerLink="/administration" routerLinkActive="active" (click)="closeMenu()">Administration</a></li>
+    <div class="navdroite-wrapper">
+      <ul class="navdroite">
+        <!-- si connecté -->
+        @if (isLoggedIn()) {
+          <!-- Menu pour admin et gestionnaire -->
+          @if (isAdmin() || isGestionnaire()) {
+            <li><a routerLink="/administration" routerLinkActive="active" (click)="closeMenu()">Administration</a></li>
+          }
+          <li><a routerLink="/profil" routerLinkActive="active" (click)="closeMenu()">Profil</a></li>
+          <li><a routerLink="/accueil" (click)="logout(); closeMenu()">Déconnexion</a></li>
+        } @else {
+          <!-- si non connecté -->
+          <li><a routerLink="/inscription" routerLinkActive="active" (click)="closeMenu()">Inscription</a></li>
+          <li><a routerLink="/connexion" routerLinkActive="active" (click)="closeMenu()">Connexion</a></li>
         }
-        <li><a routerLink="/profil" routerLinkActive="active" (click)="closeMenu()">Profil</a></li>
-        <li><a routerLink="/accueil" (click)="logout(); closeMenu()">Déconnexion</a></li>
-      } @else {
-        <!-- si non connecté -->
-        <li><a routerLink="/inscription" routerLinkActive="active" (click)="closeMenu()">Inscription</a></li>
-        <li><a routerLink="/connexion" routerLinkActive="active" (click)="closeMenu()">Connexion</a></li>
+      </ul>
+
+      <!-- Indique à qui appartient le compte connecté (utile sur un ordi partagé) -->
+      @if (isLoggedIn() && pseudo()) {
+        <p class="bienvenue">Bienvenue, {{ pseudo() }}</p>
       }
-    </ul>
+    </div>
   </nav>
 </div>
 

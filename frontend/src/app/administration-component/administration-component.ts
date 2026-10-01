@@ -31,19 +31,14 @@ export class AdministrationComponent implements OnDestroy {
   membres: Membre[] = [];
 
   constructor() {
-    // Contrairement à ngOnInit (qui ne s'exécute qu'une fois, avant que
-    // AuthService ait fini de récupérer le rôle après un rafraîchissement),
-    // effect() se relance automatiquement à chaque fois que la valeur lue
-    // à l'intérieur change — ici, dès que isAdmin() passe de false à true.
+    // effect() se relance à chaque changement (contrairement à ngOnInit, qui ne s'exécute qu'une fois)
     effect(() => {
       if (this.authService.isAdmin() && !this.listesDejaChargees) {
         this.listesDejaChargees = true;
         this.chargerInscriptions();
         this.chargerMembres();
 
-        // Sans ça, une nouvelle inscription n'apparaît que si l'admin
-        // recharge la page entière — on vérifie donc en tâche de fond,
-        // toutes les 10 secondes, tant que cette page reste ouverte.
+        // vérifie en fond toutes les 10s, sinon faut recharger la page pour voir une nouvelle inscription
         this.intervalleInscriptions = setInterval(() => {
           this.chargerInscriptions();
         }, 10000);

@@ -22,9 +22,7 @@ class Partie
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $joueur_noir_id = null;
 
-    // Rempli seulement juste avant suppression (partie terminée), pour que
-    // le dernier "GET" du frontend puisse afficher le résultat avant que
-    // la ligne ne disparaisse.
+    // rempli juste avant suppression, pour que le frontend affiche le résultat avant que ça disparaisse
     #[ORM\Column(length: 10, nullable: true)]
     private ?string $resultat = null;
 
@@ -34,22 +32,16 @@ class Partie
     #[ORM\Column]
     private ?bool $classee = null;
 
-    // 'en_attente' (invitation envoyée, pas encore acceptée) ou 'en_cours'
-    // (partie en train de se jouer). Pas de statut "terminée" : la ligne
-    // est supprimée dès que la partie se termine (voir Classement pour la
-    // trace durable de l'impact sur l'Elo).
+    // 'en_attente', 'en_cours', 'terminee' ou 'refusee'
     #[ORM\Column(length: 15)]
     private ?string $statut = null;
 
-    // Position actuelle du plateau au format FEN (notation standard
-    // d'échecs) — permet de recharger l'état exact sans rejouer tous les
-    // coups depuis le début.
+    // position du plateau en FEN, permet de recharger l'état sans rejouer les coups
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $fen = null;
 
-    // Liste des coups joués (ex: ["e4", "e5", "Nf3"]), pour l'affichage de
-    // l'historique pendant la partie. Types::JSON : Doctrine convertit
-    // automatiquement un tableau PHP en JSON pour le stockage, et inversement.
+    // liste des coups joués (ex: ["e4", "e5"]), pour l'historique
+    // Types::JSON = converti auto par Doctrine
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $coups = null;
 
@@ -65,15 +57,14 @@ class Partie
     #[ORM\Column(nullable: true)]
     private ?\DateTime $dernier_coup_le = null;
 
-    // "Battement de cœur" de chaque joueur, pour détecter une déconnexion.
+    // signal de présence de chaque joueur, pour détecter une déconnexion
     #[ORM\Column(nullable: true)]
     private ?\DateTime $dernier_signal_blanc = null;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTime $dernier_signal_noir = null;
 
-    // 'blanc' ou 'noir' si ce camp vient de proposer une nulle, en attente
-    // de la réponse de l'adversaire — null sinon.
+    // 'blanc' ou 'noir' si une nulle est proposée et en attente de réponse, null sinon
     #[ORM\Column(length: 10, nullable: true)]
     private ?string $nul_propose_par = null;
 

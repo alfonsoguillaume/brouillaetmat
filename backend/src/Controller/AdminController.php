@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
+use App\Service\EmailUniciteService;
+use App\Service\PseudoUniciteService;
+use App\Service\TelephoneService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,10 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AdminController extends AbstractController
 {
-    /**
-     * Liste tous les comptes en attente de validation.
-     * Route déjà protégée globalement (voir security.yaml : ^/api/admin => ROLE_ADMIN).
-     */
+    // Liste des comptes en attente de validation. Route déjà protégée (security.yaml)
     #[Route('/api/admin/inscriptions', name: 'api_admin_inscriptions_liste', methods: ['GET'])]
     public function listeInscriptionsEnAttente(EntityManagerInterface $em): JsonResponse
     {
@@ -38,9 +38,7 @@ class AdminController extends AbstractController
         return $this->json($resultat);
     }
 
-    /**
-     * Valide un compte : passe son statut à "valide".
-     */
+    // Valide un compte
     #[Route('/api/admin/inscriptions/{id<\d+>}/valider', name: 'api_admin_inscription_valider', methods: ['PATCH'])]
     public function validerInscription(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -56,9 +54,7 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Compte validé.']);
     }
 
-    /**
-     * Refuse un compte : supprime définitivement la demande d'inscription.
-     */
+    // Refuse un compte, supprime la demande définitivement
     #[Route('/api/admin/inscriptions/{id<\d+>}/refuser', name: 'api_admin_inscription_refuser', methods: ['DELETE'])]
     public function refuserInscription(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -74,18 +70,11 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Demande refusée et supprimée.']);
     }
 
-    /**
-     * Liste tous les membres au statut "valide" ou "bloque" (les inscriptions
-     * "en_attente" sont gérées par la liste dédiée ci-dessus).
-     */
+    // Membres valides/bloqués (en_attente géré par la liste au-dessus)
     #[Route('/api/admin/membres', name: 'api_admin_membres_liste', methods: ['GET'])]
     public function listeMembres(EntityManagerInterface $em): JsonResponse
     {
-        $utilisateurs = $em->getRepository(Utilisateur::class)->createQueryBuilder('u')
-            ->where('u.statut_inscription != :enAttente')
-            ->setParameter('enAttente', 'en_attente')
-            ->getQuery()
-            ->getResult();
+        $utilisateurs = $em->getRepository(Utilisateur::class)->findMembresGeres();
 
         $resultat = array_map(function (Utilisateur $utilisateur) {
             return [
@@ -106,12 +95,9 @@ class AdminController extends AbstractController
     }
 
     /**
-     * Récupère un membre par son id, en refusant toute action sur un compte
-     * admin (bonne pratique : un admin ne peut pas être modifié via cette
-     * interface, même par un autre admin).
+     * Récupère un membre modifiable, refuse les comptes admin (même pour un autre admin)
      *
-     * @return Utilisateur|JsonResponse Renvoie directement une réponse d'erreur
-     *                                  si le membre n'existe pas ou est admin.
+     * @return Utilisateur|JsonResponse erreur directe si introuvable ou admin
      */
     private function recupererMembreModifiable(int $id, EntityManagerInterface $em): Utilisateur|JsonResponse
     {
@@ -128,12 +114,9 @@ class AdminController extends AbstractController
         return $utilisateur;
     }
 
-    /**
-     * Modifie les informations d'un membre (mêmes champs et règles que
-     * /api/profil, mais ciblé sur un autre utilisateur que soi-même).
-     */
+    // Modifie un membre (mêmes champs/règles que /api/profil, mais pour un autre utilisateur)
     #[Route('/api/admin/membres/{id<\d+>}', name: 'api_admin_membre_modifier', methods: ['PATCH'])]
-    public function modifierMembre(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    public function modifierMembre(int $id, Request $request, EntityManagerInterface $em, PseudoUniciteService $pseudoUniciteService, EmailUniciteService $emailUniciteService, TelephoneService $telephoneService): JsonResponse
     {
         $utilisateur = $this->recupererMembreModifiable($id, $em);
         if ($utilisateur instanceof JsonResponse) {
@@ -153,25 +136,16 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'Le format de l\'email est invalide.'], 400);
         }
 
-        if ($data['email'] !== $utilisateur->getEmail()) {
-            $emailExistant = $em->getRepository(Utilisateur::class)->findOneBy(['email' => $data['email']]);
-            if ($emailExistant) {
-                return $this->json(['message' => 'Cet email est déjà utilisé.'], 409);
-            }
+        if ($data['email'] !== $utilisateur->getEmail() && !$emailUniciteService->estDisponible($data['email'])) {
+            return $this->json(['message' => 'Cet email est déjà utilisé.'], 409);
         }
 
-        if ($data['pseudo'] !== $utilisateur->getPseudo()) {
-            $pseudoExistant = $em->getRepository(Utilisateur::class)->findOneBy(['pseudo' => $data['pseudo']]);
-            if ($pseudoExistant) {
-                return $this->json(['message' => 'Ce pseudo est déjà utilisé.'], 409);
-            }
+        if ($data['pseudo'] !== $utilisateur->getPseudo() && !$pseudoUniciteService->estDisponible($data['pseudo'])) {
+            return $this->json(['message' => 'Ce pseudo est déjà utilisé.'], 409);
         }
 
-        if (!empty($data['telephone'])) {
-            $telephoneNettoye = preg_replace('/\s+/', '', $data['telephone']);
-            if (!preg_match('/^0\d{9}$/', $telephoneNettoye)) {
-                return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
-            }
+        if (!empty($data['telephone']) && !$telephoneService->estValide($data['telephone'])) {
+            return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
         }
 
         if (!empty($data['email_tuteur']) && !filter_var($data['email_tuteur'], FILTER_VALIDATE_EMAIL)) {
@@ -191,9 +165,7 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Membre mis à jour.']);
     }
 
-    /**
-     * Change le rôle d'un membre (membre / gestionnaire / admin).
-     */
+    // Change le rôle (membre/gestionnaire/admin)
     #[Route('/api/admin/membres/{id<\d+>}/role', name: 'api_admin_membre_role', methods: ['PATCH'])]
     public function changerRole(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -215,9 +187,7 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Rôle mis à jour.']);
     }
 
-    /**
-     * Bloque un membre : il ne pourra plus se connecter (voir UtilisateurChecker).
-     */
+    // Bloque un membre, ne pourra plus se connecter (UtilisateurChecker)
     #[Route('/api/admin/membres/{id<\d+>}/bloquer', name: 'api_admin_membre_bloquer', methods: ['PATCH'])]
     public function bloquerMembre(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -232,9 +202,7 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Membre bloqué.']);
     }
 
-    /**
-     * Débloque un membre précédemment bloqué.
-     */
+    // Débloque un membre
     #[Route('/api/admin/membres/{id<\d+>}/debloquer', name: 'api_admin_membre_debloquer', methods: ['PATCH'])]
     public function debloquerMembre(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -249,12 +217,8 @@ class AdminController extends AbstractController
         return $this->json(['message' => 'Membre débloqué.']);
     }
 
-    /**
-     * Supprime définitivement un membre. Refuse si ce membre a des données
-     * liées en base (articles écrits, emprunts, parties...), pour ne pas
-     * casser l'intégrité des autres tables — dans ce cas, le bloquer plutôt
-     * que le supprimer est la bonne alternative.
-     */
+    // Supprime un membre. Refuse si des données sont liées (articles, emprunts, parties...)
+    // bloquer à la place dans ce cas
     #[Route('/api/admin/membres/{id<\d+>}', name: 'api_admin_membre_supprimer', methods: ['DELETE'])]
     public function supprimerMembre(int $id, EntityManagerInterface $em): JsonResponse
     {

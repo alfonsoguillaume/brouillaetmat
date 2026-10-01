@@ -60,7 +60,7 @@
     </div>
 
     @if (messagesErreursFormulaire.length > 0) {
-      <div class="erreur">
+      <div class="bandeau-erreur">
         @for (msg of messagesErreursFormulaire; track msg) {
           <p>{{ msg }}</p>
         }
@@ -68,7 +68,7 @@
     }
 
     @if (messageErreur) {
-      <p class="erreur">{{ messageErreur }}</p>
+      <p class="bandeau-erreur">{{ messageErreur }}</p>
     }
 
     <button type="submit" class="btn-primary">S'inscrire</button>

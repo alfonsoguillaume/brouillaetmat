@@ -29,8 +29,7 @@ export class TournoisComponent {
   tournoisArchive: TournoiArchive[] = [];
   membresDisponibles: MembreLeger[] = [];
 
-  // Date du jour au format YYYY-MM-DD, pour empêcher de choisir une date
-  // passée directement dans le sélecteur natif du navigateur.
+  // date du jour en YYYY-MM-DD, empêche de choisir une date passée
   dateMin = new Date().toISOString().split('T')[0];
 
   constructor() {
@@ -64,9 +63,7 @@ export class TournoisComponent {
   // ---------- Détail d'un tournoi archivé (annulé ou terminé) ----------
 
   archiveSelectionnee: TournoiArchive | null = null;
-  // Rempli seulement si le tournoi est "terminé" — contient le classement
-  // final (participants + points), récupéré via la même route de détail
-  // que pour un tournoi actif.
+  // rempli que si terminé, classement final via la même route de détail
   archiveDetailComplet: TournoiDetail | null = null;
 
   ouvrirDetailArchive(t: TournoiArchive): void {
@@ -88,7 +85,7 @@ export class TournoisComponent {
     this.archiveDetailComplet = null;
   }
 
-  // Classement trié du meilleur score au moins bon — pour l'affichage.
+  // classement trié du meilleur au moins bon
   get classementTrie(): ParticipantTournoi[] {
     if (!this.archiveDetailComplet) {
       return [];
@@ -98,9 +95,7 @@ export class TournoisComponent {
     );
   }
 
-  // Même tri, mais pour la modale de détail d'un tournoi ACTIF (utile
-  // quand il vient de passer automatiquement à "termine" pendant qu'on
-  // avait la modale ouverte, sans avoir à la fermer/rouvrir depuis l'archive).
+  // même tri pour la modale d'un tournoi actif (utile s'il passe à termine pendant qu'on regarde)
   get classementTrieActif(): ParticipantTournoi[] {
     if (!this.tournoiSelectionne) {
       return [];
@@ -455,9 +450,7 @@ export class TournoisComponent {
         this.tournoiSelectionne = data;
         this.chargerMatchsPlanifies(data.id);
         if (data.statut === 'termine') {
-          // Vient de se terminer tout seul (dernier match du round-robin
-          // saisi) — on rafraîchit les listes en tâche de fond, pour que
-          // tout soit déjà à jour au moment où l'admin ferme la modale.
+          // vient de se terminer tout seul, rafraîchit les listes en fond
           this.chargerTournois();
           this.chargerArchive();
         }

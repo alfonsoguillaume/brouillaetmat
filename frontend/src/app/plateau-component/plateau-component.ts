@@ -33,15 +33,10 @@ export class PlateauComponent implements AfterViewInit, OnChanges {
   @Input() jeSuisBlanc: boolean = true;
   @Input() monTour: boolean = false;
 
-  // Le coup ET, s'il y a lieu, le résultat de fin de partie voyagent
-  // ENSEMBLE dans le même évènement — pour que le parent enregistre
-  // d'abord le coup, PUIS déclenche la fin de partie seulement une fois
-  // le coup confirmé enregistré (évite la course entre les 2 requêtes).
+  // coup + fin de partie dans le même évènement, pour éviter que les 2 requêtes se chevauchent
   @Output() coupJoue = new EventEmitter<{ fen: string; coup: string; finPartie: ResultatFin | null }>();
 
-  // Utilisé uniquement quand on REÇOIT un coup de l'adversaire (pas de
-  // coup à "chaîner" dans ce cas — le coup est déjà enregistré côté
-  // serveur puisqu'on vient de le recevoir via le rafraîchissement).
+  // pour le coup reçu de l'adversaire, déjà enregistré côté serveur
   @Output() partieTerminee = new EventEmitter<ResultatFin>();
 
   private api: Api | null = null;
@@ -115,8 +110,7 @@ export class PlateauComponent implements AfterViewInit, OnChanges {
     const nouveauFen = this.chess.fen();
     const finPartie = this.detecterFinDePartie();
 
-    // Un seul évènement, avec finPartie inclus dedans — le parent attend
-    // la confirmation d'enregistrement du coup avant d'agir dessus.
+    // finPartie inclus dans le même évènement
     this.coupJoue.emit({fen: nouveauFen, coup: resultat.san, finPartie});
 
     this.api?.set({
@@ -126,9 +120,7 @@ export class PlateauComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  // chess.js sait reconnaître nativement toutes les fins de partie
-  // classiques — on se contente de l'interroger. Renvoie l'info (sans
-  // rien émettre elle-même) pour laisser l'appelant décider du moment.
+  // chess.js détecte déjà les fins de partie, on vérifie juste
   private detecterFinDePartie(): ResultatFin | null {
     if (this.chess.isCheckmate()) {
       const gagnant = this.chess.turn() === 'w' ? 'noir' : 'blanc';

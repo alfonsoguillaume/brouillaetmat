@@ -40,9 +40,7 @@ export class ArticleService {
       formData.append('photo', photo);
     }
 
-    // POST plutôt que PATCH : PHP ne sait pas nativement lire un corps
-    // multipart/form-data envoyé en PATCH — c'est une limitation connue,
-    // contournée en gardant POST pour cette route côté backend aussi.
+    // POST et pas PATCH : PHP lit pas bien le multipart en PATCH
     return this.http.post<{ message: string }>(`${this.apiUrl}/${id}`, formData);
   }
 

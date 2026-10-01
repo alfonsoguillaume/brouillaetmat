@@ -29,16 +29,13 @@ export class ConfirmerEmailComponent implements OnInit {
       return;
     }
 
-    // Appelée automatiquement dès l'arrivée sur la page — pas besoin
-    // d'action de la part de l'utilisateur, le lien lui-même est la preuve.
+    // appelé direct à l'arrivée sur la page, pas besoin d'action du user
     this.profilService.confirmerEmail(token).subscribe({
       next: (data) => {
         this.chargementEnCours = false;
         this.succes = true;
         this.message = data.message;
-        // L'ancienne session (liée à l'ancien email) n'a plus de sens
-        // maintenant que l'email a réellement changé en base — on
-        // déconnecte automatiquement pour forcer une reconnexion propre.
+        // déconnecte: l'ancienne session correspond plus au nouvel email
         this.authService.logout();
         this.cdr.detectChanges();
       },

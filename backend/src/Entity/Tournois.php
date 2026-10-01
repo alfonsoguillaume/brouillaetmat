@@ -20,12 +20,11 @@ class Tournois
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date = null;
 
-    // Valeurs possibles : 'planifie', 'en_cours', 'annule'.
+    // 'planifie', 'en_cours', 'termine' ou 'annule'
     #[ORM\Column(length: 15)]
     private ?string $statut = null;
 
-    // Rempli uniquement si statut = 'annule' — la raison de l'annulation,
-    // conservée pour l'historique/archives.
+    // rempli seulement si annulé, gardé pour l'historique
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $motif_annulation = null;
 

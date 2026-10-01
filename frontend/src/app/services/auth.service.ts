@@ -8,6 +8,7 @@ interface LoginResponse {
 
 interface MeResponse {
   email: string;
+  pseudo: string;
   roles: string[];
 }
 
@@ -19,20 +20,15 @@ export class AuthService {
 
   private loggedIn = signal<boolean>(!!localStorage.getItem('token'));
   private roles = signal<string[]>([]);
+  private pseudo = signal<string | null>(null);
+  readonly pseudoSignal = this.pseudo.asReadonly();
 
-  // "Vrai" dès qu'on sait avec certitude si l'utilisateur est connecté ou
-  // non ET quel est son rôle — soit immédiatement (pas de token = rien à
-  // charger), soit après la réponse de /api/me. Le garde de route (guard)
-  // attendra ce signal avant de décider d'autoriser ou non une page, pour
-  // ne jamais juger "trop tôt", avant que le rôle soit vraiment connu.
+  // vrai dès qu'on connait le statut connecté + rôle, le guard attend ce signal avant d'autoriser une page
   private profilCharge = signal<boolean>(!this.loggedIn());
   readonly profilChargeSignal = this.profilCharge.asReadonly();
 
   constructor() {
-    // Si un token existe déjà (page rafraîchie, ou nouvel onglet), on
-    // récupère le profil immédiatement — sinon "roles" resterait vide
-    // jusqu'au prochain login(), et isAdmin()/isGestionnaire() renverraient
-    // toujours false même pour un admin déjà connecté.
+    // si token déjà present (page rafraîchie, nouvel onglet), recharge le profil tout de suite
     if (this.loggedIn()) {
       this.chargerProfil();
     }
@@ -50,6 +46,10 @@ export class AuthService {
     return this.roles().includes('ROLE_GESTIONNAIRE') || this.isAdmin();
   }
 
+  getPseudo(): string | null {
+    return this.pseudo();
+  }
+
   login(email: string, password: string) {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {email, password}).pipe(
       tap((response) => {
@@ -64,6 +64,7 @@ export class AuthService {
     this.http.get<MeResponse>(`${this.apiUrl}/me`).subscribe({
       next: (me) => {
         this.roles.set(me.roles);
+        this.pseudo.set(me.pseudo);
         this.profilCharge.set(true);
       },
       error: () => {
@@ -77,5 +78,6 @@ export class AuthService {
     localStorage.removeItem('token');
     this.loggedIn.set(false);
     this.roles.set([]);
+    this.pseudo.set(null);
   }
 }

@@ -1,7 +1,6 @@
 import {AbstractControl, ValidationErrors} from '@angular/forms';
 
-// Champ optionnel : vide accepté. S'il est rempli, doit contenir exactement
-// 10 chiffres (les espaces éventuels entre les chiffres sont ignorés).
+// champ optionnel, vide accepté. sinon 10 chiffres (espaces ignorés)
 export function telephoneValidator(control: AbstractControl): ValidationErrors | null {
   const valeur = control.value;
   if (!valeur) {
@@ -11,9 +10,7 @@ export function telephoneValidator(control: AbstractControl): ValidationErrors |
   return /^0\d{9}$/.test(nettoye) ? null : {telephoneInvalide: true};
 }
 
-// Vérifie les 5 règles de complexité du mot de passe. Renvoie un objet
-// listant TOUTES les règles manquantes (pas juste la première trouvée),
-// pour que le message FALC puisse tout afficher en une fois.
+// vérifie les 5 règles du mot de passe, renvoie toutes les règles manquantes (pas juste la 1ere) pour le message FALC
 export function motDePasseValidator(control: AbstractControl): ValidationErrors | null {
   const valeur = control.value;
   if (!valeur) {

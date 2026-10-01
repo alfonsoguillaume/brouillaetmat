@@ -16,20 +16,16 @@ export class Header implements OnDestroy {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // Propriété qui gère l'état d'ouverture du menu sur mobile
+  // état d'ouverture du menu mobile
   isMenuOpen: boolean = false;
 
-  // Badge "quelque chose vous attend" sur le lien "Jouer" — utile pour ne
-  // pas manquer une invitation ou une proposition de nulle si on se
-  // promène ailleurs sur le site (la page Jouer elle-même l'affiche déjà
-  // directement, pas besoin du badge quand on y est déjà).
+  // badge sur le lien Jouer, pour une invitation/nulle en attente ailleurs sur le site
   aUneNotificationJeu = false;
   private surPageJouer = false;
   private intervalleNotifJeu: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    // Ferme automatiquement le menu à chaque navigation réussie, et
-    // retient si on est sur la page Jouer (pour masquer le badge dessus).
+    // ferme le menu à chaque navigation, retient si on est sur la page Jouer
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event) => {
@@ -44,8 +40,7 @@ export class Header implements OnDestroy {
       this.verifierNotificationJeu();
       this.envoyerSignalPresence();
     }, 5000);
-    // Premier contrôle immédiat, pas besoin d'attendre 5 secondes après
-    // le chargement de la page.
+    // premier contrôle immédiat, pas besoin d'attendre 5s
     this.verifierNotificationJeu();
     this.envoyerSignalPresence();
   }
@@ -68,18 +63,17 @@ export class Header implements OnDestroy {
         } else {
           const maCouleur = partie.je_suis_blanc ? 'blanc' : 'noir';
           this.aUneNotificationJeu =
-            // Invitation reçue, en attente de ma réponse.
+            // invitation reçue, en attente de ma réponse
             (partie.statut === 'en_attente' && !partie.je_suis_blanc)
-            // L'adversaire propose une nulle.
+            // adversaire propose une nulle
             || (partie.statut === 'en_cours' && partie.nul_propose_par !== null && partie.nul_propose_par !== maCouleur)
-            // Mon invitation a été refusée — j'ai un message à fermer.
+            // mon invitation refusée, message à fermer
             || (partie.statut === 'refusee' && partie.je_suis_blanc);
         }
         this.cdr.detectChanges();
       },
       error: () => {
-        // Pas grave si ça échoue une fois — le prochain essai, 5s plus
-        // tard, retentera tout seul.
+        // pas grave si ça échoue, le prochain essai retentera dans 5s
       }
     });
   }
@@ -88,20 +82,19 @@ export class Header implements OnDestroy {
     if (!this.authService.isLoggedIn()) {
       return;
     }
-    // Pas besoin de traiter la réponse — sert juste à mettre à jour
-    // "dernière activité" côté serveur, aucun affichage local à changer.
+    // pas besoin de traiter la réponse, juste à jour la dernière activité côté serveur
     this.jeuService.signalPresence().subscribe({
       error: () => {
       }
     });
   }
 
-  // Méthode appelée au clic sur le bouton burger
+  // clic sur le bouton burger
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
   }
 
-  // Méthode appelée au clic sur un lien du menu
+  // clic sur un lien du menu
   closeMenu(): void {
     this.isMenuOpen = false;
   }
@@ -116,6 +109,10 @@ export class Header implements OnDestroy {
 
   isGestionnaire(): boolean {
     return this.authService.isGestionnaire();
+  }
+
+  pseudo(): string | null {
+    return this.authService.getPseudo();
   }
 
   logout(): void {

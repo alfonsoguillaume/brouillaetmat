@@ -16,16 +16,11 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
-/**
- * Toutes les routes de ce contrôleur sont déjà réservées aux admins via
- * security.yaml : { path: ^/api/documents, roles: ROLE_ADMIN }.
- */
+// Routes réservées aux admins (security.yaml)
 class DocumentController extends AbstractController
 {
-    // Volontairement HORS de public/ : ce dossier n'est donc jamais
-    // accessible par une simple URL, même en devinant le nom du fichier.
-    // Le seul moyen d'obtenir un fichier est de passer par la route
-    // /telecharger ci-dessous, qui vérifie le rôle avant de le servir.
+    // hors de public/, inaccessible par URL directe
+    // seul passage possible: route /telecharger (vérifie le rôle)
     private const DOSSIER_DOCUMENTS = __DIR__ . '/../../var/uploads/documents';
     private const TYPES_AUTORISES = [
         'application/pdf',
@@ -38,10 +33,7 @@ class DocumentController extends AbstractController
     ];
     private const TAILLE_MAX_OCTETS = 10 * 1024 * 1024; // 10 Mo
 
-    /**
-     * Liste les documents d'un dossier précis (?dossier_id=5), ou ceux "à
-     * la racine" (hors de tout dossier) si aucun paramètre n'est fourni.
-     */
+    // Documents d'un dossier (?dossier_id=5), ou racine si rien fourni
     #[Route('/api/documents', name: 'api_documents_liste', methods: ['GET'])]
     public function liste(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -69,9 +61,7 @@ class DocumentController extends AbstractController
         return $this->json($resultat);
     }
 
-    /**
-     * Liste les dossiers, avec le nombre de documents qu'ils contiennent.
-     */
+    // Liste des dossiers + nombre de documents
     #[Route('/api/documents/dossiers', name: 'api_dossiers_liste', methods: ['GET'])]
     public function listeDossiers(EntityManagerInterface $em): JsonResponse
     {
@@ -86,9 +76,7 @@ class DocumentController extends AbstractController
         return $this->json($resultat);
     }
 
-    /**
-     * Crée un nouveau dossier, vide au départ.
-     */
+    // Crée un dossier vide
     #[Route('/api/documents/dossiers', name: 'api_dossier_creer', methods: ['POST'])]
     public function creerDossier(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -112,13 +100,8 @@ class DocumentController extends AbstractController
         return $this->json(['message' => 'Dossier créé.', 'id' => $dossier->getId()], 201);
     }
 
-    /**
-     * Supprime un dossier ET tout son contenu (documents + fichiers sur le
-     * disque). Décision assumée : plutôt que de bloquer la suppression
-     * d'un dossier non vide, on la permet, mais seulement après
-     * confirmation explicite côté Angular (le message prévient bien que
-     * le contenu sera perdu).
-     */
+    // Supprime un dossier ET son contenu (fichiers inclus)
+    // confirmation déjà faite côté Angular avant d'arriver ici
     #[Route('/api/documents/dossiers/{id<\d+>}', name: 'api_dossier_supprimer', methods: ['DELETE'])]
     public function supprimerDossier(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -141,9 +124,7 @@ class DocumentController extends AbstractController
         return $this->json(['message' => 'Dossier et son contenu supprimés.']);
     }
 
-    /**
-     * Ajoute un nouveau document (multipart/form-data : "nom" + "fichier").
-     */
+    // Ajoute un document (multipart: nom + fichier)
     #[Route('/api/documents', name: 'api_document_ajouter', methods: ['POST'])]
     public function ajouter(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): JsonResponse
     {
@@ -199,11 +180,8 @@ class DocumentController extends AbstractController
         return $this->json(['message' => 'Document ajouté.', 'id' => $document->getId()], 201);
     }
 
-    /**
-     * Sert le fichier d'un document, uniquement si l'appelant a le rôle
-     * requis (vérifié par le firewall avant même d'entrer ici). C'est le
-     * SEUL moyen d'obtenir le contenu d'un document.
-     */
+    // Sert le fichier, rôle déjà vérifié par le firewall
+    // seul moyen d'accéder au contenu
     #[Route('/api/documents/{id<\d+>}/telecharger', name: 'api_document_telecharger', methods: ['GET'])]
     public function telecharger(int $id, EntityManagerInterface $em): Response
     {
@@ -226,9 +204,7 @@ class DocumentController extends AbstractController
         return $reponse;
     }
 
-    /**
-     * Supprime un document (et son fichier sur le disque).
-     */
+    // Supprime un document (+ fichier sur le disque)
     #[Route('/api/documents/{id<\d+>}', name: 'api_document_supprimer', methods: ['DELETE'])]
     public function supprimer(int $id, EntityManagerInterface $em): JsonResponse
     {

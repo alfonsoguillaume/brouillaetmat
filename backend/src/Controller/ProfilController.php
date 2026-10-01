@@ -3,20 +3,22 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
+use App\Service\EmailUniciteService;
+use App\Service\GenerateurTokenService;
+use App\Service\NotificationEmailService;
+use App\Service\PolitiqueMotDePasseService;
+use App\Service\PseudoUniciteService;
+use App\Service\TelephoneService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class ProfilController extends AbstractController
 {
-    /**
-     * Renvoie les informations du membre actuellement connecté (jamais le mot de passe).
-     */
+    // Infos du membre connecté (jamais le mot de passe)
     #[Route('/api/profil', name: 'api_profil_voir', methods: ['GET'])]
     public function voirProfil(): JsonResponse
     {
@@ -35,13 +37,9 @@ class ProfilController extends AbstractController
         ]);
     }
 
-    /**
-     * Modifie les informations du membre connecté (nom, prénom, pseudo, téléphone,
-     * email du tuteur). L'email de connexion et la date de naissance ne sont pas
-     * modifiables ici.
-     */
+    // Modifie le profil connecté (pas l'email ni la date de naissance, non modifiables ici)
     #[Route('/api/profil', name: 'api_profil_modifier', methods: ['PATCH'])]
-    public function modifierProfil(Request $request, EntityManagerInterface $em): JsonResponse
+    public function modifierProfil(Request $request, EntityManagerInterface $em, PseudoUniciteService $pseudoUniciteService, TelephoneService $telephoneService): JsonResponse
     {
         /** @var Utilisateur $utilisateur */
         $utilisateur = $this->getUser();
@@ -54,19 +52,13 @@ class ProfilController extends AbstractController
             }
         }
 
-        // Vérifie que le nouveau pseudo n'est pas déjà pris par QUELQU'UN D'AUTRE.
-        if ($data['pseudo'] !== $utilisateur->getPseudo()) {
-            $pseudoExistant = $em->getRepository(Utilisateur::class)->findOneBy(['pseudo' => $data['pseudo']]);
-            if ($pseudoExistant) {
-                return $this->json(['message' => 'Ce pseudo est déjà utilisé.'], 409);
-            }
+        // vérifie que le pseudo n'est pas pris par un autre
+        if ($data['pseudo'] !== $utilisateur->getPseudo() && !$pseudoUniciteService->estDisponible($data['pseudo'])) {
+            return $this->json(['message' => 'Ce pseudo est déjà utilisé.'], 409);
         }
 
-        if (!empty($data['telephone'])) {
-            $telephoneNettoye = preg_replace('/\s+/', '', $data['telephone']);
-            if (!preg_match('/^0\d{9}$/', $telephoneNettoye)) {
-                return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
-            }
+        if (!empty($data['telephone']) && !$telephoneService->estValide($data['telephone'])) {
+            return $this->json(['message' => 'Le numéro de téléphone doit contenir 10 chiffres et commencer par 0.'], 400);
         }
 
         if (!empty($data['email_tuteur']) && !filter_var($data['email_tuteur'], FILTER_VALIDATE_EMAIL)) {
@@ -84,15 +76,13 @@ class ProfilController extends AbstractController
         return $this->json(['message' => 'Profil mis à jour.']);
     }
 
-    /**
-     * Change le mot de passe du membre connecté. Exige l'ancien mot de passe
-     * pour confirmer que c'est bien lui qui fait la demande.
-     */
+    // Change le mot de passe, exige l'ancien pour confirmer que c'est bien lui
     #[Route('/api/profil/mot-de-passe', name: 'api_profil_mot_de_passe', methods: ['PATCH'])]
     public function changerMotDePasse(
         Request                     $request,
         EntityManagerInterface      $em,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        PolitiqueMotDePasseService  $politiqueMotDePasseService
     ): JsonResponse
     {
         /** @var Utilisateur $utilisateur */
@@ -108,23 +98,7 @@ class ProfilController extends AbstractController
         }
 
         $nouveauMotDePasse = $data['nouveau_mot_de_passe'];
-        $erreurs = [];
-
-        if (strlen($nouveauMotDePasse) < 12) {
-            $erreurs[] = '12 caractères minimum';
-        }
-        if (!preg_match('/[A-Z]/', $nouveauMotDePasse)) {
-            $erreurs[] = 'une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $nouveauMotDePasse)) {
-            $erreurs[] = 'une minuscule';
-        }
-        if (!preg_match('/\d/', $nouveauMotDePasse)) {
-            $erreurs[] = 'un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $nouveauMotDePasse)) {
-            $erreurs[] = 'un caractère spécial';
-        }
+        $erreurs = $politiqueMotDePasseService->erreurs($nouveauMotDePasse);
 
         if (!empty($erreurs)) {
             return $this->json([
@@ -141,21 +115,17 @@ class ProfilController extends AbstractController
         return $this->json(['message' => 'Mot de passe modifié avec succès.']);
     }
 
-    /**
-     * Demande un changement d'email — n'applique RIEN tout de suite. Exige
-     * le mot de passe actuel (empêche quelqu'un qui aurait volé une session
-     * de détourner le compte sans connaître le mot de passe). Envoie un
-     * email de confirmation à la NOUVELLE adresse (le changement ne devient
-     * réel qu'au clic dessus) et un email d'alerte à l'ANCIENNE adresse
-     * (purement informatif, pour prévenir le vrai propriétaire en cas de
-     * demande frauduleuse).
-     */
+    // Demande de changement d'email, applique rien tout de suite.
+    // Exige le mot de passe actuel. Email de confirmation à la nouvelle
+    // adresse + email d'alerte à l'ancienne (si demande frauduleuse)
     #[Route('/api/profil/changer-email', name: 'api_profil_changer_email', methods: ['POST'])]
     public function demanderChangementEmail(
         Request                     $request,
         EntityManagerInterface      $em,
         UserPasswordHasherInterface $passwordHasher,
-        MailerInterface             $mailer
+        NotificationEmailService    $notificationEmailService,
+        EmailUniciteService         $emailUniciteService,
+        GenerateurTokenService      $generateurTokenService
     ): JsonResponse
     {
         /** @var Utilisateur $utilisateur */
@@ -180,13 +150,11 @@ class ProfilController extends AbstractController
             return $this->json(['message' => 'C\'est déjà votre email actuel.'], 400);
         }
 
-        $emailExistant = $em->getRepository(Utilisateur::class)->findOneBy(['email' => $nouvelEmail]);
-        if ($emailExistant) {
+        if (!$emailUniciteService->estDisponible($nouvelEmail)) {
             return $this->json(['message' => 'Cet email est déjà utilisé par un autre compte.'], 409);
         }
 
-        // 32 octets aléatoires -> 64 caractères hexadécimaux, impossible à deviner.
-        $token = bin2hex(random_bytes(32));
+        $token = $generateurTokenService->generer();
 
         $utilisateur->setNouvelEmailEnAttente($nouvelEmail);
         $utilisateur->setTokenChangementEmail($token);
@@ -196,52 +164,41 @@ class ProfilController extends AbstractController
 
         $lienConfirmation = 'http://localhost:4200/confirmer-email/' . $token;
 
-        $mailer->send((new Email())
-            ->from('brouillaetmat@gmail.com')
-            ->to($nouvelEmail)
-            ->subject('Confirmez votre nouvel email — Brouilla&Mat')
-            ->text(
-                "Bonjour,\n\n"
-                . "Vous avez demandé à utiliser cette adresse comme nouvel email de connexion "
-                . "sur le site du club Brouilla&Mat.\n\n"
-                . "Pour confirmer, cliquez sur ce lien (valable 1 heure) :\n$lienConfirmation\n\n"
-                . "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email."
-            )
-            ->html(
-                '<p>Bonjour,</p>'
-                . '<p>Vous avez demandé à utiliser cette adresse comme nouvel email de connexion '
-                . 'sur le site du club Brouilla&amp;Mat.</p>'
-                . '<p><a href="' . $lienConfirmation . '" '
-                . 'style="display:inline-block;padding:12px 24px;background-color:#CE865A;'
-                . 'color:#2D302C;text-decoration:none;border-radius:8px;font-weight:bold;">'
-                . 'Confirmer mon nouvel email</a></p>'
-                . '<p>Ce lien est valable 1 heure.</p>'
-                . '<p>Si vous n\'êtes pas à l\'origine de cette demande, ignorez simplement cet email.</p>'
-            ));
+        $notificationEmailService->envoyer(
+            $nouvelEmail,
+            'Confirmez votre nouvel email — Brouilla&Mat',
+            "Bonjour,\n\n"
+            . "Vous avez demandé à utiliser cette adresse comme nouvel email de connexion "
+            . "sur le site du club Brouilla&Mat.\n\n"
+            . "Pour confirmer, cliquez sur ce lien (valable 1 heure) :\n$lienConfirmation\n\n"
+            . "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.",
+            '<p>Bonjour,</p>'
+            . '<p>Vous avez demandé à utiliser cette adresse comme nouvel email de connexion '
+            . 'sur le site du club Brouilla&amp;Mat.</p>'
+            . '<p><a href="' . $lienConfirmation . '" '
+            . 'style="display:inline-block;padding:12px 24px;background-color:#CE865A;'
+            . 'color:#2D302C;text-decoration:none;border-radius:8px;font-weight:bold;">'
+            . 'Confirmer mon nouvel email</a></p>'
+            . '<p>Ce lien est valable 1 heure.</p>'
+            . '<p>Si vous n\'êtes pas à l\'origine de cette demande, ignorez simplement cet email.</p>'
+        );
 
-        $mailer->send((new Email())
-            ->from('brouillaetmat@gmail.com')
-            ->to($utilisateur->getEmail())
-            ->subject('Alerte : changement d\'email demandé sur votre compte — Brouilla&Mat')
-            ->text(
-                "Bonjour,\n\n"
-                . "Une demande de changement d'email a été effectuée sur votre compte, "
-                . "vers l'adresse : $nouvelEmail.\n\n"
-                . "Si c'est bien vous, aucune action n'est nécessaire.\n\n"
-                . "Si ce n'est PAS vous, contactez un administrateur du club dès que possible : "
-                . "votre compte pourrait être compromis."
-            ));
+        $notificationEmailService->envoyer(
+            $utilisateur->getEmail(),
+            'Alerte : changement d\'email demandé sur votre compte — Brouilla&Mat',
+            "Bonjour,\n\n"
+            . "Une demande de changement d'email a été effectuée sur votre compte, "
+            . "vers l'adresse : $nouvelEmail.\n\n"
+            . "Si c'est bien vous, aucune action n'est nécessaire.\n\n"
+            . "Si ce n'est PAS vous, contactez un administrateur du club dès que possible : "
+            . "votre compte pourrait être compromis."
+        );
 
         return $this->json(['message' => 'Un email de confirmation a été envoyé à votre nouvelle adresse.']);
     }
 
-    /**
-     * Confirme un changement d'email via le lien reçu — c'est SEULEMENT à
-     * cet instant que l'email officiel change réellement. Route publique
-     * (le lien est cliqué depuis une boîte mail, pas forcément dans une
-     * session connectée) : la preuve d'identité est le jeton lui-même,
-     * impossible à deviner.
-     */
+    // Confirme le changement d'email via le lien reçu, c'est ici que ça change vraiment.
+    // Route publique (lien cliqué depuis la boîte mail), le jeton sert de preuve d'identité
     #[Route('/api/profil/confirmer-email/{token}', name: 'api_profil_confirmer_email', methods: ['POST'])]
     public function confirmerChangementEmail(string $token, EntityManagerInterface $em): JsonResponse
     {

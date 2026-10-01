@@ -18,21 +18,14 @@ export class JouerComponent implements OnInit, OnDestroy {
   maPartie: PartieActive | null = null;
   membres: MembreJeu[] = [];
 
-  // Rafraîchissement automatique : permet de détecter, sans recharger la
-  // page, que l'adversaire a accepté une invitation, joué un coup, ou que
-  // la partie est terminée (statut 'terminee', vu via le rafraîchissement
-  // plutôt que via un évènement éphémère — voir explication détaillée
-  // dans traiterFinDePartie ci-dessous).
+  // rafraîchissement auto, détecte invitation acceptée/coup joué/partie finie sans recharger la page
   private intervalId: ReturnType<typeof setInterval> | null = null;
 
-  // Minuteur SÉPARÉ, toutes les secondes — purement visuel (fait défiler
-  // l'affichage du chrono), ne contacte le serveur QUE si un temps tombe
-  // à zéro. Volontairement distinct du rafraîchissement toutes les 3s.
+  // minuteur séparé, juste visuel, contacte le serveur que si le temps tombe à 0
   private intervalChrono: ReturnType<typeof setInterval> | null = null;
   private signalementTempsEcouleEnvoye = false;
 
-  // "Battement de cœur" — signale au serveur qu'on est toujours là,
-  // toutes les 5 secondes pendant qu'une partie est en cours.
+  // signal de présence au serveur, toutes les 5s pendant une partie
   private intervalSignal: ReturnType<typeof setInterval> | null = null;
   private signalementDeconnexionEnvoye = false;
 
@@ -104,8 +97,7 @@ export class JouerComponent implements OnInit, OnDestroy {
     });
   }
 
-  // "trait" (côté backend) vaut 'blanc' ou 'noir' — on compare avec sa
-  // propre couleur pour savoir si c'est à soi de jouer.
+  // trait = 'blanc' ou 'noir' côté backend, comparé à sa couleur
   estMonTour(): boolean {
     if (!this.maPartie || !this.maPartie.trait) {
       return false;
@@ -115,10 +107,8 @@ export class JouerComponent implements OnInit, OnDestroy {
 
   // ---------- Chronomètre ----------
 
-  // Le temps stocké en base n'est mis à jour qu'À CHAQUE COUP joué —
-  // entre-temps, il faut recalculer le temps RÉEL en déduisant les
-  // secondes écoulées depuis le dernier coup, mais UNIQUEMENT pour le
-  // camp qui a actuellement le trait (l'autre chrono, lui, ne tourne pas).
+  // temps en base mis à jour qu'à chaque coup, recalcul du temps réel
+  // entre-temps pour celui qui a le trait (l'autre chrono ne tourne pas)
   private calculerTempsRestant(couleur: 'blanc' | 'noir'): number {
     if (!this.maPartie) {
       return 600;
@@ -163,9 +153,7 @@ export class JouerComponent implements OnInit, OnDestroy {
 
     const tempsAuTrait = this.calculerTempsRestant(this.maPartie.trait as 'blanc' | 'noir');
     if (tempsAuTrait <= 0) {
-      // N'importe lequel des deux joueurs peut signaler ça — pas
-      // seulement celui dont le temps est écoulé (voir explication côté
-      // backend : utile si c'est justement lui qui a fermé son navigateur).
+      // n'importe quel joueur peut signaler ça, utile si l'autre a fermé l'onglet
       this.signalementTempsEcouleEnvoye = true;
       this.jeuService.tempsEcoule(this.maPartie.id).subscribe({
         next: () => {
@@ -193,9 +181,7 @@ export class JouerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Le signal de L'ADVERSAIRE (pas le mien) — s'il n'a plus donné signe
-    // de vie depuis plus de 20 secondes, on le signale au serveur (qui
-    // revérifiera avant de trancher).
+    // signal de l'adversaire, pas le mien. Si rien depuis 20s, on signale au serveur
     const signalAdversaire = this.maPartie.je_suis_blanc
       ? this.maPartie.dernier_signal_noir
       : this.maPartie.dernier_signal_blanc;
@@ -324,8 +310,7 @@ export class JouerComponent implements OnInit, OnDestroy {
 
   // ---------- Invitation refusée par l'adversaire (vue du proposeur) ----------
 
-  // Nom de l'adversaire, peu importe sa couleur — utile pour personnaliser
-  // le message "X a refusé votre partie."
+  // nom de l'adversaire, peu importe sa couleur (pour le message de refus)
   nomAdversaire(): string {
     if (!this.maPartie) {
       return '';
@@ -338,9 +323,7 @@ export class JouerComponent implements OnInit, OnDestroy {
     if (!this.maPartie) {
       return;
     }
-    // Réutilise la même route que l'annulation — côté backend, un
-    // proposeur qui appelle ça sur une partie "refusee" la supprime
-    // définitivement (voir JeuController::annulerInvitation).
+    // même route que l'annulation, le backend supprime définitivement si statut refusee
     this.jeuService.annulerInvitation(this.maPartie.id).subscribe({
       next: () => {
         this.maPartie = null;
@@ -362,9 +345,8 @@ export class JouerComponent implements OnInit, OnDestroy {
 
     this.jeuService.jouerCoup(this.maPartie.id, evenement.fen, evenement.coup).subscribe({
       next: () => {
-        // On ne signale la fin de partie qu'UNE FOIS le coup confirmé
-        // enregistré — sinon la partie pourrait passer "terminee" avant
-        // que ce dernier coup n'ait été sauvegardé.
+        // fin de partie signalée qu'une fois le coup bien enregistré,
+        // sinon risque de perdre le dernier coup
         if (evenement.finPartie) {
           this.jeuService.terminerPartie(this.maPartie!.id, evenement.finPartie.resultat).subscribe({
             next: () => this.chargerMaPartie(false),
@@ -386,17 +368,14 @@ export class JouerComponent implements OnInit, OnDestroy {
     if (!this.maPartie) {
       return;
     }
-    // Idempotent côté serveur — même si l'adversaire l'a déjà signalé,
-    // cet appel ne fait rien de mal, il confirme juste le même état.
+    // appelée 2x sans problème, même si l'adversaire l'a déjà signalé
     this.jeuService.terminerPartie(this.maPartie.id, evenement.resultat).subscribe({
       next: () => this.chargerMaPartie(false),
       error: () => this.chargerMaPartie(false),
     });
   }
 
-  // ---------- Affichage du résultat (piloté par l'état du serveur, pas
-  // par l'évènement éphémère — donc visible même après un rechargement
-  // de page, ou si on a raté l'instant précis de la détection) ----------
+  // ---------- Affichage du résultat (état serveur, visible même après rechargement) ----------
 
   texteResultat(): string {
     if (!this.maPartie || this.maPartie.resultat === null) {

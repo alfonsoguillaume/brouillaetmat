@@ -34,10 +34,7 @@ export class ConnexionComponent {
     });
   }
 
-  /**
-   * Symfony renvoie certains messages d'erreur en anglais par défaut.
-   * On les traduit ici pour un affichage cohérent en français.
-   */
+  // Symfony renvoie certains messages en anglais, on les traduit en français
   private traduireMessage(message: string): string {
     if (message === 'Invalid credentials.') {
       return 'Email ou mot de passe incorrect.';

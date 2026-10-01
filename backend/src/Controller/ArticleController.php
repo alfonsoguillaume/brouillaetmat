@@ -19,11 +19,8 @@ class ArticleController extends AbstractController
     private const TYPES_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
     private const TAILLE_MAX_OCTETS = 5 * 1024 * 1024; // 5 Mo
 
-    /**
-     * Liste tous les articles, du plus récent au plus ancien. Route publique
-     * (voir security.yaml) : visiteurs, membres et gestionnaires y ont accès,
-     * c'est le frontend qui décide de flouter la photo si non connecté.
-     */
+    // Liste des articles, plus récent au plus ancien. Route publique,
+    // flou de la photo géré côté Angular
     #[Route('/api/articles', name: 'api_articles_liste', methods: ['GET'])]
     public function liste(EntityManagerInterface $em): JsonResponse
     {
@@ -34,9 +31,7 @@ class ArticleController extends AbstractController
         return $this->json($resultat);
     }
 
-    /**
-     * Détail d'un article précis.
-     */
+    // Détail d'un article
     #[Route('/api/articles/{id<\d+>}', name: 'api_article_detail', methods: ['GET'])]
     public function detail(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -49,10 +44,7 @@ class ArticleController extends AbstractController
         return $this->json($this->formaterArticle($article));
     }
 
-    /**
-     * Crée un nouvel article. Réservé aux gestionnaires (voir security.yaml).
-     * Envoyé en multipart/form-data (pas en JSON) à cause de la photo.
-     */
+    // Crée un article (gestionnaires). Multipart à cause de la photo
     #[Route('/api/articles', name: 'api_article_creer', methods: ['POST'])]
     public function creer(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): JsonResponse
     {
@@ -87,9 +79,7 @@ class ArticleController extends AbstractController
         return $this->json(['message' => 'Article publié.', 'id' => $article->getId()], 201);
     }
 
-    /**
-     * Modifie un article existant. Réservé aux gestionnaires.
-     */
+    // Modifie un article (gestionnaires)
     #[Route('/api/articles/{id<\d+>}', name: 'api_article_modifier', methods: ['POST'])]
     public function modifier(int $id, Request $request, EntityManagerInterface $em, SluggerInterface $slugger): JsonResponse
     {
@@ -128,9 +118,7 @@ class ArticleController extends AbstractController
         return $this->json(['message' => 'Article mis à jour.']);
     }
 
-    /**
-     * Supprime un article (et sa photo sur le disque, le cas échéant).
-     */
+    // Supprime un article (+ photo si elle existe)
     #[Route('/api/articles/{id<\d+>}', name: 'api_article_supprimer', methods: ['DELETE'])]
     public function supprimer(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -147,10 +135,7 @@ class ArticleController extends AbstractController
         return $this->json(['message' => 'Article supprimé.']);
     }
 
-    /**
-     * Transforme un objet Article en tableau prêt pour le JSON, avec le nom
-     * (pas l'objet complet) de l'auteur/modificateur.
-     */
+    // Article -> tableau JSON, avec juste le nom de l'auteur/modificateur
     private function formaterArticle(Article $article): array
     {
         return [
@@ -167,11 +152,7 @@ class ArticleController extends AbstractController
         ];
     }
 
-    /**
-     * Valide et enregistre un fichier photo sur le disque, renvoie son nom
-     * de fichier généré (à stocker dans la colonne "photo"), ou une réponse
-     * d'erreur si le fichier n'est pas valide.
-     */
+    // Valide et enregistre la photo, renvoie le nom généré ou une erreur
     private function enregistrerPhoto($fichier, SluggerInterface $slugger): string|JsonResponse
     {
         if (!in_array($fichier->getMimeType(), self::TYPES_AUTORISES, true)) {

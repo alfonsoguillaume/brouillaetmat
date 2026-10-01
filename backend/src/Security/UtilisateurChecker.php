@@ -10,10 +10,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class UtilisateurChecker implements UserCheckerInterface
 {
-    /**
-     * Appelée par Symfony AVANT de vérifier le mot de passe.
-     * On en profite pour bloquer les comptes pas encore validés par un admin.
-     */
+    // Appelée avant de vérifier le mot de passe, bloque les comptes pas encore validés
     public function checkPreAuth(UserInterface $user): void
     {
         if (!$user instanceof Utilisateur) {
@@ -33,11 +30,7 @@ class UtilisateurChecker implements UserCheckerInterface
         }
     }
 
-    /**
-     * Appelée par Symfony APRÈS une authentification réussie.
-     * Rien à vérifier ici pour l'instant, mais la méthode est obligatoire
-     * (imposée par l'interface UserCheckerInterface).
-     */
+    // Appelée après authentification réussie, rien à faire ici mais obligatoire (interface)
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
     }

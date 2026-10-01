@@ -51,15 +51,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $email_tuteur = null;
 
-    // Note interne visible et modifiable uniquement par les admins (pas
-    // les gestionnaires) — jamais exposée sur les routes accessibles au
-    // membre lui-même (/api/profil) ni aux gestionnaires.
+    // commentaire admin only, jamais visible par le membre ou le gestionnaire
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $commentaire = null;
 
-    // Changement d'email en attente de confirmation — l'email "officiel"
-    // (colonne $email) ne change qu'une fois le lien de confirmation
-    // cliqué, jamais avant.
+    // nouvel email en attente, change seulement au clic du lien de confirmation
     #[ORM\Column(length: 191, nullable: true)]
     private ?string $nouvel_email_en_attente = null;
 
@@ -69,20 +65,20 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTime $token_changement_email_expire_le = null;
 
-    // Réinitialisation de mot de passe ("mot de passe oublié") — même
-    // principe que le changement d'email : un jeton temporaire, jamais
-    // le mot de passe lui-même, envoyé par email.
+    // jeton mot de passe oublié, même principe que le changement d'email
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $token_reinitialisation = null;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTime $token_reinitialisation_expire_le = null;
 
-    // Mis à jour à chaque signal de présence envoyé par le navigateur
-    // (voir Header côté Angular) — sert à déterminer qui est "en ligne"
-    // (dernière activité récente) sans infrastructure temps réel dédiée.
+    // mis à jour à chaque signal de présence, sert à savoir qui est en ligne
     #[ORM\Column(nullable: true)]
     private ?\DateTime $derniere_activite = null;
+
+    // compte technique (créé via app:creer-compte-technique), invisible partout pour les membres
+    #[ORM\Column]
+    private bool $compte_technique = false;
 
     /**
      * @var Collection<int, Article>
@@ -347,6 +343,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDerniereActivite(?\DateTime $derniere_activite): static
     {
         $this->derniere_activite = $derniere_activite;
+
+        return $this;
+    }
+
+    public function isCompteTechnique(): bool
+    {
+        return $this->compte_technique;
+    }
+
+    public function setCompteTechnique(bool $compte_technique): static
+    {
+        $this->compte_technique = $compte_technique;
 
         return $this;
     }

@@ -2,3 +2,7 @@ lexik_jwt_authentication:
     secret_key: '%env(resolve:JWT_SECRET_KEY)%'
     public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
     pass_phrase: '%env(JWT_PASSPHRASE)%'
+    # Durée de vie du token, en secondes. 3600 = 1h, c'était déjà la valeur
+    # par défaut du bundle — rendue explicite ici pour que ce soit un choix
+    # visible dans le code plutôt qu'un défaut implicite.
+    token_ttl: 3600

@@ -12,18 +12,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
-/**
- * Toutes les routes sont réservées aux gestionnaires (et admins, via la
- * hiérarchie des rôles) — voir security.yaml : ^/api/bibliotheque.
- */
+// Routes réservées aux gestionnaires/admins (security.yaml)
 class BibliothequeController extends AbstractController
 {
     // ---------- Catalogue des ouvrages ----------
 
-    /**
-     * Liste tous les ouvrages, avec un indicateur "disponible" (pas
-     * actuellement emprunté), calculé à la volée.
-     */
+    // Liste des ouvrages + disponible (calculé à la volée)
     #[Route('/api/bibliotheque/ouvrages', name: 'api_biblio_ouvrages_liste', methods: ['GET'])]
     public function listeOuvrages(EntityManagerInterface $em): JsonResponse
     {
@@ -87,10 +81,7 @@ class BibliothequeController extends AbstractController
         return $this->json(['message' => 'Ouvrage mis à jour.']);
     }
 
-    /**
-     * Supprime un ouvrage. Refuse s'il est actuellement emprunté ou s'il a
-     * un historique de prêts archivés (contrainte de clé étrangère).
-     */
+    // Supprime un ouvrage, refuse si emprunté ou historique de prêts
     #[Route('/api/bibliotheque/ouvrages/{id<\d+>}', name: 'api_biblio_ouvrage_supprimer', methods: ['DELETE'])]
     public function supprimerOuvrage(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -113,11 +104,7 @@ class BibliothequeController extends AbstractController
 
     // ---------- Membres (pour la liste déroulante) ----------
 
-    /**
-     * Liste légère des membres validés (juste de quoi remplir un menu
-     * déroulant) — distincte de /api/admin/membres qui est réservée aux
-     * admins et renvoie beaucoup plus d'informations.
-     */
+    // Membres validés, version light pour un menu déroulant (pas /api/admin/membres)
     #[Route('/api/bibliotheque/membres', name: 'api_biblio_membres_liste', methods: ['GET'])]
     public function listeMembres(EntityManagerInterface $em): JsonResponse
     {
@@ -163,9 +150,7 @@ class BibliothequeController extends AbstractController
             return $this->json(['message' => 'Ouvrage introuvable.'], 404);
         }
 
-        // Sécurité en plus du filtrage déjà fait côté Angular : un seul
-        // exemplaire par titre, donc un ouvrage déjà emprunté ne peut pas
-        // l'être une deuxième fois.
+        // sécurité en plus du filtrage Angular: un seul exemplaire par titre
         if (!$ouvrage->getEmprunts()->isEmpty()) {
             return $this->json(['message' => 'Cet ouvrage est déjà emprunté.'], 409);
         }
@@ -186,10 +171,7 @@ class BibliothequeController extends AbstractController
         return $this->json(['message' => 'Emprunt enregistré.'], 201);
     }
 
-    /**
-     * Marque un emprunt comme rendu : supprime la ligne "en cours" et crée
-     * la ligne archivée correspondante, avec la date du jour comme retour.
-     */
+    // Marque un emprunt rendu: supprime la ligne en cours, crée la ligne archive
     #[Route('/api/bibliotheque/emprunts/{id<\d+>}/retour', name: 'api_biblio_emprunt_retour', methods: ['POST'])]
     public function marquerRetour(int $id, EntityManagerInterface $em): JsonResponse
     {

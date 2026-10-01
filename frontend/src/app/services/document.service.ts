@@ -1,8 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
-// Nommé "DocumentAdmin" plutôt que "Document" pour ne pas entrer en conflit
-// avec le type natif "Document" du navigateur (représente la page HTML elle-même).
+// DocumentAdmin pour pas confondre avec le type Document du navigateur
 export interface DocumentAdmin {
   id: number;
   nom: string;
@@ -54,9 +53,7 @@ export class DocumentService {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
   }
 
-  // responseType: 'blob' : on attend des données binaires (le fichier
-  // lui-même), pas du JSON — Angular sait alors les traiter comme un
-  // fichier plutôt que d'essayer de les interpréter comme du texte.
+  // blob car fichier binaire, pas du JSON
   telecharger(id: number) {
     return this.http.get(`${this.apiUrl}/${id}/telecharger`, {responseType: 'blob'});
   }

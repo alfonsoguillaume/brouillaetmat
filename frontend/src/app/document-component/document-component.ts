@@ -15,7 +15,7 @@ export class DocumentComponent {
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
-  // Documents "à la racine" (hors de tout dossier) — toujours visibles.
+  // documents hors dossier, toujours visibles
   documents: DocumentAdmin[] = [];
   dossiers: Dossier[] = [];
 
@@ -175,8 +175,7 @@ export class DocumentComponent {
   ouvrirModaleAjout(): void {
     this.modaleAjoutOuverte = true;
     this.fichierSelectionne = null;
-    // Si on ouvre l'ajout depuis l'intérieur d'un dossier (modale de
-    // détail déjà ouverte), on pré-sélectionne ce dossier — sinon racine.
+    // pré-sélectionne le dossier ouvert, sinon racine
     this.dossierChoisiPourAjout = this.dossierSelectionne ? this.dossierSelectionne.id.toString() : '';
     this.messagesErreursAjout = [];
     this.ajoutForm.reset();
@@ -234,8 +233,7 @@ export class DocumentComponent {
         this.fermerModaleAjout();
         this.chargerDocuments();
         this.chargerDossiers();
-        // Si on avait ajouté dans le dossier actuellement ouvert, on
-        // rafraîchit aussi sa liste pour voir le nouveau fichier tout de suite.
+        // rafraîchit le dossier ouvert pour voir le nouveau fichier
         if (this.dossierSelectionne) {
           this.ouvrirDossier(this.dossierSelectionne);
         }

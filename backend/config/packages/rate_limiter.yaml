@@ -4,3 +4,7 @@ framework:
             policy: 'sliding_window'
             limit: 5
             interval: '1 hour'
+        mot_de_passe_oublie:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'

@@ -75,8 +75,7 @@ export class ProfilComponent implements OnInit {
           emailTuteur: profil.email_tuteur ?? '',
         });
 
-        // Recalcule si le membre est encore mineur, pour exiger (ou non)
-        // l'e-mail du tuteur, comme à l'inscription.
+        // recalcule si mineur, pour exiger ou non l'e-mail du tuteur
         this.isMineur = this.calculerAge(profil.date_naissance) < 18;
         const tuteurControl = this.profilForm.get('emailTuteur');
         if (this.isMineur) {

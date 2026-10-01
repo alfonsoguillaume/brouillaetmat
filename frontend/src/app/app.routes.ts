@@ -18,6 +18,7 @@ import {
 } from './reinitialiser-mot-de-passe-component/reinitialiser-mot-de-passe-component';
 import {DocumentComponent} from './document-component/document-component';
 import {BibliothequeComponent} from './bibliotheque-component/bibliotheque-component';
+import {PageIntrouvableComponent} from './page-introuvable-component/page-introuvable-component';
 import {adminGuard, gestionnaireGuard} from './guards/role.guard';
 
 export const routes: Routes = [
@@ -45,6 +46,6 @@ export const routes: Routes = [
   {path: 'mentions-legales', component: LegalComponent},
   {path: 'politique-confidentialite', component: PolitiqueComponent},
 
-  // Redirection globale
-  {path: '**', redirectTo: 'accueil'}
+  // Page 404 : toute URL inconnue affiche ce composant
+  {path: '**', component: PageIntrouvableComponent}
 ];

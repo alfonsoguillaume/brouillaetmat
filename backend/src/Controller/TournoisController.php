@@ -12,17 +12,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
-/**
- * Consultation (GET) ouverte à tout membre connecté (ROLE_USER, règle
- * générale de security.yaml). Écriture (POST/PATCH/DELETE) réservée aux
- * admins uniquement — pas même les gestionnaires, contrairement aux
- * articles/bibliothèque (voir security.yaml : ^/api/tournois).
- *
- * NOTE IMPORTANTE : la saisie des scores et le calcul du classement ne sont
- * pas encore implémentés — en attente de la méthode de notation à confirmer.
- * Cette version couvre : créer/modifier/supprimer un tournoi, inscrire ou
- * désinscrire des membres avant le lancement, et lancer le tournoi.
- */
+// GET ouvert à tout membre connecté. POST/PATCH/DELETE réservé aux admins
+// (pas les gestionnaires, contrairement aux articles/bibliothèque)
 class TournoisController extends AbstractController
 {
     // ---------- Liste et détail ----------
@@ -52,9 +43,7 @@ class TournoisController extends AbstractController
         return $this->json($resultat);
     }
 
-    /**
-     * Archives : tournois annulés, avec leur motif et la date d'annulation.
-     */
+    // Archives: tournois annulés/terminés, avec motif et date
     #[Route('/api/tournois/annules', name: 'api_tournois_annules_liste', methods: ['GET'])]
     public function listeAnnules(EntityManagerInterface $em): JsonResponse
     {
@@ -103,10 +92,7 @@ class TournoisController extends AbstractController
         ]);
     }
 
-    /**
-     * Liste légère des membres validés, pour remplir le menu déroulant
-     * d'inscription à un tournoi.
-     */
+    // Membres validés, version light pour le menu d'inscription
     #[Route('/api/tournois/membres-disponibles', name: 'api_tournois_membres', methods: ['GET'])]
     public function membresDisponibles(EntityManagerInterface $em): JsonResponse
     {
@@ -174,12 +160,7 @@ class TournoisController extends AbstractController
         return $this->json(['message' => 'Tournoi mis à jour.']);
     }
 
-    /**
-     * Vrai si chaque paire de participants s'est déjà affrontée une fois —
-     * vérifie précisément CHAQUE paire (même logique que listeMatchs()),
-     * pas seulement un total de lignes : rejouer 3 fois "A vs B" donne 3
-     * lignes en base, mais ne fait avancer AUCUNE des autres paires.
-     */
+    // vrai si chaque paire a joué une fois (vérifie chaque paire, pas juste le total de lignes)
     private function tousLesMatchsJoues(Tournois $tournoi, EntityManagerInterface $em): bool
     {
         $participations = $em->getRepository(Participation::class)->findBy(['tournois_id' => $tournoi]);
@@ -187,9 +168,7 @@ class TournoisController extends AbstractController
 
         $nombreJoueurs = count($joueurs);
         if ($nombreJoueurs < 2) {
-            // Moins de 2 participants : rien à jouer, donc rien à
-            // terminer automatiquement (évite un tournoi vide qui se
-            // clôturerait tout seul dès son lancement).
+            // moins de 2 participants, rien à terminer automatiquement
             return false;
         }
 
@@ -205,7 +184,7 @@ class TournoisController extends AbstractController
             for ($j = $i + 1; $j < $nombreJoueurs; $j++) {
                 $cle = min($joueurs[$i]->getId(), $joueurs[$j]->getId()) . '-' . max($joueurs[$i]->getId(), $joueurs[$j]->getId());
                 if (!isset($dejaJoues[$cle])) {
-                    // Cette paire précise n'a pas encore joué — pas terminé.
+                    // cette paire n'a pas joué, pas terminé
                     return false;
                 }
             }
@@ -214,13 +193,7 @@ class TournoisController extends AbstractController
         return true;
     }
 
-    /**
-     * Calcule la liste COMPLÈTE des matchs d'un tournoi round-robin (chaque
-     * participant affronte chaque autre une fois), en croisant avec les
-     * matchs déjà saisis pour indiquer lesquels restent à faire — sans
-     * cette route, l'organisateur n'a aucun moyen de savoir s'il a oublié
-     * une rencontre.
-     */
+    // Liste complète des matchs round-robin, croisée avec les matchs déjà saisis
     #[Route('/api/tournois/{id<\d+>}/matchs', name: 'api_tournoi_matchs_liste', methods: ['GET'])]
     public function listeMatchs(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -232,9 +205,7 @@ class TournoisController extends AbstractController
         $participations = $em->getRepository(Participation::class)->findBy(['tournois_id' => $tournoi]);
         $joueurs = array_map(fn(Participation $p) => $p->getUtilisateurId(), $participations);
 
-        // "Dictionnaire" des matchs déjà joués, indexé par une clé qui ne
-        // dépend pas de l'ordre des 2 joueurs (min-max), pour retrouver un
-        // match peu importe qui était "joueur1" ou "joueur2" au moment de la saisie.
+        // matchs déjà joués, indexés par clé min-max (peu importe qui était joueur1/2)
         $dejaJoues = [];
         foreach ($em->getRepository(MatchTournoi::class)->findBy(['tournois_id' => $tournoi]) as $match) {
             $idA = $match->getJoueur1Id()->getId();
@@ -266,12 +237,7 @@ class TournoisController extends AbstractController
         return $this->json($resultat);
     }
 
-    /**
-     * Enregistre le résultat d'un match entre 2 participants, et met à
-     * jour leurs points en conséquence (victoire = 1, nul = 0,5, défaite =
-     * 0 — méthode confirmée par la tutrice). Le champ "resultat" de
-     * Participation sert de compteur de points cumulés pour ce tournoi.
-     */
+    // Enregistre un résultat, met à jour les points (victoire=1, nul=0,5, défaite=0)
     #[Route('/api/tournois/{id<\d+>}/matchs', name: 'api_tournoi_match_saisir', methods: ['POST'])]
     public function saisirMatch(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -307,9 +273,7 @@ class TournoisController extends AbstractController
             return $this->json(['message' => 'Les deux joueurs doivent être inscrits à ce tournoi.'], 400);
         }
 
-        // Empêche de rejouer 2 fois la même paire — sans ça, "A bat B" 3
-        // fois de suite compterait comme 3 matchs différents et pourrait
-        // faire croire (à tort) que le tournoi est terminé.
+        // empêche de rejouer la même paire deux fois
         foreach ($em->getRepository(MatchTournoi::class)->findBy(['tournois_id' => $tournoi]) as $matchExistant) {
             $idExistantA = $matchExistant->getJoueur1Id()->getId();
             $idExistantB = $matchExistant->getJoueur2Id()->getId();
@@ -328,7 +292,7 @@ class TournoisController extends AbstractController
         $match->setDateSaisie(new \DateTime());
         $em->persist($match);
 
-        // Points selon le résultat : victoire = 1, nul = 0,5, défaite = 0.
+        // points selon résultat
         [$pointsJoueur1, $pointsJoueur2] = match ($resultat) {
             'joueur1' => [1.0, 0.0],
             'joueur2' => [0.0, 1.0],
@@ -338,10 +302,7 @@ class TournoisController extends AbstractController
         $participation1->setResultat((string)((float)($participation1->getResultat() ?? 0) + $pointsJoueur1));
         $participation2->setResultat((string)((float)($participation2->getResultat() ?? 0) + $pointsJoueur2));
 
-        // Ce flush() enregistre le match qu'on vient de créer AVANT de
-        // vérifier s'il ne reste plus rien à jouer — sinon,
-        // tousLesMatchsJoues() le compterait comme "pas encore joué"
-        // (il ne serait pas encore visible en base au moment du calcul).
+        // flush avant de vérifier la fin, sinon ce match ne serait pas encore visible en base
         $em->flush();
 
         if ($this->tousLesMatchsJoues($tournoi, $em)) {
@@ -352,11 +313,7 @@ class TournoisController extends AbstractController
         return $this->detail($id, $em);
     }
 
-    /**
-     * Termine un tournoi : verrouille tout, déplace le tournoi dans
-     * l'archive avec le classement final (déjà calculé au fil des
-     * matchs saisis, rien à recalculer ici).
-     */
+    // Termine un tournoi, classement déjà calculé au fil des matchs (rien à recalculer)
     #[Route('/api/tournois/{id<\d+>}/terminer', name: 'api_tournoi_terminer', methods: ['POST'])]
     public function terminerTournoi(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -375,10 +332,7 @@ class TournoisController extends AbstractController
         return $this->json(['message' => 'Tournoi terminé.']);
     }
 
-    /**
-     * Annule un tournoi : ne le supprime pas, il reste consultable dans les
-     * archives avec son motif. Un motif est obligatoire.
-     */
+    // Annule un tournoi (pas supprimé, reste dans les archives avec le motif)
     #[Route('/api/tournois/{id<\d+>}/annuler', name: 'api_tournoi_annuler', methods: ['POST'])]
     public function annuler(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {

@@ -74,15 +74,11 @@ export class InscriptionComponent {
     tuteurControl?.updateValueAndValidity();
   }
 
-  /**
-   * Construit une liste de messages simples et précis, un par problème détecté.
-   * Principe FALC : une phrase courte, une seule idée, pas d'ambiguïté.
-   */
+  // liste des messages d'erreur, un par problème (FALC : phrase courte, une idée)
   private construireMessagesErreurs(): string[] {
     const messages: string[] = [];
 
-    // Cas particulier du mot de passe : plusieurs règles peuvent manquer en
-    // même temps, on les liste toutes plutôt qu'une seule à la fois.
+    // mot de passe : plusieurs règles peuvent manquer en même temps, on les liste toutes
     const passwordControle = this.inscriptionForm.get('password');
     if (passwordControle && passwordControle.invalid) {
       if (passwordControle.errors?.['required']) {
