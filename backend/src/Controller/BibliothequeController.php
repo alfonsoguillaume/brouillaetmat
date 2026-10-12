@@ -81,7 +81,7 @@ class BibliothequeController extends AbstractController
         return $this->json(['message' => 'Ouvrage mis à jour.']);
     }
 
-    // Supprime un ouvrage, refuse si emprunté ou historique de prêts
+    // Supprime un ouvrage. Refusé si emprunté en ce moment, ses archives partent avec lui
     #[Route('/api/bibliotheque/ouvrages/{id<\d+>}', name: 'api_biblio_ouvrage_supprimer', methods: ['DELETE'])]
     public function supprimerOuvrage(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -90,14 +90,20 @@ class BibliothequeController extends AbstractController
             return $this->json(['message' => 'Ouvrage introuvable.'], 404);
         }
 
-        try {
-            $em->remove($ouvrage);
-            $em->flush();
-        } catch (\Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException $e) {
+        // Emprunt en cours: suppression refusée
+        if ($em->getRepository(Emprunt::class)->findOneBy(['ouvrage_id' => $ouvrage])) {
             return $this->json([
-                'message' => 'Impossible de supprimer : cet ouvrage est emprunté ou a un historique de prêts.',
+                'message' => 'Impossible de supprimer : cet ouvrage est emprunté en ce moment.',
             ], 409);
         }
+
+        // Archives du livre supprimées avec lui, tout dans la même opération
+        $archives = $em->getRepository(ArchiveEmprunt::class)->findBy(['ouvrage_id' => $ouvrage]);
+        foreach ($archives as $archive) {
+            $em->remove($archive);
+        }
+        $em->remove($ouvrage);
+        $em->flush();
 
         return $this->json(['message' => 'Ouvrage supprimé.']);
     }

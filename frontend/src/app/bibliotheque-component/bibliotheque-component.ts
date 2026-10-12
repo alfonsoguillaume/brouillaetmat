@@ -195,6 +195,7 @@ export class BibliothequeComponent {
       next: () => {
         this.confirmationSuppressionOuvrage = null;
         this.chargerOuvrages();
+        this.chargerArchives();
         this.cdr.detectChanges();
       },
       error: (err) => {

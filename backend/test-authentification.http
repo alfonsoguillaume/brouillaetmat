@@ -1,0 +1,160 @@
+### ============================================================
+### JEU D'ESSAI : AUTHENTIFICATION (connexion et accès)
+### Outil : client HTTP de PhpStorm (bouton vert à côté de chaque requête)
+### Le serveur doit tourner sur http://localhost:8000
+### ============================================================
+
+@host = http://localhost:8000
+@mdp = JeuEssai2026!
+@emailValide = jeu.valide@test.fr
+@emailAttente = jeu.attente@test.fr
+@emailBloque = jeu.bloque@test.fr
+
+### ------------------------------------------------------------
+### ÉTAPE 0 : créer les 3 comptes de test (à faire une seule fois)
+### Après la création, les 3 comptes sont "en attente".
+### Ensuite, sur le site, page Administration :
+###   - valider le compte jeu.valide@test.fr
+###   - valider le compte jeu.bloque@test.fr, puis le bloquer
+###   - ne rien faire pour jeu.attente@test.fr (il reste en attente)
+### ------------------------------------------------------------
+
+### Création du compte "valide"
+POST {{host}}/api/inscription
+Content-Type: application/json
+
+{
+    "nom": "Valide",
+    "prenom": "Jeu",
+    "pseudo": "jeu_valide",
+    "email": "{{emailValide}}",
+    "password": "{{mdp}}",
+    "date_naissance": "1990-01-01",
+    "consentement_parental": false
+}
+
+### Création du compte "en attente"
+POST {{host}}/api/inscription
+Content-Type: application/json
+
+{
+    "nom": "Attente",
+    "prenom": "Jeu",
+    "pseudo": "jeu_attente",
+    "email": "{{emailAttente}}",
+    "password": "{{mdp}}",
+    "date_naissance": "1990-01-01",
+    "consentement_parental": false
+}
+
+### Création du compte "bloqué"
+POST {{host}}/api/inscription
+Content-Type: application/json
+
+{
+    "nom": "Bloque",
+    "prenom": "Jeu",
+    "pseudo": "jeu_bloque",
+    "email": "{{emailBloque}}",
+    "password": "{{mdp}}",
+    "date_naissance": "1990-01-01",
+    "consentement_parental": false
+}
+
+### ------------------------------------------------------------
+### CAS 1 : connexion correcte
+### Attendu : 200 + un jeton JWT (gardé automatiquement pour les cas 6, 7 et 8)
+### ------------------------------------------------------------
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+    "email": "{{emailValide}}",
+    "password": "{{mdp}}"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}
+
+### ------------------------------------------------------------
+### CAS 2 : mauvais mot de passe
+### Attendu : 401, connexion refusée
+### ------------------------------------------------------------
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+    "email": "{{emailValide}}",
+    "password": "MauvaisMotDePasse1!"
+}
+
+### ------------------------------------------------------------
+### CAS 3 : email inconnu
+### Attendu : 401, même réponse qu'au cas 2 (on ne révèle pas si l'email existe)
+### ------------------------------------------------------------
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+    "email": "inconnu@test.fr",
+    "password": "{{mdp}}"
+}
+
+### ------------------------------------------------------------
+### CAS 4 : compte en attente de validation
+### Attendu : 401, message "Votre inscription est en attente de validation..."
+### ------------------------------------------------------------
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+    "email": "{{emailAttente}}",
+    "password": "{{mdp}}"
+}
+
+### ------------------------------------------------------------
+### CAS 5 : compte bloqué
+### Attendu : 401, message "Votre compte a été bloqué..."
+### ------------------------------------------------------------
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+    "email": "{{emailBloque}}",
+    "password": "{{mdp}}"
+}
+
+### ------------------------------------------------------------
+### CAS 6 : accès à une page protégée AVEC le jeton (lancer le cas 1 avant)
+### Attendu : 200 + les informations du profil
+### ------------------------------------------------------------
+GET {{host}}/api/profil
+Authorization: Bearer {{token}}
+
+### ------------------------------------------------------------
+### CAS 7 : accès à la même page SANS jeton
+### Attendu : 401
+### ------------------------------------------------------------
+GET {{host}}/api/profil
+
+### ------------------------------------------------------------
+### CAS 8 : accès à une page admin avec le jeton d'un simple membre
+### Attendu : 403 (accès refusé : droits insuffisants)
+### ------------------------------------------------------------
+GET {{host}}/api/admin/membres
+Authorization: Bearer {{token}}
+
+### ------------------------------------------------------------
+### CAS 9 : trop d'essais de connexion (À FAIRE EN DERNIER)
+### Lancer cette requête 6 fois de suite (moins de 15 minutes).
+### Attendu : les essais 1 à 5 donnent 401, le 6e donne 429 (connexion bloquée).
+### Cet email n'existe pas : il ne bloque aucun vrai compte de test.
+### ------------------------------------------------------------
+POST {{host}}/api/login
+Content-Type: application/json
+
+{
+    "email": "essais.excessifs@test.fr",
+    "password": "MauvaisMotDePasse1!"
+}
