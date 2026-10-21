@@ -1,5 +1,10 @@
 DirectoryIndex index.php
 
+# Garde l'en-tête Authorization (2e méthode, selon le serveur)
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
 # Pas de choix automatique de fichier
 <IfModule mod_negotiation.c>
     Options -MultiViews
