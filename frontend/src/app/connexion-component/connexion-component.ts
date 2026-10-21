@@ -17,6 +17,8 @@ export class ConnexionComponent {
   email: string = '';
   password: string = '';
   messageErreur: string = '';
+  // message envoyé par la page d'inscription
+  messageSucces: string = history.state?.messageInscription ?? '';
   afficherMotDePasse: boolean = false;
 
   onSubmit(): void {

@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
@@ -43,7 +44,7 @@ export interface ClassementEntry {
 @Injectable({providedIn: 'root'})
 export class JeuService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/jeu';
+  private apiUrl = `${API_URL}/api/jeu`;
 
   membresDisponibles() {
     return this.http.get<MembreJeu[]>(`${this.apiUrl}/membres`);

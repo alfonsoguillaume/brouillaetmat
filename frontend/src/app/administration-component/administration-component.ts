@@ -140,6 +140,10 @@ export class AdministrationComponent implements OnDestroy {
       next: () => {
         this.inscriptions = this.inscriptions.filter(inscription => inscription.id !== id);
         this.confirmationEnCours = null;
+        // inscription validée : on met à jour le tableau des membres
+        if (action === 'valider') {
+          this.chargerMembres();
+        }
         this.cdr.detectChanges();
       }
     });

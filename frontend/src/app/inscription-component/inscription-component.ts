@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {ChangeDetectorRef, Component, inject} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
@@ -17,7 +18,7 @@ export class InscriptionComponent {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = `${API_URL}/api`;
 
   isMineur = false;
   messageErreur = '';
@@ -161,7 +162,12 @@ export class InscriptionComponent {
 
     this.http.post(`${this.apiUrl}/inscription`, payload).subscribe({
       next: () => {
-        this.router.navigate(['/connexion']);
+        // message affiché sur la page de connexion
+        this.router.navigate(['/connexion'], {
+          state: {
+            messageInscription: "Inscription enregistrée. Le club doit valider votre compte avant que vous puissiez vous connecter."
+          }
+        });
       },
       error: (err) => {
         this.messageErreur = err.error?.message ?? 'Une erreur est survenue, réessaie plus tard.';

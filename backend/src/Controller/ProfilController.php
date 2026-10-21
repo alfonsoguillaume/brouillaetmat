@@ -11,6 +11,7 @@ use App\Service\PseudoUniciteService;
 use App\Service\TelephoneService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -125,7 +126,8 @@ class ProfilController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         NotificationEmailService    $notificationEmailService,
         EmailUniciteService         $emailUniciteService,
-        GenerateurTokenService      $generateurTokenService
+        GenerateurTokenService      $generateurTokenService,
+        #[Autowire('%app.frontend_url%')] string $urlSite
     ): JsonResponse
     {
         /** @var Utilisateur $utilisateur */
@@ -162,7 +164,7 @@ class ProfilController extends AbstractController
 
         $em->flush();
 
-        $lienConfirmation = 'http://localhost:4200/confirmer-email/' . $token;
+        $lienConfirmation = $urlSite . '/confirmer-email/' . $token;
 
         $notificationEmailService->envoyer(
             $nouvelEmail,

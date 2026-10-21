@@ -17,3 +17,10 @@
   cursor: pointer;
   accent-color: #CE865A;
 }
+
+.succes {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #688D6A;
+  margin-top: 0.5rem;
+}

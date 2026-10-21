@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {tap} from 'rxjs/operators';
@@ -16,7 +17,7 @@ interface MeResponse {
 export class AuthService {
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = `${API_URL}/api`;
 
   private loggedIn = signal<boolean>(!!localStorage.getItem('token'));
   private roles = signal<string[]>([]);

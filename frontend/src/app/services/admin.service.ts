@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
@@ -38,7 +39,7 @@ export interface ModificationMembre {
 @Injectable({providedIn: 'root'})
 export class AdminService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/admin';
+  private apiUrl = `${API_URL}/api/admin`;
 
   listeInscriptions() {
     return this.http.get<InscriptionEnAttente[]>(`${this.apiUrl}/inscriptions`);

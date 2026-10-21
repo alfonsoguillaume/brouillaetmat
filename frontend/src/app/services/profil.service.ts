@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
@@ -33,7 +34,7 @@ export interface DemandeChangementEmail {
 @Injectable({providedIn: 'root'})
 export class ProfilService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/profil';
+  private apiUrl = `${API_URL}/api/profil`;
 
   getProfil() {
     return this.http.get<Profil>(this.apiUrl);

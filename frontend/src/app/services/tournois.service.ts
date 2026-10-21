@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
@@ -51,7 +52,7 @@ export interface MatchPlanifie {
 @Injectable({providedIn: 'root'})
 export class TournoisService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/tournois';
+  private apiUrl = `${API_URL}/api/tournois`;
 
   liste() {
     return this.http.get<TournoiListe[]>(this.apiUrl);

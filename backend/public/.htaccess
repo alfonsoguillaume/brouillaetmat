@@ -1,0 +1,33 @@
+DirectoryIndex index.php
+
+# Pas de choix automatique de fichier
+<IfModule mod_negotiation.c>
+    Options -MultiViews
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirige tout en https
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Retrouve le dossier de base automatiquement
+    RewriteCond %{REQUEST_URI}::$0 ^(/.+)/(.*)::\2$
+    RewriteRule .* - [E=BASE:%1]
+
+    # Garde l'en-tête Authorization (le jeton de connexion)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%0]
+
+    # Évite l'adresse avec index.php visible
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^index\.php(?:/(.*)|$) %{ENV:BASE}/$1 [R=301,L]
+
+    # Si le fichier existe (photos par exemple), on le sert tel quel
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule .? - [L]
+
+    # Tout le reste va vers index.php, Symfony choisit la route
+    RewriteRule .? %{ENV:BASE}/index.php [L]
+</IfModule>

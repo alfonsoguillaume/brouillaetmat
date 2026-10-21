@@ -1,10 +1,11 @@
+import {API_URL} from '../api.config';
 import {Component, computed, ElementRef, inject, signal, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AuthService} from '../services/auth.service';
 import {Article, ArticleService} from '../services/article.service';
 
-const BASE_URL_PHOTOS = 'http://localhost:8000/uploads/articles/';
+const BASE_URL_PHOTOS = `${API_URL}/uploads/articles/`;
 
 @Component({
   selector: 'app-club-component',

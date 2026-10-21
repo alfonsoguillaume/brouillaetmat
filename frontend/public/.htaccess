@@ -1,0 +1,12 @@
+# Redirige tout en https
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Fichier ou dossier qui existe : on le sert tel quel
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Le reste : on renvoie index.html, Angular affiche la bonne page
+RewriteRule ^ index.html [L]

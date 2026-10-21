@@ -25,6 +25,10 @@
     <label for="afficherMdp">Afficher le mot de passe</label>
   </div>
 
+  @if (messageSucces) {
+    <p class="succes">{{ messageSucces }}</p>
+  }
+
   @if (messageErreur) {
     <p class="erreur">{{ messageErreur }}</p>
   }

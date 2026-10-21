@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
@@ -32,7 +33,7 @@ export interface ArchiveEmpruntLigne {
 @Injectable({providedIn: 'root'})
 export class BibliothequeService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/bibliotheque';
+  private apiUrl = `${API_URL}/api/bibliotheque`;
 
   // --- Ouvrages ---
   listeOuvrages() {

@@ -1,3 +1,4 @@
+import {API_URL} from '../api.config';
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
@@ -19,7 +20,7 @@ export interface Dossier {
 @Injectable({providedIn: 'root'})
 export class DocumentService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/documents';
+  private apiUrl = `${API_URL}/api/documents`;
 
   liste(dossierId: number | null) {
     const params = dossierId ? `?dossier_id=${dossierId}` : '';

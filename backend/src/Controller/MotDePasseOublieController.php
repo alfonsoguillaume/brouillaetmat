@@ -26,7 +26,8 @@ class MotDePasseOublieController extends AbstractController
         NotificationEmailService                                                $notificationEmailService,
         GenerateurTokenService                                                  $generateurTokenService,
         LimiteurAppelsService                                                   $limiteurAppelsService,
-        #[Autowire(service: 'limiter.mot_de_passe_oublie')] RateLimiterFactory $motDePasseOublieLimiter
+        #[Autowire(service: 'limiter.mot_de_passe_oublie')] RateLimiterFactory $motDePasseOublieLimiter,
+        #[Autowire('%app.frontend_url%')] string                                $urlSite
     ): JsonResponse
     {
         // anti-spam, limite les demandes par IP
@@ -55,7 +56,7 @@ class MotDePasseOublieController extends AbstractController
         $utilisateur->setTokenReinitialisationExpireLe((new \DateTime())->modify('+1 hour'));
         $em->flush();
 
-        $lienReinitialisation = 'http://localhost:4200/reinitialiser-mot-de-passe/' . $token;
+        $lienReinitialisation = $urlSite . '/reinitialiser-mot-de-passe/' . $token;
 
         $notificationEmailService->envoyer(
             $utilisateur->getEmail(),
