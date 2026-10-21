@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   imports: [],
@@ -6,4 +7,7 @@ import { Component } from '@angular/core';
   styleUrl: './bureau-component.css',
   templateUrl: './bureau-component.html',
 })
-export class BureauComponent {}
+export class BureauComponent {
+  // pour cacher le téléphone aux non connectés
+  protected readonly auth = inject(AuthService);
+}
