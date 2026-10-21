@@ -9,7 +9,7 @@ use Symfony\Component\Mime\Email;
 // html optionnel, certains mails sont texte seulement
 class NotificationEmailService
 {
-    private const EXPEDITEUR = 'brouillaetmat@gmail.com';
+    private const EXPEDITEUR = 'contact@brouillaetmat.fr';
 
     public function __construct(
         private readonly MailerInterface $mailer,
