@@ -1,10 +1,5 @@
 DirectoryIndex index.php
 
-# Garde l'en-tête Authorization (2e méthode, selon le serveur)
-<IfModule mod_setenvif.c>
-    SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
-</IfModule>
-
 # Pas de choix automatique de fichier
 <IfModule mod_negotiation.c>
     Options -MultiViews
@@ -22,7 +17,7 @@ DirectoryIndex index.php
     RewriteRule .* - [E=BASE:%1]
 
     # Garde l'en-tête Authorization (le jeton de connexion)
-    RewriteCond %{HTTP:Authorization} .
+    RewriteCond %{HTTP:Authorization} .+
     RewriteRule ^ - [E=HTTP_AUTHORIZATION:%0]
 
     # Évite l'adresse avec index.php visible
